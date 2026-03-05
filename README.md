@@ -86,51 +86,63 @@ xion --network mainnet status
 
 ## Configuration
 
-Configuration is stored in `~/.xion-toolkit/config.json`:
+### Configuration Architecture
+
+Xion Agent Toolkit uses a layered configuration system:
+
+1. **Network Configuration** (Compile-time constants):
+   - OAuth Client IDs (from environment variables)
+   - Treasury Code IDs and configurations
+   - API endpoints
+   - Generated at compile time via `build.rs`
+
+2. **User Configuration** (`~/.xion-toolkit/config.json`):
+   - Current active network
+   - Config schema version
+
+3. **User Credentials** (Encrypted storage):
+   - Access and refresh tokens
+   - Stored in OS keyring (encrypted)
+   - Separate credentials per network
+
+### Environment Variables
+
+Create a `.env` file in the project root with your OAuth Client IDs:
+
+```bash
+# Copy .env.example to .env and fill in values
+cp .env.example .env
+```
+
+Required variables:
+- `XION_LOCAL_OAUTH_CLIENT_ID` - Client ID for local development
+- `XION_TESTNET_OAUTH_CLIENT_ID` - Client ID for testnet
+- `XION_MAINNET_OAUTH_CLIENT_ID` - Client ID for mainnet
+
+### User Configuration File
 
 ```json
 {
   "version": "1.0",
-  "network": "testnet",
-  "oauth": {
-    "client_id": "your-client-id",
-    "access_token": "encrypted-token",
-    "refresh_token": "encrypted-refresh-token",
-    "expires_at": "2024-01-01T00:00:00Z"
-  },
-  "treasury": {
-    "default_address": "xion1..."
-  },
-  "networks": {
-    "local": {
-      "oauth_api_url": "http://localhost:8787",
-      "rpc_url": "http://localhost:26657",
-      "chain_id": "xion-local"
-    },
-    "testnet": {
-      "oauth_api_url": "https://oauth2.testnet.burnt.com",
-      "rpc_url": "https://rpc.xion-testnet-2.burnt.com:443",
-      "chain_id": "xion-testnet-2",
-      "treasury_code_id": 1260
-    },
-    "mainnet": {
-      "oauth_api_url": "https://oauth2.burnt.com",
-      "rpc_url": "https://rpc.xion-mainnet-1.burnt.com:443",
-      "chain_id": "xion-mainnet-1",
-      "treasury_code_id": 63
-    }
-  }
+  "network": "testnet"
 }
 ```
+
+### Credential Storage
+
+Credentials are encrypted and stored separately for each network:
+- **Location**: `~/.xion-toolkit/credentials/{network}.json` (metadata)
+- **Tokens**: OS keyring (encrypted)
+- **Per-network**: Switching networks switches credentials
 
 ## CLI Commands
 
 ### Authentication
 
 ```bash
-xion auth login [--port 8080]   # OAuth2 login
-xion auth logout                # Clear credentials
-xion auth status                # Check auth status
+xion auth login [--port 54321]  # OAuth2 login (default port: 54321)
+xion auth logout                # Clear credentials for current network
+xion auth status                # Check auth status for current network
 xion auth refresh               # Refresh access token
 ```
 
@@ -147,9 +159,9 @@ xion treasury withdraw <address> --amount <amount>  # Withdraw from treasury
 ### Configuration
 
 ```bash
-xion config show                # Show current config
+xion config show                # Show current config and network settings
+xion config set-network <network>  # Switch active network (local/testnet/mainnet)
 xion config get <key>           # Get config value
-xion config set <key> <value>   # Set config value
 xion config reset               # Reset to defaults
 ```
 
@@ -244,10 +256,12 @@ xion-agent-cli/
 
 ## Security
 
-- **Token Storage**: Tokens are encrypted and stored in the OS keyring
+- **Token Storage**: Tokens are encrypted and stored in the OS keyring (macOS Keychain, Linux Secret Service, Windows Credential Manager)
 - **PKCE**: OAuth2 authorization uses PKCE for enhanced security
 - **HTTPS**: All API communication uses HTTPS
-- **Localhost Only**: Callback server only accepts localhost connections
+- **Localhost Only**: Callback server only accepts localhost connections (port 54321)
+- **Network Isolation**: Credentials are separate per network (local/testnet/mainnet)
+- **Compile-time Constants**: Network-specific OAuth Client IDs are compiled into the binary
 
 ## Network Endpoints
 
