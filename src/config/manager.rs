@@ -1,10 +1,9 @@
 use anyhow::{Context, Result};
 use directories::ProjectDirs;
-use serde_json::Value;
 use std::fs;
 use std::path::PathBuf;
 
-use super::schema::Config;
+use super::schema::{Config, UserCredentials};
 
 pub struct ConfigManager {
     config_dir: PathBuf,
@@ -60,68 +59,57 @@ impl ConfigManager {
         Ok(())
     }
 
-    pub fn get_value(&self, key: &str) -> Result<String> {
-        let config_str =
-            serde_json::to_string(&self.config).context("Failed to serialize config")?;
-        let value: Value =
-            serde_json::from_str(&config_str).context("Failed to parse config as JSON")?;
-
-        let parts: Vec<&str> = key.split('.').collect();
-        let mut current = &value;
-
-        for part in &parts {
-            current = current
-                .get(part)
-                .with_context(|| format!("Key '{}' not found in config", key))?;
-        }
-
-        Ok(current.to_string())
+    pub fn get_current_network(&self) -> &str {
+        &self.config.network
     }
 
-    pub fn set_value(&mut self, key: &str, value: &str) -> Result<()> {
-        // Simple implementation for common keys
-        match key {
-            "network" => {
-                self.config.network = value.to_string();
-            }
-            _ => {
-                anyhow::bail!("Setting key '{}' is not supported yet", key);
-            }
+    pub fn set_network(&mut self, network: &str) -> Result<()> {
+        if !["local", "testnet", "mainnet"].contains(&network) {
+            anyhow::bail!(
+                "Invalid network: {}. Must be local, testnet, or mainnet",
+                network
+            );
         }
-        Ok(())
+        self.config.network = network.to_string();
+        self.save_config()
+    }
+
+    pub fn get_status(&self) -> Result<serde_json::Value> {
+        use super::constants::{get_local_config, get_mainnet_config, get_testnet_config};
+
+        let network_config = match self.config.network.as_str() {
+            "local" => get_local_config(),
+            "testnet" => get_testnet_config(),
+            "mainnet" => get_mainnet_config(),
+            _ => anyhow::bail!("Unknown network: {}", self.config.network),
+        };
+
+        // Check if user has credentials for this network
+        let credentials_manager = CredentialsManager::new(&self.config.network)?;
+        let has_credentials = credentials_manager.has_credentials()?;
+
+        Ok(serde_json::json!({
+            "network": self.config.network,
+            "chain_id": network_config.chain_id,
+            "oauth_api_url": network_config.oauth_api_url,
+            "authenticated": has_credentials,
+            "callback_port": network_config.callback_port
+        }))
+    }
+
+    pub fn get_network_config(&self) -> Result<super::constants::NetworkConfig> {
+        use super::constants::{get_local_config, get_mainnet_config, get_testnet_config};
+
+        match self.config.network.as_str() {
+            "local" => Ok(get_local_config()),
+            "testnet" => Ok(get_testnet_config()),
+            "mainnet" => Ok(get_mainnet_config()),
+            _ => anyhow::bail!("Unknown network: {}", self.config.network),
+        }
     }
 
     pub fn reset_config(&mut self) -> Result<()> {
         self.config = Config::default();
         self.save_config()
-    }
-
-    pub fn get_status(&self) -> Result<serde_json::Value> {
-        let current_network = &self.config.network;
-        let network_config = match current_network.as_str() {
-            "local" => &self.config.networks.local,
-            "testnet" => &self.config.networks.testnet,
-            "mainnet" => &self.config.networks.mainnet,
-            _ => anyhow::bail!("Unknown network: {}", current_network),
-        };
-
-        let authenticated = self.config.oauth.is_some();
-
-        Ok(serde_json::json!({
-            "network": current_network,
-            "chain_id": network_config.chain_id,
-            "oauth_api_url": network_config.oauth_api_url,
-            "authenticated": authenticated,
-            "treasury_configured": self.config.treasury.is_some()
-        }))
-    }
-
-    pub fn get_network_config(&self) -> Result<&super::schema::NetworkConfig> {
-        match self.config.network.as_str() {
-            "local" => Ok(&self.config.networks.local),
-            "testnet" => Ok(&self.config.networks.testnet),
-            "mainnet" => Ok(&self.config.networks.mainnet),
-            _ => anyhow::bail!("Unknown network: {}", self.config.network),
-        }
     }
 }

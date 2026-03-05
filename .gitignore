@@ -142,3 +142,22 @@ vite.config.ts.timestamp-*
 # Added by cargo
 
 /target
+
+# Rust specific
+**/*.rs.bk
+*.pdb
+
+# Environment variables
+.env.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+

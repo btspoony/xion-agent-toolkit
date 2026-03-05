@@ -28,7 +28,7 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// OAuth2 authentication commands
+    /// Login using OAuth2 flow
     #[command(subcommand)]
     Auth(auth::AuthCommands),
 
