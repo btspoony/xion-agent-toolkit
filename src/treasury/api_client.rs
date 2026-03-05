@@ -153,7 +153,7 @@ impl TreasuryApiClient {
     ///
     /// # Example
     /// ```no_run
-    /// use xion_agent_cli::api::{TreasuryApiClient, QueryOptions};
+    /// use xion_agent_cli::treasury::{TreasuryApiClient, QueryOptions};
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
