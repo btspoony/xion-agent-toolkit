@@ -40,9 +40,9 @@ impl TokenManager {
     ///
     /// # Example
     /// ```no_run
-    /// use xion_agent_cli::config::CredentialsManager;
-    /// use xion_agent_cli::api::OAuth2ApiClient;
-    /// use xion_agent_cli::oauth::TokenManager;
+    /// use xion_agent_toolkit::config::CredentialsManager;
+    /// use xion_agent_toolkit::api::OAuth2ApiClient;
+    /// use xion_agent_toolkit::oauth::TokenManager;
     ///
     /// let creds_mgr = CredentialsManager::new("testnet")?;
     /// let api_client = OAuth2ApiClient::new("https://oauth2.testnet.burnt.com".to_string());
@@ -78,9 +78,9 @@ impl TokenManager {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::config::CredentialsManager;
-    /// # use xion_agent_cli::api::OAuth2ApiClient;
-    /// # use xion_agent_cli::oauth::TokenManager;
+    /// # use xion_agent_toolkit::config::CredentialsManager;
+    /// # use xion_agent_toolkit::api::OAuth2ApiClient;
+    /// # use xion_agent_toolkit::oauth::TokenManager;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
     /// let token_mgr = TokenManager::new(
@@ -133,9 +133,9 @@ impl TokenManager {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::oauth::TokenManager;
-    /// # use xion_agent_cli::config::CredentialsManager;
-    /// # use xion_agent_cli::api::OAuth2ApiClient;
+    /// # use xion_agent_toolkit::oauth::TokenManager;
+    /// # use xion_agent_toolkit::config::CredentialsManager;
+    /// # use xion_agent_toolkit::api::OAuth2ApiClient;
     /// # let token_mgr = TokenManager::new(
     /// #     CredentialsManager::new("testnet")?,
     /// #     OAuth2ApiClient::new("https://oauth2.testnet.burnt.com".to_string()),
@@ -174,9 +174,9 @@ impl TokenManager {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::oauth::TokenManager;
-    /// # use xion_agent_cli::config::CredentialsManager;
-    /// # use xion_agent_cli::api::OAuth2ApiClient;
+    /// # use xion_agent_toolkit::oauth::TokenManager;
+    /// # use xion_agent_toolkit::config::CredentialsManager;
+    /// # use xion_agent_toolkit::api::OAuth2ApiClient;
     /// # let token_mgr = TokenManager::new(
     /// #     CredentialsManager::new("testnet")?,
     /// #     OAuth2ApiClient::new("https://oauth2.testnet.burnt.com".to_string()),
@@ -220,9 +220,9 @@ impl TokenManager {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::oauth::TokenManager;
-    /// # use xion_agent_cli::config::CredentialsManager;
-    /// # use xion_agent_cli::api::OAuth2ApiClient;
+    /// # use xion_agent_toolkit::oauth::TokenManager;
+    /// # use xion_agent_toolkit::config::CredentialsManager;
+    /// # use xion_agent_toolkit::api::OAuth2ApiClient;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
     /// # let token_mgr = TokenManager::new(
@@ -289,9 +289,9 @@ impl TokenManager {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::oauth::TokenManager;
-    /// # use xion_agent_cli::config::CredentialsManager;
-    /// # use xion_agent_cli::api::OAuth2ApiClient;
+    /// # use xion_agent_toolkit::oauth::TokenManager;
+    /// # use xion_agent_toolkit::config::CredentialsManager;
+    /// # use xion_agent_toolkit::api::OAuth2ApiClient;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
     /// # let token_mgr = TokenManager::new(
@@ -338,7 +338,7 @@ impl TokenManager {
 ///
 /// # Example
 /// ```
-/// use xion_agent_cli::oauth::token_manager::calculate_expiry_time;
+/// use xion_agent_toolkit::oauth::token_manager::calculate_expiry_time;
 ///
 /// let expires_at = calculate_expiry_time(3600);
 /// println!("Expires at: {}", expires_at);
@@ -364,7 +364,7 @@ pub fn calculate_expiry_time(expires_in: i64) -> String {
 ///
 /// # Example
 /// ```
-/// use xion_agent_cli::oauth::token_manager::parse_expiry_time;
+/// use xion_agent_toolkit::oauth::token_manager::parse_expiry_time;
 ///
 /// let dt = parse_expiry_time("2024-01-01T00:00:00Z")?;
 /// println!("Parsed: {}", dt);

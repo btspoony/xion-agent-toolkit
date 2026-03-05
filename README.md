@@ -44,8 +44,8 @@ Xion Agent Toolkit provides a command-line interface for interacting with Xion's
 ### From Source
 
 ```bash
-git clone https://github.com/burnt-labs/xion-agent-cli
-cd xion-agent-cli
+git clone https://github.com/burnt-labs/xion-agent-toolkit
+cd xion-agent-toolkit
 cargo install --path .
 ```
 
@@ -334,7 +334,7 @@ xion --network mainnet treasury list
 ## Project Architecture
 
 ```
-xion-agent-cli/
+xion-agent-toolkit/
 ├── src/
 │   ├── main.rs              # CLI entry point
 │   ├── lib.rs               # Library exports
@@ -479,7 +479,7 @@ Licensed under either of Apache License, Version 2.0 or MIT license at your opti
 
 ## Support
 
-- GitHub Issues: [Project Issues Page](https://github.com/burnt-labs/xion-agent-cli/issues)
+- GitHub Issues: [Project Issues Page](https://github.com/burnt-labs/xion-agent-toolkit/issues)
 - Documentation: See `plans/` directory for detailed architecture and implementation docs
 
 ---

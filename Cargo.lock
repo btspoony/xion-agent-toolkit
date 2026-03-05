@@ -3560,7 +3560,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "xion-agent-cli"
+name = "xion-agent-toolkit"
 version = "0.1.0"
 dependencies = [
  "anyhow",

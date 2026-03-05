@@ -1,18 +1,18 @@
 [package]
-name = "xion-agent-cli"
+name = "xion-agent-toolkit"
 version = "0.1.0"
 edition = "2021"
 authors = ["Xion Developer Team"]
 description = "CLI-driven, Agent-oriented toolkit for Xion blockchain development"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/burnt-labs/xion-agent-cli"
+repository = "https://github.com/burnt-labs/xion-agent-toolkit"
 readme = "README.md"
 keywords = ["xion", "blockchain", "cli", "agent", "oauth2"]
 categories = ["command-line-utilities", "cryptography::cryptocurrencies"]
 build = "build.rs"
 
 [lib]
-name = "xion_agent_cli"
+name = "xion_agent_toolkit"
 path = "src/lib.rs"
 
 [[bin]]

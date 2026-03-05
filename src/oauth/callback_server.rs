@@ -77,7 +77,7 @@ struct CallbackState {
 ///
 /// # Example
 /// ```rust,no_run
-/// use xion_agent_cli::oauth::CallbackServer;
+/// use xion_agent_toolkit::oauth::CallbackServer;
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {

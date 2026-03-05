@@ -40,7 +40,7 @@ Xion Agent Toolkit is a CLI-driven, Agent-oriented toolkit designed to facilitat
 ## Project Structure
 
 ```
-xion-agent-cli/
+xion-agent-toolkit/
 ├── AGENTS.md                    # This file - Development Guidelines
 ├── Cargo.toml                   # Rust project configuration
 ├── src/

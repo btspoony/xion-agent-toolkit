@@ -50,8 +50,8 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 ### Building
 
 ```bash
-git clone https://github.com/burnt-labs/xion-agent-cli
-cd xion-agent-cli
+git clone https://github.com/burnt-labs/xion-agent-toolkit
+cd xion-agent-toolkit
 cargo build
 ```
 
@@ -109,7 +109,7 @@ test(pkce): add unit tests for verifier generation
 ## Project Structure
 
 ```
-xion-agent-cli/
+xion-agent-toolkit/
 ├── src/
 │   ├── main.rs              # CLI entry point
 │   ├── lib.rs               # Library exports
@@ -226,7 +226,7 @@ mod tests {
 /// # Example
 ///
 /// ```
-/// use xion_agent_cli::oauth::generate_pkce_challenge;
+/// use xion_agent_toolkit::oauth::generate_pkce_challenge;
 ///
 /// let verifier = "my_verifier_string";
 /// let challenge = generate_pkce_challenge(verifier)?;

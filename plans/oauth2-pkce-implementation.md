@@ -63,13 +63,13 @@ All 12 unit tests passed:
 ## File Manifest
 
 **Created files:**
-- `/Users/bibi/workspace/xion/xion-agent-cli/src/oauth/mod.rs`
-- `/Users/bibi/workspace/xion/xion-agent-cli/src/oauth/pkce.rs`
-- `/Users/bibi/workspace/xion/xion-agent-cli/docs/oauth-pkce.md`
+- `/Users/bibi/workspace/xion/xion-agent-toolkit/src/oauth/mod.rs`
+- `/Users/bibi/workspace/xion/xion-agent-toolkit/src/oauth/pkce.rs`
+- `/Users/bibi/workspace/xion/xion-agent-toolkit/docs/oauth-pkce.md`
 
 **Modified files:**
-- `/Users/bibi/workspace/xion/xion-agent-cli/Cargo.toml` - Added hex dependency
-- `/Users/bibi/workspace/xion/xion-agent-cli/src/main.rs` - Added oauth module reference
+- `/Users/bibi/workspace/xion/xion-agent-toolkit/Cargo.toml` - Added hex dependency
+- `/Users/bibi/workspace/xion/xion-agent-toolkit/src/main.rs` - Added oauth module reference
 
 ---
 *Created by: @fullstack-dev*

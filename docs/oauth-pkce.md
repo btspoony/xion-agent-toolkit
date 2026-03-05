@@ -9,7 +9,7 @@ This module implements the PKCE (Proof Key for Code Exchange) extension for OAut
 ### Generate PKCE Challenge
 
 ```rust
-use xion_agent_cli::oauth::PKCEChallenge;
+use xion_agent_toolkit::oauth::PKCEChallenge;
 
 // Generate a new PKCE challenge
 let pkce = PKCEChallenge::generate()?;
@@ -35,7 +35,7 @@ match pkce.verify_state(callback_state) {
 ### Helper Functions
 
 ```rust
-use xion_agent_cli::oauth::{generate_pkce_verifier, generate_pkce_challenge, generate_state};
+use xion_agent_toolkit::oauth::{generate_pkce_verifier, generate_pkce_challenge, generate_state};
 
 // Generate individual components
 let verifier = generate_pkce_verifier()?;

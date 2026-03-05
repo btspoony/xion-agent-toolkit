@@ -123,7 +123,7 @@ impl OAuth2ApiClient {
     ///
     /// # Example
     /// ```no_run
-    /// use xion_agent_cli::api::OAuth2ApiClient;
+    /// use xion_agent_toolkit::api::OAuth2ApiClient;
     ///
     /// let client = OAuth2ApiClient::new("https://oauth2.testnet.burnt.com".to_string());
     /// ```
@@ -163,7 +163,7 @@ impl OAuth2ApiClient {
     ///
     /// # Example
     /// ```no_run
-    /// use xion_agent_cli::api::OAuth2ApiClient;
+    /// use xion_agent_toolkit::api::OAuth2ApiClient;
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
@@ -221,7 +221,7 @@ impl OAuth2ApiClient {
     ///
     /// # Example
     /// ```no_run
-    /// use xion_agent_cli::api::OAuth2ApiClient;
+    /// use xion_agent_toolkit::api::OAuth2ApiClient;
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
@@ -273,7 +273,7 @@ impl OAuth2ApiClient {
     ///
     /// # Example
     /// ```no_run
-    /// use xion_agent_cli::api::OAuth2ApiClient;
+    /// use xion_agent_toolkit::api::OAuth2ApiClient;
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {

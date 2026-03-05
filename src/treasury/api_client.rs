@@ -47,7 +47,7 @@ impl TreasuryApiClient {
     ///
     /// # Example
     /// ```no_run
-    /// use xion_agent_cli::api::TreasuryApiClient;
+    /// use xion_agent_toolkit::api::TreasuryApiClient;
     ///
     /// let client = TreasuryApiClient::new("https://oauth2.testnet.burnt.com".to_string());
     /// ```
@@ -81,7 +81,7 @@ impl TreasuryApiClient {
     ///
     /// # Example
     /// ```no_run
-    /// use xion_agent_cli::api::TreasuryApiClient;
+    /// use xion_agent_toolkit::api::TreasuryApiClient;
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
@@ -153,7 +153,7 @@ impl TreasuryApiClient {
     ///
     /// # Example
     /// ```no_run
-    /// use xion_agent_cli::treasury::{TreasuryApiClient, QueryOptions};
+    /// use xion_agent_toolkit::treasury::{TreasuryApiClient, QueryOptions};
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {

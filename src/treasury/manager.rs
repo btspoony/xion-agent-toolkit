@@ -23,9 +23,9 @@ use super::types::{CreateTreasuryRequest, QueryOptions, TreasuryInfo, TreasuryLi
 ///
 /// # Example
 /// ```no_run
-/// use xion_agent_cli::config::NetworkConfig;
-/// use xion_agent_cli::oauth::OAuthClient;
-/// use xion_agent_cli::treasury::TreasuryManager;
+/// use xion_agent_toolkit::config::NetworkConfig;
+/// use xion_agent_toolkit::oauth::OAuthClient;
+/// use xion_agent_toolkit::treasury::TreasuryManager;
 ///
 /// # #[tokio::main]
 /// # async fn main() -> anyhow::Result<()> {
@@ -67,9 +67,9 @@ impl TreasuryManager {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::oauth::OAuthClient;
-    /// # use xion_agent_cli::config::NetworkConfig;
-    /// # use xion_agent_cli::treasury::TreasuryManager;
+    /// # use xion_agent_toolkit::oauth::OAuthClient;
+    /// # use xion_agent_toolkit::config::NetworkConfig;
+    /// # use xion_agent_toolkit::treasury::TreasuryManager;
     /// # fn main() -> anyhow::Result<()> {
     /// # let config = NetworkConfig {
     /// #     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
@@ -125,9 +125,9 @@ impl TreasuryManager {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::treasury::TreasuryManager;
-    /// # use xion_agent_cli::oauth::OAuthClient;
-    /// # use xion_agent_cli::config::NetworkConfig;
+    /// # use xion_agent_toolkit::treasury::TreasuryManager;
+    /// # use xion_agent_toolkit::oauth::OAuthClient;
+    /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
     /// # let config = NetworkConfig {
@@ -198,9 +198,9 @@ impl TreasuryManager {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::treasury::TreasuryManager;
-    /// # use xion_agent_cli::oauth::OAuthClient;
-    /// # use xion_agent_cli::config::NetworkConfig;
+    /// # use xion_agent_toolkit::treasury::TreasuryManager;
+    /// # use xion_agent_toolkit::oauth::OAuthClient;
+    /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
     /// # let config = NetworkConfig {
@@ -262,9 +262,9 @@ impl TreasuryManager {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::treasury::TreasuryManager;
-    /// # use xion_agent_cli::oauth::OAuthClient;
-    /// # use xion_agent_cli::config::NetworkConfig;
+    /// # use xion_agent_toolkit::treasury::TreasuryManager;
+    /// # use xion_agent_toolkit::oauth::OAuthClient;
+    /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
     /// # let config = NetworkConfig {
@@ -300,9 +300,9 @@ impl TreasuryManager {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::treasury::TreasuryManager;
-    /// # use xion_agent_cli::oauth::OAuthClient;
-    /// # use xion_agent_cli::config::NetworkConfig;
+    /// # use xion_agent_toolkit::treasury::TreasuryManager;
+    /// # use xion_agent_toolkit::oauth::OAuthClient;
+    /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # fn main() -> anyhow::Result<()> {
     /// # let config = NetworkConfig {
     /// #     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),

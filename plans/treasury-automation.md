@@ -26,7 +26,7 @@ Xion's Treasury contracts provide gasless transactions and delegated authorizati
 #### 1.2 Core Modules
 
 ```
-xion-agent-cli/
+xion-agent-toolkit/
 ├── CLI Core
 │   ├── auth - OAuth2 authentication commands
 │   ├── treasury - Treasury management commands

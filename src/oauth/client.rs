@@ -19,8 +19,8 @@ use crate::oauth::{CallbackServer, PKCEChallenge, TokenManager};
 ///
 /// # Example
 /// ```no_run
-/// use xion_agent_cli::config::NetworkConfig;
-/// use xion_agent_cli::oauth::OAuthClient;
+/// use xion_agent_toolkit::config::NetworkConfig;
+/// use xion_agent_toolkit::oauth::OAuthClient;
 ///
 /// # #[tokio::main]
 /// # async fn main() -> anyhow::Result<()> {
@@ -73,8 +73,8 @@ impl OAuthClient {
     ///
     /// # Example
     /// ```no_run
-    /// use xion_agent_cli::config::NetworkConfig;
-    /// use xion_agent_cli::oauth::OAuthClient;
+    /// use xion_agent_toolkit::config::NetworkConfig;
+    /// use xion_agent_toolkit::oauth::OAuthClient;
     ///
     /// let config = NetworkConfig {
     ///     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
@@ -139,8 +139,8 @@ impl OAuthClient {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::oauth::OAuthClient;
-    /// # use xion_agent_cli::config::NetworkConfig;
+    /// # use xion_agent_toolkit::oauth::OAuthClient;
+    /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
     /// # let config = NetworkConfig {
@@ -242,8 +242,8 @@ impl OAuthClient {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::oauth::OAuthClient;
-    /// # use xion_agent_cli::config::NetworkConfig;
+    /// # use xion_agent_toolkit::oauth::OAuthClient;
+    /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # fn main() -> anyhow::Result<()> {
     /// # let config = NetworkConfig {
     /// #     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
@@ -282,8 +282,8 @@ impl OAuthClient {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::oauth::OAuthClient;
-    /// # use xion_agent_cli::config::NetworkConfig;
+    /// # use xion_agent_toolkit::oauth::OAuthClient;
+    /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # fn main() -> anyhow::Result<()> {
     /// # let config = NetworkConfig {
     /// #     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
@@ -323,8 +323,8 @@ impl OAuthClient {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::oauth::OAuthClient;
-    /// # use xion_agent_cli::config::NetworkConfig;
+    /// # use xion_agent_toolkit::oauth::OAuthClient;
+    /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # fn main() -> anyhow::Result<()> {
     /// # let config = NetworkConfig {
     /// #     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
@@ -366,8 +366,8 @@ impl OAuthClient {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::oauth::OAuthClient;
-    /// # use xion_agent_cli::config::NetworkConfig;
+    /// # use xion_agent_toolkit::oauth::OAuthClient;
+    /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
     /// # let config = NetworkConfig {
@@ -409,8 +409,8 @@ impl OAuthClient {
     ///
     /// # Example
     /// ```no_run
-    /// # use xion_agent_cli::oauth::OAuthClient;
-    /// # use xion_agent_cli::config::NetworkConfig;
+    /// # use xion_agent_toolkit::oauth::OAuthClient;
+    /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
     /// # let config = NetworkConfig {

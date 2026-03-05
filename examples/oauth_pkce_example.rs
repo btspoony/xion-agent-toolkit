@@ -2,7 +2,7 @@
 //
 // This example demonstrates how to use the PKCE module for OAuth2 authorization
 
-use xion_agent_cli::oauth::{
+use xion_agent_toolkit::oauth::{
     generate_pkce_challenge, generate_pkce_verifier, generate_state, PKCEChallenge,
 };
 

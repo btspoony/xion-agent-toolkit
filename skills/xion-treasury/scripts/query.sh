@@ -108,7 +108,7 @@ log_info "Querying Treasury: $ADDRESS"
 
 # Check if xion CLI is available
 if ! command -v xion &> /dev/null; then
-    handle_error "xion CLI not found in PATH. Please install xion-agent-cli first." "CLI_NOT_FOUND"
+    handle_error "xion CLI not found in PATH. Please install xion-agent-toolkit first." "CLI_NOT_FOUND"
 fi
 
 # Build command
