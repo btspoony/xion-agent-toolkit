@@ -1,10 +1,10 @@
-# OAuth2 客户端架构设计
+# OAuth2 Client Architecture Design
 
-## 系统概述
+## System Overview
 
-Xion Agent Toolkit 的 OAuth2 客户端实现了基于 OAuth2 Authorization Code Flow + PKCE 的认证流程，支持浏览器登录、本地回调服务器、Token 管理和多网络环境。
+The OAuth2 client in the Xion Agent Toolkit implements the OAuth2 Authorization Code Flow with PKCE. It supports browser-based login, a local callback server, token management, and multiple network environments.
 
-## 架构图
+## Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -51,12 +51,12 @@ Xion Agent Toolkit 的 OAuth2 客户端实现了基于 OAuth2 Authorization Code
               └───────────────────────────────┘
 ```
 
-## 模块划分
+## Module Breakdown
 
-### 1. OAuth2 核心模块 (`src/oauth/`)
+### 1. OAuth2 Core Module (`src/oauth/`)
 
 #### 1.1 `mod.rs`
-**职责**: 模块导出和公共 API
+**Responsibility**: Module exports and public API
 
 ```rust
 pub mod pkce;
@@ -70,9 +70,9 @@ pub use token_manager::TokenManager;
 ```
 
 #### 1.2 `pkce.rs`
-**职责**: PKCE 实现（RFC 7636）
+**Responsibility**: PKCE implementation (RFC 7636)
 
-**关键 Struct**:
+**Key struct**:
 ```rust
 pub struct PKCEChallenge {
     pub verifier: String,
@@ -93,9 +93,9 @@ impl PKCEChallenge {
 ```
 
 #### 1.3 `client.rs`
-**职责**: OAuth2 客户端主逻辑，编排整个登录流程
+**Responsibility**: Main OAuth2 client logic, orchestrating the full login flow
 
-**关键 Struct**:
+**Key struct**:
 ```rust
 pub struct OAuthClient {
     config: NetworkConfig,
@@ -121,9 +121,9 @@ impl OAuthClient {
 ```
 
 #### 1.4 `callback_server.rs`
-**职责**: 本地回调服务器，接收 OAuth2 redirect
+**Responsibility**: Local callback server to receive OAuth2 redirects
 
-**关键 Struct**:
+**Key struct**:
 ```rust
 pub struct CallbackServer {
     port: u16,
@@ -138,9 +138,9 @@ impl CallbackServer {
 ```
 
 #### 1.5 `token_manager.rs`
-**职责**: Token 生命周期管理（刷新、过期检查）
+**Responsibility**: Token lifecycle management (refresh, expiry checks)
 
-**关键 Struct**:
+**Key struct**:
 ```rust
 pub struct TokenManager {
     credentials_manager: CredentialsManager,
@@ -159,11 +159,11 @@ impl TokenManager {
 }
 ```
 
-### 2. OAuth2 API 客户端模块 (`src/api/oauth2_api.rs`)
+### 2. OAuth2 API Client Module (`src/api/oauth2_api.rs`)
 
-**职责**: 与 OAuth2 API Service 通信
+**Responsibility**: Communicate with the OAuth2 API Service
 
-**关键 Struct**:
+**Key struct**:
 ```rust
 pub struct OAuth2ApiClient {
     base_url: String,
@@ -191,40 +191,40 @@ impl OAuth2ApiClient {
 }
 ```
 
-## 文件创建清单
+## File Creation Checklist
 
-需要创建的新文件：
+New files to create:
 
-1. `src/oauth/mod.rs` - 模块导出
-2. `src/oauth/pkce.rs` - PKCE 实现
-3. `src/oauth/client.rs` - OAuth2 客户端主逻辑
-4. `src/oauth/callback_server.rs` - Axum 回调服务器
-5. `src/oauth/token_manager.rs` - Token 管理器
-6. `src/api/mod.rs` - API 模块导出
-7. `src/api/oauth2_api.rs` - OAuth2 API 客户端
+1. `src/oauth/mod.rs` - Module exports
+2. `src/oauth/pkce.rs` - PKCE implementation
+3. `src/oauth/client.rs` - Main OAuth2 client logic
+4. `src/oauth/callback_server.rs` - Axum-based callback server
+5. `src/oauth/token_manager.rs` - Token manager
+6. `src/api/mod.rs` - API module exports
+7. `src/api/oauth2_api.rs` - OAuth2 API client
 
-需要修改的文件：
+Files to modify:
 
-1. `src/main.rs` - 添加 oauth 和 api 模块
-2. `src/cli/auth.rs` - 实现 handle_login, handle_refresh
-3. `src/utils/error.rs` - 扩展错误类型
+1. `src/main.rs` - Add `oauth` and `api` modules
+2. `src/cli/auth.rs` - Implement `handle_login` and `handle_refresh`
+3. `src/utils/error.rs` - Extend error types
 
-## 开发计划
+## Development Plan
 
-### Phase 2.1: 基础设施（优先级：P0）
-- [ ] 创建模块结构（oauth, api）
-- [ ] 实现 PKCE（pkce.rs）
-- [ ] 实现 OAuth2 API 客户端（oauth2_api.rs）
-- [ ] 扩展错误处理（error.rs）
+### Phase 2.1: Infrastructure (Priority: P0)
+- [ ] Create module structure (`oauth`, `api`)
+- [ ] Implement PKCE (`pkce.rs`)
+- [ ] Implement OAuth2 API client (`oauth2_api.rs`)
+- [ ] Extend error handling (`error.rs`)
 
-### Phase 2.2: 核心流程（优先级：P0）
-- [ ] 实现回调服务器（callback_server.rs）
-- [ ] 实现 OAuth2 客户端编排（client.rs）
-- [ ] 实现 Token 管理器（token_manager.rs）
+### Phase 2.2: Core Flow (Priority: P0)
+- [ ] Implement callback server (`callback_server.rs`)
+- [ ] Implement OAuth2 client orchestration (`client.rs`)
+- [ ] Implement token manager (`token_manager.rs`)
 
-### Phase 2.3: 集成（优先级：P0）
-- [ ] CLI 命令集成（auth.rs）
-- [ ] 测试和验证
+### Phase 2.3: Integration (Priority: P0)
+- [ ] Integrate CLI commands (`auth.rs`)
+- [ ] Testing and validation
 
 ---
 *Created by: @architect*
