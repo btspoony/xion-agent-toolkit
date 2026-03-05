@@ -1,5 +1,7 @@
+mod api;
 mod cli;
 mod config;
+mod oauth;
 mod utils;
 
 use clap::Parser;
