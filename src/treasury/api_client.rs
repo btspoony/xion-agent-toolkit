@@ -6,11 +6,20 @@
 use anyhow::{Context, Result};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use tracing::{debug, instrument};
+use std::time::Duration;
+use tokio::time::sleep;
+use tracing::{debug, instrument, warn};
 
 use super::types::{
     BroadcastRequest, BroadcastResponse, QueryOptions, TreasuryInfo, TreasuryListItem,
 };
+
+/// Default delay before polling for new treasury (in seconds)
+const DEFAULT_POLL_DELAY_SECS: u64 = 2;
+/// Default timeout for waiting for treasury creation (in seconds)
+const DEFAULT_POLL_TIMEOUT_SECS: u64 = 30;
+/// Polling interval (in seconds)
+const POLL_INTERVAL_SECS: u64 = 2;
 
 /// Treasury API Client for Xion
 ///
@@ -560,20 +569,94 @@ impl TreasuryApiClient {
 
         // Broadcast the transaction
         let response = self.broadcast_transaction(access_token, broadcast_request).await?;
-
-        // Parse the treasury address from the response
-        // Note: In a real implementation, we would need to query the transaction
-        // to get the instantiated contract address. For now, we'll compute it
-        // using instantiate2Address if we had access to the checksum.
         
         debug!("Treasury creation transaction broadcast: {}", response.tx_hash);
 
+        // Wait for the treasury to be indexed and return the actual address
+        let treasury_address = self
+            .wait_for_treasury_creation(access_token, &request.admin, &response.tx_hash)
+            .await?;
+
         Ok(super::types::CreateTreasuryResult {
-            treasury_address: "pending".to_string(), // Would be computed or queried
+            treasury_address,
             tx_hash: response.tx_hash,
             admin: request.admin,
             created_at: chrono::Utc::now().to_rfc3339(),
         })
+    }
+
+    /// Wait for treasury creation to be indexed
+    ///
+    /// Polls the `/mgr-api/treasuries` endpoint to find the newly created treasury.
+    /// The treasury is identified by matching the admin address and recent creation time.
+    ///
+    /// # Arguments
+    /// * `access_token` - Valid OAuth2 access token
+    /// * `admin_address` - Expected admin address of the new treasury
+    /// * `tx_hash` - Transaction hash for error reporting
+    ///
+    /// # Returns
+    /// The treasury address if found within timeout
+    ///
+    /// # Errors
+    /// Returns an error with the tx_hash if the treasury is not found within the timeout period
+    #[instrument(skip(self, access_token))]
+    async fn wait_for_treasury_creation(
+        &self,
+        access_token: &str,
+        admin_address: &str,
+        tx_hash: &str,
+    ) -> Result<String> {
+        debug!(
+            "Waiting for treasury creation to be indexed (admin: {})",
+            admin_address
+        );
+
+        // Initial delay to allow indexing
+        sleep(Duration::from_secs(DEFAULT_POLL_DELAY_SECS)).await;
+
+        let start_time = std::time::Instant::now();
+        let timeout = Duration::from_secs(DEFAULT_POLL_TIMEOUT_SECS);
+
+        loop {
+            // Check if we've exceeded the timeout
+            if start_time.elapsed() >= timeout {
+                anyhow::bail!(
+                    "Treasury creation timed out after {} seconds. Transaction was broadcast successfully (tx_hash: {}). \
+                     The treasury may still be created. Check the transaction status manually or wait a few moments and list your treasuries.",
+                    DEFAULT_POLL_TIMEOUT_SECS,
+                    tx_hash
+                );
+            }
+
+            // List treasuries and look for the newly created one
+            match self.list_treasuries(access_token).await {
+                Ok(treasuries) => {
+                    // Look for a treasury with matching admin address
+                    // The newest treasury should be at the top of the list (most recent first)
+                    for treasury in &treasuries {
+                        if treasury.admin.as_deref() == Some(admin_address) {
+                            debug!(
+                                "Found newly created treasury: {} for admin: {}",
+                                treasury.address, admin_address
+                            );
+                            return Ok(treasury.address.clone());
+                        }
+                    }
+                    debug!(
+                        "Treasury not yet indexed, retrying... ({}/{}s elapsed)",
+                        start_time.elapsed().as_secs(),
+                        DEFAULT_POLL_TIMEOUT_SECS
+                    );
+                }
+                Err(e) => {
+                    warn!("Failed to list treasuries while waiting for creation: {}", e);
+                }
+            }
+
+            // Wait before next poll
+            sleep(Duration::from_secs(POLL_INTERVAL_SECS)).await;
+        }
     }
 
     /// Get the base URL
@@ -763,5 +846,87 @@ mod tests {
         .unwrap();
         let decoded_value: serde_json::Value = serde_json::from_slice(&decoded).unwrap();
         assert_eq!(value, decoded_value);
+    }
+
+    #[tokio::test]
+    async fn test_wait_for_treasury_creation_success() {
+        // This test verifies the polling mechanism finds the treasury
+        let mut server = mockito::Server::new_async().await;
+        
+        let admin_address = "xion1admin123";
+        let treasury_address = "xion1treasury456";
+        
+        // Mock the list treasuries endpoint - return treasury with matching admin
+        let mock = server.mock("GET", "/mgr-api/treasuries")
+            .match_header("authorization", "Bearer test_token")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(serde_json::json!({
+                "treasuries": [
+                    {
+                        "address": treasury_address,
+                        "admin": admin_address,
+                        "balance": "0"
+                    }
+                ]
+            }).to_string())
+            .create();
+        
+        let client = TreasuryApiClient::new(server.url());
+        
+        // Call the wait_for_treasury_creation method
+        let result = client
+            .wait_for_treasury_creation("test_token", admin_address, "tx123")
+            .await;
+        
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), treasury_address);
+        
+        mock.assert();
+    }
+
+    #[tokio::test]
+    async fn test_wait_for_treasury_creation_multiple_treasuries() {
+        // Test that it finds the correct treasury when there are multiple
+        let mut server = mockito::Server::new_async().await;
+        
+        let admin_address = "xion1admin999";
+        let treasury_address = "xion1treasury999";
+        
+        // Mock returning multiple treasuries, one with matching admin
+        let mock = server.mock("GET", "/mgr-api/treasuries")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(serde_json::json!({
+                "treasuries": [
+                    {
+                        "address": "xion1other1",
+                        "admin": "xion1admin1",
+                        "balance": "1000"
+                    },
+                    {
+                        "address": "xion1other2",
+                        "admin": "xion1admin2",
+                        "balance": "2000"
+                    },
+                    {
+                        "address": treasury_address,
+                        "admin": admin_address,
+                        "balance": "0"
+                    }
+                ]
+            }).to_string())
+            .create();
+        
+        let client = TreasuryApiClient::new(server.url());
+        
+        let result = client
+            .wait_for_treasury_creation("test_token", admin_address, "tx456")
+            .await;
+        
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), treasury_address);
+        
+        mock.assert();
     }
 }

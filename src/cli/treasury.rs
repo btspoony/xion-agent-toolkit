@@ -44,61 +44,61 @@ pub enum TreasuryCommands {
 pub struct CreateArgs {
     /// Path to JSON config file
     #[arg(short, long, value_name = "FILE")]
-    config: Option<PathBuf>,
+    pub config: Option<PathBuf>,
     
     /// OAuth callback URL (required unless using --config)
     #[arg(short = 'r', long)]
-    redirect_url: Option<String>,
+    pub redirect_url: Option<String>,
     
     /// Treasury icon URL (required unless using --config)
     #[arg(short = 'i', long)]
-    icon_url: Option<String>,
+    pub icon_url: Option<String>,
     
     /// Treasury display name
     #[arg(short, long)]
-    name: Option<String>,
+    pub name: Option<String>,
     
     /// Mark as OAuth2 application
     #[arg(long)]
-    is_oauth2_app: bool,
+    pub is_oauth2_app: bool,
     
     // Fee grant flags
     /// Fee allowance type: basic, periodic, or allowed-msg
     #[arg(long)]
-    fee_allowance_type: Option<String>,
+    pub fee_allowance_type: Option<String>,
     
     /// Fee spend limit (e.g., "1000000uxion")
     #[arg(long)]
-    fee_spend_limit: Option<String>,
+    pub fee_spend_limit: Option<String>,
     
     /// Fee period seconds (for periodic allowance)
     #[arg(long)]
-    fee_period_seconds: Option<u64>,
+    pub fee_period_seconds: Option<u64>,
     
     /// Fee period spend limit (for periodic allowance)
     #[arg(long)]
-    fee_period_spend_limit: Option<String>,
+    pub fee_period_spend_limit: Option<String>,
     
     /// Fee grant description
     #[arg(long)]
-    fee_description: Option<String>,
+    pub fee_description: Option<String>,
     
     // Grant flags (simplified)
     /// Grant permission type URL
     #[arg(long)]
-    grant_type_url: Option<String>,
+    pub grant_type_url: Option<String>,
     
     /// Grant authorization type (generic, send, stake)
     #[arg(long)]
-    grant_auth_type: Option<String>,
+    pub grant_auth_type: Option<String>,
     
     /// Grant description
     #[arg(long)]
-    grant_description: Option<String>,
+    pub grant_description: Option<String>,
     
     /// Grant spend limit (for send authorization)
     #[arg(long)]
-    grant_spend_limit: Option<String>,
+    pub grant_spend_limit: Option<String>,
 }
 
 pub async fn handle_command(cmd: TreasuryCommands) -> Result<()> {
@@ -272,7 +272,7 @@ fn load_treasury_config(path: &PathBuf) -> Result<TreasuryCreateRequest> {
 }
 
 /// Build treasury creation request from CLI flags
-fn build_request_from_flags(args: &CreateArgs) -> Result<TreasuryCreateRequest> {
+pub fn build_request_from_flags(args: &CreateArgs) -> Result<TreasuryCreateRequest> {
     // Validate required fields
     let redirect_url = args.redirect_url.clone()
         .ok_or_else(|| anyhow::anyhow!("--redirect-url is required"))?;
@@ -357,7 +357,7 @@ fn build_request_from_flags(args: &CreateArgs) -> Result<TreasuryCreateRequest> 
 }
 
 /// Validate treasury creation request
-fn validate_create_request(request: &TreasuryCreateRequest) -> Result<()> {
+pub fn validate_create_request(request: &TreasuryCreateRequest) -> Result<()> {
     // Validate URLs
     if !request.params.redirect_url.starts_with("http") {
         return Err(anyhow::anyhow!("redirect_url must be a valid URL starting with http:// or https://"));

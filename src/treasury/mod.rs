@@ -24,8 +24,9 @@ pub use encoding::{
 };
 pub use manager::TreasuryManager;
 pub use types::{
-    BroadcastRequest, BroadcastResponse, CreateTreasuryRequest, FeeConfig, FeeConfigMessage,
-    FeeGrantRequest, FundResult, GrantConfig, GrantConfigMessage, GrantConfigRequest,
-    QueryOptions, TransactionMessage, TreasuryInfo, TreasuryListItem, TreasuryParams,
-    TreasuryParamsMessage, TypeUrlValue, WithdrawResult,
+    AuthorizationInput, BroadcastRequest, BroadcastResponse, CreateTreasuryRequest, FeeConfig,
+    FeeConfigInput, FeeConfigMessage, FeeGrantRequest, FundResult, GrantConfig,
+    GrantConfigInput, GrantConfigMessage, GrantConfigRequest, QueryOptions, TransactionMessage,
+    TreasuryCreateRequest, TreasuryInfo, TreasuryListItem, TreasuryParams,
+    TreasuryParamsInput, TreasuryParamsMessage, TypeUrlValue, WithdrawResult,
 };
