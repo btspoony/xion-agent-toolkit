@@ -4,7 +4,7 @@ A CLI-driven, Agent-oriented toolkit for developing on the Xion blockchain.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![Test Coverage](https://img.shields.io/badge/tests-63%20passing-green)]()
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)]()
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
 ## Overview
 
@@ -468,7 +468,7 @@ We welcome contributions! Please follow these guidelines:
 
 ## License
 
-Licensed under either of Apache License, Version 2.0 or MIT license at your option.
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
 
 ## Resources
 
@@ -481,7 +481,3 @@ Licensed under either of Apache License, Version 2.0 or MIT license at your opti
 
 - GitHub Issues: [Project Issues Page](https://github.com/burnt-labs/xion-agent-toolkit/issues)
 - Documentation: See `plans/` directory for detailed architecture and implementation docs
-
----
-
-**Built with ❤️ for the Xion ecosystem**
