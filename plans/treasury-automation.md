@@ -399,10 +399,12 @@ xion treasury query <treasury-address>
 | 2026-03-06 | All tests passing (65 tests) | ✅ |
 | 2026-03-06 | Fixed: xion_address field returning null | ✅ |
 | 2026-03-06 | OAuth2: Call /api/v1/me to get MetaAccount address | ✅ |
+| 2026-03-06 | OAuth2: Testnet login verified with xion_address | ✅ |
 | 2026-03-06 | Treasury: Implement fund operation with MsgSend | ✅ |
 | 2026-03-06 | Treasury: Implement withdraw operation with MsgExecuteContract | ✅ |
 | 2026-03-06 | Treasury: Add transaction broadcasting support | ✅ |
-| 2026-03-06 | All tests passing (68 tests) | ✅ |
+| 2026-03-06 | Docs: Fix all doc tests (122 tests passing) | ✅ |
+| 2026-03-06 | All tests passing (68 unit + 20 integration + 34 doc) | ✅ |
 
 ---
 *Created: 2025-03-05*
