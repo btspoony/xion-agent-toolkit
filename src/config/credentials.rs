@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
-use directories::ProjectDirs;
 use keyring::Entry;
+use std::env;
 use std::fs;
 use std::path::PathBuf;
 
@@ -14,10 +14,12 @@ pub struct CredentialsManager {
 
 impl CredentialsManager {
     pub fn new(network: &str) -> Result<Self> {
-        let project_dirs = ProjectDirs::from("com", "burnt", "xion-toolkit")
-            .context("Failed to determine config directory")?;
+        // Use unified ~/.xion-toolkit/ directory for all platforms
+        let home_dir = env::var("HOME")
+            .or_else(|_| env::var("USERPROFILE"))
+            .context("Failed to determine home directory")?;
 
-        let config_dir = project_dirs.config_dir().to_path_buf();
+        let config_dir = PathBuf::from(home_dir).join(".xion-toolkit");
 
         // Ensure credentials directory exists
         let creds_dir = config_dir.join("credentials");

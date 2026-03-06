@@ -46,6 +46,7 @@ fn handle_show() -> Result<()> {
             "network": config.network,
         },
         "network_config": {
+            "network_name": network_config.network_name,
             "chain_id": network_config.chain_id,
             "oauth_api_url": network_config.oauth_api_url,
             "rpc_url": network_config.rpc_url,

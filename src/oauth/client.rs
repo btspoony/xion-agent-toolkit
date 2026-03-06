@@ -96,7 +96,7 @@ impl OAuthClient {
         let api_client = OAuth2ApiClient::new(network_config.oauth_api_url.clone());
 
         // Create credentials manager
-        let credentials_manager = CredentialsManager::new(&network_config.chain_id)
+        let credentials_manager = CredentialsManager::new(&network_config.network_name)
             .context("Failed to create credentials manager")?;
 
         // Create token manager
@@ -163,17 +163,42 @@ impl OAuthClient {
     pub async fn login(&self) -> Result<UserCredentials> {
         info!("Starting OAuth2 login flow");
 
+        // Step 0: Fetch OAuth2 endpoints from discovery document
+        info!("Fetching OAuth2 endpoints from discovery endpoint");
+        let oauth_endpoints = crate::config::get_oauth2_endpoints(
+            &self.network_config.network_name,
+            &self.network_config.oauth_api_url,
+        )
+        .await
+        .context("Failed to fetch OAuth2 endpoints")?;
+
+        info!(
+            "Using authorization endpoint: {}",
+            oauth_endpoints.authorization_endpoint
+        );
+        info!(
+            "Using token endpoint: {}",
+            oauth_endpoints.token_endpoint
+        );
+
         // Step 1: Generate PKCE challenge
         debug!("Generating PKCE challenge");
         let pkce = PKCEChallenge::generate()
             .context("Failed to generate PKCE challenge")?;
 
-        // Step 2: Build redirect URI
-        let redirect_uri = format!("http://localhost:{}", self.network_config.callback_port);
+        // Step 2: Build redirect URI (using 127.0.0.1 instead of localhost for consistency)
+        let redirect_uri = format!(
+            "http://127.0.0.1:{}/callback",
+            self.network_config.callback_port
+        );
         debug!("Redirect URI: {}", redirect_uri);
 
         // Step 3: Build authorization URL
-        let auth_url = self.build_authorization_url(&pkce, &redirect_uri);
+        let auth_url = self.build_authorization_url(
+            &pkce,
+            &redirect_uri,
+            &oauth_endpoints.authorization_endpoint,
+        );
         info!("Authorization URL: {}", auth_url);
 
         // Step 4: Start callback server
@@ -198,11 +223,12 @@ impl OAuthClient {
         debug!("Exchanging authorization code for tokens");
         let token_response = self
             .api_client
-            .exchange_code(
+            .exchange_code_with_endpoint(
                 &code,
                 &pkce.verifier,
                 &redirect_uri,
                 &self.network_config.oauth_client_id,
+                &oauth_endpoints.token_endpoint,
             )
             .await
             .context("Failed to exchange authorization code for tokens")?;
@@ -444,19 +470,25 @@ impl OAuthClient {
     /// # Arguments
     /// * `pkce` - PKCE challenge containing verifier, challenge, and state
     /// * `redirect_uri` - Callback URL for receiving the authorization code
+    /// * `authorization_endpoint` - OAuth2 authorization endpoint URL
     ///
     /// # Returns
     /// Fully constructed authorization URL
-    fn build_authorization_url(&self, pkce: &PKCEChallenge, redirect_uri: &str) -> String {
+    fn build_authorization_url(
+        &self,
+        pkce: &PKCEChallenge,
+        redirect_uri: &str,
+        authorization_endpoint: &str,
+    ) -> String {
         format!(
-            "{}/oauth2/authorize?\
+            "{}?\
              response_type=code&\
              client_id={}&\
              redirect_uri={}&\
              code_challenge={}&\
              code_challenge_method=S256&\
              state={}",
-            self.network_config.oauth_api_url,
+            authorization_endpoint,
             urlencoding::encode(&self.network_config.oauth_client_id),
             urlencoding::encode(redirect_uri),
             pkce.challenge,
@@ -486,6 +518,7 @@ mod tests {
 
     fn create_test_config() -> NetworkConfig {
         NetworkConfig {
+            network_name: "testnet".to_string(),
             oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
             rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
             chain_id: "xion-testnet-2".to_string(),
@@ -509,14 +542,15 @@ mod tests {
         let client = OAuthClient::new(config).unwrap();
 
         let pkce = PKCEChallenge::generate().unwrap();
-        let redirect_uri = "http://localhost:54321";
-        let auth_url = client.build_authorization_url(&pkce, redirect_uri);
+        let redirect_uri = "http://127.0.0.1:54321/callback";
+        let auth_endpoint = "https://oauth2.testnet.burnt.com/oauth/authorize";
+        let auth_url = client.build_authorization_url(&pkce, redirect_uri, auth_endpoint);
 
         // Verify URL structure
-        assert!(auth_url.starts_with("https://oauth2.testnet.burnt.com/oauth2/authorize"));
+        assert!(auth_url.starts_with("https://oauth2.testnet.burnt.com/oauth/authorize"));
         assert!(auth_url.contains("response_type=code"));
         assert!(auth_url.contains("client_id=test-client-id"));
-        assert!(auth_url.contains("redirect_uri=http%3A%2F%2Flocalhost%3A54321"));
+        assert!(auth_url.contains("redirect_uri=http%3A%2F%2F127.0.0.1%3A54321%2Fcallback"));
         assert!(auth_url.contains(&format!("code_challenge={}", pkce.challenge)));
         assert!(auth_url.contains("code_challenge_method=S256"));
         assert!(auth_url.contains(&format!("state={}", pkce.state)));
@@ -529,7 +563,8 @@ mod tests {
 
         let pkce = PKCEChallenge::generate().unwrap();
         let redirect_uri = "http://localhost:54321/callback";
-        let auth_url = client.build_authorization_url(&pkce, redirect_uri);
+        let auth_endpoint = "https://oauth2.testnet.burnt.com/oauth/authorize";
+        let auth_url = client.build_authorization_url(&pkce, redirect_uri, auth_endpoint);
 
         // Verify URL encoding
         assert!(auth_url.contains("redirect_uri=http%3A%2F%2Flocalhost%3A54321%2Fcallback"));

@@ -22,6 +22,9 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
 
+    // Set environment variable for network override (used by commands)
+    std::env::set_var("XION_NETWORK_OVERRIDE", &cli.network);
+
     match cli.command {
         Commands::Auth(auth_cmd) => cli::handle_auth_command(auth_cmd).await?,
         Commands::Treasury(treasury_cmd) => cli::handle_treasury_command(treasury_cmd).await?,

@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use directories::ProjectDirs;
+use std::env;
 use std::fs;
 use std::path::PathBuf;
 
@@ -13,10 +13,12 @@ pub struct ConfigManager {
 
 impl ConfigManager {
     pub fn new() -> Result<Self> {
-        let project_dirs = ProjectDirs::from("com", "burnt", "xion-toolkit")
-            .context("Failed to determine config directory")?;
+        // Use unified ~/.xion-toolkit/ directory for all platforms
+        let home_dir = env::var("HOME")
+            .or_else(|_| env::var("USERPROFILE"))
+            .context("Failed to determine home directory")?;
 
-        let config_dir = project_dirs.config_dir().to_path_buf();
+        let config_dir = PathBuf::from(home_dir).join(".xion-toolkit");
 
         // Ensure config directory exists
         fs::create_dir_all(&config_dir).context("Failed to create config directory")?;
@@ -61,7 +63,14 @@ impl ConfigManager {
     }
 
     pub fn get_current_network(&self) -> &str {
-        &self.config.network
+        // Check for CLI override via environment variable
+        if let Ok(network_override) = std::env::var("XION_NETWORK_OVERRIDE") {
+            // Return the override value (leak to get 'static lifetime)
+            // This is safe because the environment variable lives for the process lifetime
+            Box::leak(network_override.into_boxed_str())
+        } else {
+            &self.config.network
+        }
     }
 
     pub fn set_network(&mut self, network: &str) -> Result<()> {
@@ -78,19 +87,20 @@ impl ConfigManager {
     pub fn get_status(&self) -> Result<serde_json::Value> {
         use super::constants::{get_local_config, get_mainnet_config, get_testnet_config};
 
-        let network_config = match self.config.network.as_str() {
+        let current_network = self.get_current_network();
+        let network_config = match current_network {
             "local" => get_local_config(),
             "testnet" => get_testnet_config(),
             "mainnet" => get_mainnet_config(),
-            _ => anyhow::bail!("Unknown network: {}", self.config.network),
+            _ => anyhow::bail!("Unknown network: {}", current_network),
         };
 
         // Check if user has credentials for this network
-        let credentials_manager = CredentialsManager::new(&self.config.network)?;
+        let credentials_manager = CredentialsManager::new(current_network)?;
         let has_credentials = credentials_manager.has_credentials()?;
 
         Ok(serde_json::json!({
-            "network": self.config.network,
+            "network": current_network,
             "chain_id": network_config.chain_id,
             "oauth_api_url": network_config.oauth_api_url,
             "authenticated": has_credentials,
@@ -101,11 +111,12 @@ impl ConfigManager {
     pub fn get_network_config(&self) -> Result<super::constants::NetworkConfig> {
         use super::constants::{get_local_config, get_mainnet_config, get_testnet_config};
 
-        match self.config.network.as_str() {
+        let current_network = self.get_current_network();
+        match current_network {
             "local" => Ok(get_local_config()),
             "testnet" => Ok(get_testnet_config()),
             "mainnet" => Ok(get_mainnet_config()),
-            _ => anyhow::bail!("Unknown network: {}", self.config.network),
+            _ => anyhow::bail!("Unknown network: {}", current_network),
         }
     }
 

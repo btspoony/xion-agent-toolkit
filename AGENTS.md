@@ -197,53 +197,53 @@ main
 ## Configuration Management
 
 ### Configuration File Location
+
+All configuration files are stored in a unified location for easy access across all platforms:
+
 ```
 ~/.xion-toolkit/
-├── config.json              # Main configuration
-├── credentials.json         # Encrypted credentials (via keyring)
-└── cache/
-    └── token.json           # Token cache
+├── config.json              # Main configuration (network preference)
+└── credentials/             # Per-network credential metadata
+    ├── local.json           # Local network credentials metadata
+    ├── testnet.json         # Testnet credentials metadata
+    └── mainnet.json         # Mainnet credentials metadata
 ```
 
+**Note**: Sensitive tokens (access_token, refresh_token) are stored securely in the OS keyring, not in plain text files. The `credentials/*.json` files only contain non-sensitive metadata (expiration time, address).
+
+**Platform Support**: The toolkit uses the unified `~/.xion-toolkit/` directory on all platforms (macOS, Linux, Windows) for consistency and ease of access.
+
 ### Configuration Schema
+
+#### User Config (`~/.xion-toolkit/config.json`)
 
 ```json
 {
   "version": "1.0",
-  "network": "testnet",
-  "oauth": {
-    "client_id": "your-client-id",
-    "access_token": "encrypted-token",
-    "refresh_token": "encrypted-refresh-token",
-    "expires_at": "2024-01-01T00:00:00Z"
-  },
-  "treasury": {
-    "default_address": "xion1..."
-  },
-  "networks": {
-    "local": {
-      "oauth_api_url": "http://localhost:8787",
-      "rpc_url": "http://localhost:26657",
-      "chain_id": "xion-local",
-      "treasury_code_id": null
-    },
-    "testnet": {
-      "oauth_api_url": "https://oauth2.testnet.burnt.com",
-      "rpc_url": "https://rpc.xion-testnet-2.burnt.com:443",
-      "chain_id": "xion-testnet-2",
-      "treasury_code_id": 1260,
-      "treasury_config": "xion175qd54keur7gkuwtctfupgtucvlvkrxhv0pgq753sfh5xueputvsms6nll"
-    },
-    "mainnet": {
-      "oauth_api_url": "https://oauth2.burnt.com",
-      "rpc_url": "https://rpc.xion-mainnet-1.burnt.com:443",
-      "chain_id": "xion-mainnet-1",
-      "treasury_code_id": 63,
-      "treasury_config": "xion1dlsvvgey26ernlj0sq2afjluh3qd4ap0k9eerekfkw5algqrwqkshmn3uq"
-    }
-  }
+  "network": "testnet"
 }
 ```
+
+#### Network Configuration (Compiled into Binary)
+
+Network configurations are embedded at compile time via environment variables:
+
+| Network | OAuth API | RPC | Chain ID | Treasury Code ID |
+|---------|-----------|-----|----------|------------------|
+| local | http://localhost:8787 | http://localhost:26657 | xion-local | - |
+| testnet | https://oauth2.testnet.burnt.com | https://rpc.xion-testnet-2.burnt.com:443 | xion-testnet-2 | 1260 |
+| mainnet | https://oauth2.burnt.com | https://rpc.xion-mainnet-1.burnt.com:443 | xion-mainnet-1 | 63 |
+
+#### Credentials Metadata (`~/.xion-toolkit/credentials/{network}.json`)
+
+```json
+{
+  "expires_at": "2024-01-01T00:00:00Z",
+  "xion_address": "xion1..."
+}
+```
+
+**Note**: Access tokens and refresh tokens are stored securely in the OS keyring, not in files.
 
 ## Network Configuration
 

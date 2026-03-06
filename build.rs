@@ -28,6 +28,7 @@ use serde::{{Deserialize, Serialize}};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {{
+    pub network_name: String,
     pub oauth_api_url: String,
     pub rpc_url: String,
     pub chain_id: String,
@@ -39,6 +40,7 @@ pub struct NetworkConfig {{
 
 pub fn get_local_config() -> NetworkConfig {{
     NetworkConfig {{
+        network_name: "local".to_string(),
         oauth_api_url: "http://localhost:8787".to_string(),
         rpc_url: "http://localhost:26657".to_string(),
         chain_id: "xion-local".to_string(),
@@ -51,6 +53,7 @@ pub fn get_local_config() -> NetworkConfig {{
 
 pub fn get_testnet_config() -> NetworkConfig {{
     NetworkConfig {{
+        network_name: "testnet".to_string(),
         oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
         rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
         chain_id: "xion-testnet-2".to_string(),
@@ -63,6 +66,7 @@ pub fn get_testnet_config() -> NetworkConfig {{
 
 pub fn get_mainnet_config() -> NetworkConfig {{
     NetworkConfig {{
+        network_name: "mainnet".to_string(),
         oauth_api_url: "https://oauth2.burnt.com".to_string(),
         rpc_url: "https://rpc.xion-mainnet-1.burnt.com:443".to_string(),
         chain_id: "xion-mainnet-1".to_string(),

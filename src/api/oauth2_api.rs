@@ -202,6 +202,42 @@ impl OAuth2ApiClient {
             .context("Failed to exchange authorization code for token")
     }
 
+    /// Exchange authorization code for tokens (with custom endpoint)
+    ///
+    /// Similar to `exchange_code`, but allows specifying a custom token endpoint.
+    /// This is useful when endpoints are dynamically discovered via OAuth2 discovery.
+    ///
+    /// # Arguments
+    /// * `code` - Authorization code from the OAuth callback
+    /// * `code_verifier` - PKCE code verifier that matches the challenge
+    /// * `redirect_uri` - The same redirect URI used in the authorization request
+    /// * `client_id` - OAuth2 client ID
+    /// * `token_endpoint` - Custom token endpoint URL
+    #[instrument(skip(self, code, code_verifier))]
+    pub async fn exchange_code_with_endpoint(
+        &self,
+        code: &str,
+        code_verifier: &str,
+        redirect_uri: &str,
+        client_id: &str,
+        token_endpoint: &str,
+    ) -> Result<TokenResponse> {
+        debug!("Exchanging authorization code for token using custom endpoint: {}", token_endpoint);
+
+        let request = TokenRequest {
+            grant_type: "authorization_code".to_string(),
+            code: Some(code.to_string()),
+            code_verifier: Some(code_verifier.to_string()),
+            redirect_uri: Some(redirect_uri.to_string()),
+            refresh_token: None,
+            client_id: client_id.to_string(),
+        };
+
+        self.request_token_with_endpoint(&request, token_endpoint)
+            .await
+            .context("Failed to exchange authorization code for token")
+    }
+
     /// Refresh access token using refresh token
     ///
     /// When an access token expires, use the refresh token to obtain a new access token
@@ -320,15 +356,72 @@ impl OAuth2ApiClient {
 
     /// Internal method to request tokens from the OAuth2 service
     ///
-    /// Makes a POST request to the /oauth2/token endpoint
+    /// Makes a POST request to the /oauth/token endpoint
     async fn request_token(&self, request: &TokenRequest) -> Result<TokenResponse> {
-        let url = format!("{}/oauth2/token", self.base_url);
+        let url = format!("{}/oauth/token", self.base_url);
 
         debug!("Making token request to: {}", url);
 
         let response = self
             .http_client
             .post(&url)
+            .form(request)
+            .send()
+            .await
+            .context("Failed to send token request")?;
+
+        let status = response.status();
+        debug!("Token response status: {}", status);
+
+        if !status.is_success() {
+            // Try to parse error response
+            if let Ok(error_text) = response.text().await {
+                // Try to parse as OAuth2 error
+                if let Ok(oauth_error) = serde_json::from_str::<OAuth2Error>(&error_text) {
+                    anyhow::bail!(
+                        "OAuth2 error: {} - {}",
+                        oauth_error.error,
+                        oauth_error.error_description.unwrap_or_else(|| "No description".to_string())
+                    );
+                } else {
+                    anyhow::bail!("Token request failed: HTTP {} - {}", status, error_text);
+                }
+            } else {
+                anyhow::bail!("Token request failed: HTTP {}", status);
+            }
+        }
+
+        let mut token_response = response
+            .json::<TokenResponse>()
+            .await
+            .context("Failed to parse token response")?;
+
+        // Calculate and set expires_at if not provided
+        if token_response.expires_at.is_none() {
+            token_response.expires_at = Some(token_response.calculate_expires_at());
+        }
+
+        debug!(
+            "Successfully obtained token for address: {:?}",
+            token_response.xion_address
+        );
+
+        Ok(token_response)
+    }
+
+    /// Internal method to request tokens from a custom endpoint
+    ///
+    /// Similar to `request_token`, but uses a custom token endpoint URL.
+    async fn request_token_with_endpoint(
+        &self,
+        request: &TokenRequest,
+        token_endpoint: &str,
+    ) -> Result<TokenResponse> {
+        debug!("Making token request to custom endpoint: {}", token_endpoint);
+
+        let response = self
+            .http_client
+            .post(token_endpoint)
             .form(request)
             .send()
             .await
