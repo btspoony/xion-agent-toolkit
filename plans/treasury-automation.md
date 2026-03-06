@@ -237,6 +237,47 @@ xion treasury query <treasury-address>
   - [x] logout - Clear credentials
   - [x] refresh - Refresh access token
 
+### Phase 2.5: OAuth2 Improvements (Day 15) ✅ **COMPLETED**
+- [x] OAuth2 Discovery
+  - [x] Fetch endpoints from `.well-known/oauth-authorization-server`
+  - [x] Cache endpoints per network (24-hour TTL)
+  - [x] Use dynamic authorization_endpoint and token_endpoint
+- [x] Configuration fixes
+  - [x] Add `network_name` field to NetworkConfig
+  - [x] Use network_name (not chain_id) for credentials and endpoint caching
+  - [x] Update credentials file naming: `testnet.json` instead of `xion-testnet-2.json`
+- [x] Redirect URI fix
+  - [x] Changed from `http://localhost:54321` to `http://127.0.0.1:54321/callback`
+  - [x] Match Treasury OAuth client configuration
+- [x] Integration testing
+  - [x] Testnet OAuth2 login flow tested successfully
+  - [x] Token refresh works correctly
+  - [x] Credentials saved in OS keyring
+  - [x] OAuth2 endpoints cached correctly
+- [x] Fixed: `xion_address` field returning null
+  - [x] Call `/api/v1/me` endpoint after token exchange
+  - [x] Extract MetaAccount address from user info response
+  - [x] Updated UserInfo struct to match API response format
+  - [x] All tests passing (65 tests)
+- [x] OAuth2 Discovery (RFC 8414)
+  - [x] Dynamic endpoint discovery from `.well-known/oauth-authorization-server`
+  - [x] Endpoint caching (24-hour TTL)
+  - [x] Network-specific cache keys
+- [x] Network configuration fixes
+  - [x] Added `network_name` field to NetworkConfig
+  - [x] Credentials stored by network name (not chain ID)
+  - [x] Correct redirect URI (`http://127.0.0.1:54321/callback`)
+  - [x] Correct endpoint paths (`/oauth/authorize`, `/oauth/token`)
+- [x] Integration testing
+  - [x] Testnet OAuth2 login flow tested successfully
+  - [x] Token refresh working
+  - [x] All 65 unit tests passing
+- [x] Configuration improvements
+  - [x] Unified config path (`~/.xion-toolkit/`) across all platforms
+  - [x] Removed `directories` dependency
+  - [x] Default network set to testnet
+  - [x] Local network requires explicit `--network local` flag
+
 ### Phase 3: Treasury API (Days 15-21) ✅ **PARTIALLY COMPLETED**
 - [x] API clients
   - [x] Treasury API client (OAuth2 API Service)
@@ -314,6 +355,7 @@ xion treasury query <treasury-address>
 - [ ] Works on Windows
 - [ ] Keyring integration works on all platforms
 
+---
 ## Sign-off
 
 | Date | Completed Tasks | Status |
@@ -344,6 +386,15 @@ xion treasury query <treasury-address>
 | 2026-03-05 | Phase 3: All tests passing (63 tests) | ✅ |
 | 2026-03-06 | Phase 4: xion-oauth2 skill (SKILL.md + 4 scripts) | ✅ |
 | 2026-03-06 | Phase 4: xion-treasury skill (SKILL.md + 8 scripts) | ✅ |
+| 2026-03-06 | OAuth2 Discovery: Dynamic endpoint fetching | ✅ |
+| 2026-03-06 | OAuth2 Discovery: Endpoint caching (24h TTL) | ✅ |
+| 2026-03-06 | Configuration: Unified path (~/.xion-toolkit/) | ✅ |
+| 2026-03-06 | Configuration: Network name-based credential storage | ✅ |
+| 2026-03-06 | OAuth2 Integration: Testnet login successful | ✅ |
+| 2026-03-06 | OAuth2 Integration: Token refresh working | ✅ |
+| 2026-03-06 | All tests passing (65 tests) | ✅ |
+| 2026-03-06 | Fixed: xion_address field returning null | ✅ |
+| 2026-03-06 | OAuth2: Call /api/v1/me to get MetaAccount address | ✅ |
 
 ---
 *Created: 2025-03-05*
