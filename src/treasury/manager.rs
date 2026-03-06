@@ -612,6 +612,199 @@ impl TreasuryManager {
             tx_hash: broadcast_response.tx_hash,
         })
     }
+
+    // ========================================================================
+    // Grant Config Operations
+    // ========================================================================
+
+    /// Add a grant configuration to a treasury
+    ///
+    /// Adds or updates a grant configuration for the specified message type.
+    ///
+    /// # Arguments
+    /// * `address` - Treasury contract address
+    /// * `grant_config` - Grant configuration input
+    ///
+    /// # Returns
+    /// Grant config result with transaction hash
+    #[instrument(skip(self))]
+    pub async fn add_grant_config(
+        &self,
+        address: &str,
+        grant_config: super::types::GrantConfigInput,
+    ) -> Result<super::types::GrantConfigResult> {
+        debug!("Adding grant config to treasury {}", address);
+
+        // Get user credentials to obtain xion_address
+        let credentials = self
+            .oauth_client
+            .get_credentials()?
+            .ok_or_else(|| anyhow::anyhow!("Not authenticated. Please login first."))?;
+
+        let from_address = credentials
+            .xion_address
+            .ok_or_else(|| anyhow::anyhow!("User address not found in credentials. Please login again."))?;
+
+        // Get valid access token
+        let access_token = self.oauth_client.get_valid_token().await?;
+
+        // Clone type_url before moving grant_config
+        let type_url = grant_config.type_url.clone();
+
+        // Call API client to add grant config
+        self.api_client
+            .add_grant_config(&access_token, address, &type_url, grant_config, &from_address)
+            .await
+    }
+
+    /// Remove a grant configuration from a treasury
+    ///
+    /// # Arguments
+    /// * `address` - Treasury contract address
+    /// * `type_url` - Type URL of the grant to remove
+    ///
+    /// # Returns
+    /// Grant config result with transaction hash
+    #[instrument(skip(self))]
+    pub async fn remove_grant_config(
+        &self,
+        address: &str,
+        type_url: &str,
+    ) -> Result<super::types::GrantConfigResult> {
+        debug!("Removing grant config {} from treasury {}", type_url, address);
+
+        // Get user credentials to obtain xion_address
+        let credentials = self
+            .oauth_client
+            .get_credentials()?
+            .ok_or_else(|| anyhow::anyhow!("Not authenticated. Please login first."))?;
+
+        let from_address = credentials
+            .xion_address
+            .ok_or_else(|| anyhow::anyhow!("User address not found in credentials. Please login again."))?;
+
+        // Get valid access token
+        let access_token = self.oauth_client.get_valid_token().await?;
+
+        // Call API client to remove grant config
+        self.api_client
+            .remove_grant_config(&access_token, address, type_url, &from_address)
+            .await
+    }
+
+    /// List all grant configurations for a treasury
+    ///
+    /// # Arguments
+    /// * `address` - Treasury contract address
+    ///
+    /// # Returns
+    /// List of grant configurations
+    #[instrument(skip(self))]
+    pub async fn list_grant_configs(
+        &self,
+        address: &str,
+    ) -> Result<Vec<super::types::GrantConfigInfo>> {
+        debug!("Listing grant configs for treasury {}", address);
+
+        // Get valid access token
+        let access_token = self.oauth_client.get_valid_token().await?;
+
+        // Call API client to list grant configs
+        self.api_client.list_grant_configs(&access_token, address).await
+    }
+
+    // ========================================================================
+    // Fee Config Operations
+    // ========================================================================
+
+    /// Set fee configuration for a treasury
+    ///
+    /// # Arguments
+    /// * `address` - Treasury contract address
+    /// * `fee_config` - Fee configuration input
+    ///
+    /// # Returns
+    /// Fee config result with transaction hash
+    #[instrument(skip(self))]
+    pub async fn set_fee_config(
+        &self,
+        address: &str,
+        fee_config: super::types::FeeConfigInput,
+    ) -> Result<super::types::FeeConfigResult> {
+        debug!("Setting fee config for treasury {}", address);
+
+        // Get user credentials to obtain xion_address
+        let credentials = self
+            .oauth_client
+            .get_credentials()?
+            .ok_or_else(|| anyhow::anyhow!("Not authenticated. Please login first."))?;
+
+        let from_address = credentials
+            .xion_address
+            .ok_or_else(|| anyhow::anyhow!("User address not found in credentials. Please login again."))?;
+
+        // Get valid access token
+        let access_token = self.oauth_client.get_valid_token().await?;
+
+        // Call API client to set fee config
+        self.api_client
+            .set_fee_config(&access_token, address, fee_config, &from_address)
+            .await
+    }
+
+    /// Remove fee configuration from a treasury
+    ///
+    /// # Arguments
+    /// * `address` - Treasury contract address
+    ///
+    /// # Returns
+    /// Fee config result with transaction hash
+    #[instrument(skip(self))]
+    pub async fn remove_fee_config(
+        &self,
+        address: &str,
+    ) -> Result<super::types::FeeConfigResult> {
+        debug!("Removing fee config from treasury {}", address);
+
+        // Get user credentials to obtain xion_address
+        let credentials = self
+            .oauth_client
+            .get_credentials()?
+            .ok_or_else(|| anyhow::anyhow!("Not authenticated. Please login first."))?;
+
+        let from_address = credentials
+            .xion_address
+            .ok_or_else(|| anyhow::anyhow!("User address not found in credentials. Please login again."))?;
+
+        // Get valid access token
+        let access_token = self.oauth_client.get_valid_token().await?;
+
+        // Call API client to remove fee config
+        self.api_client
+            .remove_fee_config(&access_token, address, &from_address)
+            .await
+    }
+
+    /// Query fee configuration for a treasury
+    ///
+    /// # Arguments
+    /// * `address` - Treasury contract address
+    ///
+    /// # Returns
+    /// Fee config info if set, None otherwise
+    #[instrument(skip(self))]
+    pub async fn query_fee_config(
+        &self,
+        address: &str,
+    ) -> Result<Option<super::types::FeeConfigInfo>> {
+        debug!("Querying fee config for treasury {}", address);
+
+        // Get valid access token
+        let access_token = self.oauth_client.get_valid_token().await?;
+
+        // Call API client to query fee config
+        self.api_client.query_fee_config(&access_token, address).await
+    }
 }
 
 // ============================================================================

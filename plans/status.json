@@ -3,6 +3,20 @@
   "updated_at": "2026-03-06",
   "plans": [
     {
+      "id": "treasury-grant-fee-config",
+      "title": "Treasury Grant Config & Fee Config Implementation",
+      "file": "plans/treasury-grant-fee-config.md",
+      "status": "InProgress",
+      "progress": 5,
+      "owner": "@project-manager",
+      "agents": ["@fullstack-dev", "@qa-engineer"],
+      "tags": ["treasury", "grant-config", "fee-config", "cli"],
+      "created_at": "2026-03-06",
+      "updated_at": "2026-03-06",
+      "done_at": null,
+      "notes": "Plan created. Ready for implementation."
+    },
+    {
       "id": "treasury-create-enhancement",
       "title": "Treasury Create Command Enhancement",
       "file": "plans/treasury-create-enhancement.md",

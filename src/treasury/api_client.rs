@@ -744,6 +744,295 @@ fn base64_encode(value: &serde_json::Value) -> Result<String> {
     ))
 }
 
+// ============================================================================
+// Grant Config Operations
+// ============================================================================
+
+impl TreasuryApiClient {
+    /// Add a grant configuration to a treasury
+    ///
+    /// # Arguments
+    /// * `access_token` - Valid OAuth2 access token
+    /// * `treasury_address` - Treasury contract address
+    /// * `type_url` - Type URL of the message (e.g., "/cosmwasm.wasm.v1.MsgExecuteContract")
+    /// * `grant_config` - Grant configuration input
+    /// * `from_address` - Sender's MetaAccount address (must be admin)
+    ///
+    /// # Returns
+    /// Grant config result with transaction hash
+    #[instrument(skip(self, access_token, grant_config))]
+    pub async fn add_grant_config(
+        &self,
+        access_token: &str,
+        treasury_address: &str,
+        type_url: &str,
+        grant_config: super::types::GrantConfigInput,
+        from_address: &str,
+    ) -> Result<super::types::GrantConfigResult> {
+        debug!("Adding grant config for type_url: {} to treasury: {}", type_url, treasury_address);
+
+        // Encode the authorization
+        let (auth_type_url, auth_value) = super::encoding::encode_authorization_input(&grant_config.authorization)?;
+
+        // Build the grant config for chain
+        let grant_config_chain = super::types::GrantConfigChain {
+            description: grant_config.description.clone(),
+            authorization: super::types::ProtobufAny {
+                type_url: auth_type_url,
+                value: auth_value,
+            },
+            optional: grant_config.optional,
+        };
+
+        // Create the add_grant_config message
+        let add_msg = super::types::AddGrantConfigMsg {
+            type_url: type_url.to_string(),
+            grant_config: grant_config_chain,
+        };
+
+        // Encode the message as base64
+        let msg_base64 = base64_encode(&serde_json::to_value(&add_msg)?)?;
+
+        let request = BroadcastRequest {
+            messages: vec![super::types::TransactionMessage {
+                type_url: "/cosmwasm.wasm.v1.MsgExecuteContract".to_string(),
+                value: serde_json::json!({
+                    "sender": from_address,
+                    "contract": treasury_address,
+                    "msg": msg_base64,
+                    "funds": []
+                }),
+            }],
+            memo: Some(format!("Add grant config for {}", type_url)),
+        };
+
+        let response = self.broadcast_transaction(access_token, request).await?;
+
+        Ok(super::types::GrantConfigResult {
+            treasury_address: treasury_address.to_string(),
+            type_url: type_url.to_string(),
+            operation: "add".to_string(),
+            tx_hash: response.tx_hash,
+        })
+    }
+
+    /// Remove a grant configuration from a treasury
+    #[instrument(skip(self, access_token))]
+    pub async fn remove_grant_config(
+        &self,
+        access_token: &str,
+        treasury_address: &str,
+        type_url: &str,
+        from_address: &str,
+    ) -> Result<super::types::GrantConfigResult> {
+        debug!("Removing grant config for type_url: {} from treasury: {}", type_url, treasury_address);
+
+        // Create the remove_grant_config message
+        let remove_msg = super::types::RemoveGrantConfigMsg {
+            type_url: type_url.to_string(),
+        };
+
+        // Encode the message as base64
+        let msg_base64 = base64_encode(&serde_json::to_value(&remove_msg)?)?;
+
+        let request = BroadcastRequest {
+            messages: vec![super::types::TransactionMessage {
+                type_url: "/cosmwasm.wasm.v1.MsgExecuteContract".to_string(),
+                value: serde_json::json!({
+                    "sender": from_address,
+                    "contract": treasury_address,
+                    "msg": msg_base64,
+                    "funds": []
+                }),
+            }],
+            memo: Some(format!("Remove grant config {}", type_url)),
+        };
+        let response = self.broadcast_transaction(access_token, request).await?;
+
+        Ok(super::types::GrantConfigResult {
+            treasury_address: treasury_address.to_string(),
+            type_url: type_url.to_string(),
+            operation: "remove".to_string(),
+            tx_hash: response.tx_hash,
+        })
+    }
+
+    /// List grant configurations for a treasury
+    #[instrument(skip(self, access_token))]
+    pub async fn list_grant_configs(
+        &self,
+        access_token: &str,
+        treasury_address: &str,
+    ) -> Result<Vec<super::types::GrantConfigInfo>> {
+        debug!("Listing grant configs for treasury: {}", treasury_address);
+
+        // Query the treasury info which includes grant configs
+        let options = QueryOptions {
+            grants: true,
+            fee: false,
+            admin: false,
+        };
+        let treasury = self.query_treasury(access_token, treasury_address, options).await?;
+
+        // Extract grant configs
+        let grant_configs = treasury.grant_configs.unwrap_or_default();
+        let configs: Vec<super::types::GrantConfigInfo> = grant_configs
+            .into_iter()
+            .map(|gc| {
+                super::types::GrantConfigInfo {
+                    type_url: gc.type_url,
+                    description: gc.grant_config
+                        .get("description")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    authorization_type_url: gc.grant_config
+                        .get("authorization")
+                        .and_then(|a| a.get("type_url"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    optional: gc.grant_config
+                        .get("optional")
+                        .and_then(|v| v.as_bool())
+                        .unwrap_or(false),
+                }
+            })
+            .collect();
+
+        Ok(configs)
+    }
+
+    /// Set fee configuration for a treasury
+    #[instrument(skip(self, access_token, fee_config))]
+    pub async fn set_fee_config(
+        &self,
+        access_token: &str,
+        treasury_address: &str,
+        fee_config: super::types::FeeConfigInput,
+        from_address: &str,
+    ) -> Result<super::types::FeeConfigResult> {
+        debug!("Setting fee config for treasury: {}", treasury_address);
+
+        // Encode the fee allowance
+        let (allowance_type_url, allowance_value) = super::encoding::encode_fee_config_input(&fee_config)?;
+
+        // Build the fee config for chain
+        let fee_config_chain = super::types::FeeConfigChain {
+            description: match &fee_config {
+                super::types::FeeConfigInput::Basic { description, .. } => description.clone(),
+                super::types::FeeConfigInput::Periodic { description, .. } => description.clone(),
+                super::types::FeeConfigInput::AllowedMsg { description, .. } => description.clone(),
+            },
+            allowance: super::types::ProtobufAny {
+                type_url: allowance_type_url,
+                value: allowance_value,
+            },
+        };
+
+        // Create the set_fee_config message
+        let set_msg = super::types::SetFeeConfigMsg {
+            fee_config: fee_config_chain,
+        };
+
+        // Encode the message as base64
+        let msg_base64 = base64_encode(&serde_json::to_value(&set_msg)?)?;
+
+        let request = BroadcastRequest {
+            messages: vec![super::types::TransactionMessage {
+                type_url: "/cosmwasm.wasm.v1.MsgExecuteContract".to_string(),
+                value: serde_json::json!({
+                    "sender": from_address,
+                    "contract": treasury_address,
+                    "msg": msg_base64,
+                    "funds": []
+                }),
+            }],
+            memo: Some("Set fee config".to_string()),
+        };
+        let response = self.broadcast_transaction(access_token, request).await?;
+
+        Ok(super::types::FeeConfigResult {
+            treasury_address: treasury_address.to_string(),
+            operation: "set".to_string(),
+            tx_hash: response.tx_hash,
+        })
+    }
+
+    /// Remove fee configuration from a treasury
+    #[instrument(skip(self, access_token))]
+    pub async fn remove_fee_config(
+        &self,
+        access_token: &str,
+        treasury_address: &str,
+        from_address: &str,
+    ) -> Result<super::types::FeeConfigResult> {
+        debug!("Removing fee config from treasury: {}", treasury_address);
+
+        // Create the remove_fee_config message
+        let remove_msg = super::types::RemoveFeeConfigMsg {};
+
+        // Encode the message as base64
+        let msg_base64 = base64_encode(&serde_json::to_value(&remove_msg)?)?;
+
+        let request = BroadcastRequest {
+            messages: vec![super::types::TransactionMessage {
+                type_url: "/cosmwasm.wasm.v1.MsgExecuteContract".to_string(),
+                value: serde_json::json!({
+                    "sender": from_address,
+                    "contract": treasury_address,
+                    "msg": msg_base64,
+                    "funds": []
+                }),
+            }],
+            memo: Some("Remove fee config".to_string()),
+        };
+        let response = self.broadcast_transaction(access_token, request).await?;
+
+        Ok(super::types::FeeConfigResult {
+            treasury_address: treasury_address.to_string(),
+            operation: "remove".to_string(),
+            tx_hash: response.tx_hash,
+        })
+    }
+
+    /// Query fee configuration for a treasury
+    #[instrument(skip(self, access_token))]
+    pub async fn query_fee_config(
+        &self,
+        access_token: &str,
+        treasury_address: &str,
+    ) -> Result<Option<super::types::FeeConfigInfo>> {
+        debug!("Querying fee config for treasury: {}", treasury_address);
+        // Query the treasury info which includes fee config
+        let options = QueryOptions {
+            grants: false,
+            fee: true,
+            admin: false,
+        };
+        let treasury = self.query_treasury(access_token, treasury_address, options).await?;
+
+        // Extract fee config
+        if let Some(fee_config) = treasury.fee_config {
+            let description = fee_config.additional
+                .as_ref()
+                .and_then(|a| a.get("description"))
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string())
+                .unwrap_or_default();
+            
+            Ok(Some(super::types::FeeConfigInfo {
+                allowance_type_url: fee_config.config_type,
+                description,
+                spend_limit: fee_config.spend_limit,
+                expiration: fee_config.expires_at,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

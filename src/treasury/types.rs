@@ -446,6 +446,131 @@ fn default_filter_type() -> String {
     "allow_all".to_string()
 }
 
+// ============================================================================
+// GRANT CONFIG OPERATION TYPES
+// ============================================================================
+
+/// Grant config operation command
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "operation")]
+pub enum GrantConfigOperation {
+    #[serde(rename = "add")]
+    Add {
+        type_url: String,
+        grant_config: GrantConfigInput,
+    },
+    #[serde(rename = "remove")]
+    Remove { type_url: String },
+}
+
+/// Result of grant config operation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GrantConfigResult {
+    /// Treasury address
+    pub treasury_address: String,
+    /// Type URL of the grant
+    pub type_url: String,
+    /// Operation performed
+    pub operation: String,
+    /// Transaction hash
+    pub tx_hash: String,
+}
+
+/// List grant configs result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GrantConfigListResult {
+    /// Treasury address
+    pub treasury_address: String,
+    /// List of grant configs
+    pub grant_configs: Vec<GrantConfigInfo>,
+}
+
+/// Grant config info (from query)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GrantConfigInfo {
+    /// Type URL
+    #[serde(rename = "type_url")]
+    pub type_url: String,
+    /// Description
+    pub description: String,
+    /// Authorization type URL
+    pub authorization_type_url: String,
+    /// Is optional
+    #[serde(default)]
+    pub optional: bool,
+}
+
+// ============================================================================
+// FEE CONFIG OPERATION TYPES
+// ============================================================================
+
+/// Fee config operation command
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "operation")]
+pub enum FeeConfigOperation {
+    #[serde(rename = "set")]
+    Set { fee_config: FeeConfigInput },
+    #[serde(rename = "remove")]
+    Remove {},
+}
+
+/// Result of fee config operation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FeeConfigResult {
+    /// Treasury address
+    pub treasury_address: String,
+    /// Operation performed
+    pub operation: String,
+    /// Transaction hash
+    pub tx_hash: String,
+}
+
+/// Fee config info (from query)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FeeConfigInfo {
+    /// Allowance type URL
+    pub allowance_type_url: String,
+    /// Description
+    pub description: String,
+    /// Spend limit (if any)
+    #[serde(default)]
+    pub spend_limit: Option<String>,
+    /// Expiration (if any)
+    #[serde(default)]
+    pub expiration: Option<String>,
+}
+
+// ============================================================================
+// CONTRACT EXECUTE MESSAGE TYPES
+// ============================================================================
+
+/// Contract execute message for add_grant_config
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct AddGrantConfigMsg {
+    pub type_url: String,
+    pub grant_config: GrantConfigChain,
+}
+
+/// Contract execute message for remove_grant_config
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct RemoveGrantConfigMsg {
+    pub type_url: String,
+}
+
+/// Contract execute message for set_fee_config
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct SetFeeConfigMsg {
+    pub fee_config: FeeConfigChain,
+}
+
+/// Contract execute message for remove_fee_config
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct RemoveFeeConfigMsg {}
+
 #[cfg(test)]
 mod tests {
     use super::*;

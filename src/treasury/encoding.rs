@@ -599,6 +599,165 @@ pub fn encode_contract_execution_authorization(
 }
 
 // ============================================================================
+// AUTHORIZATION INPUT ENCODING (for CLI commands)
+// ============================================================================
+
+/// Encode AuthorizationInput to (type_url, base64_value)
+///
+/// # Arguments
+/// * `auth_input` - Authorization input from CLI
+///
+/// # Returns
+/// Tuple of (type_url, base64_encoded_value)
+pub fn encode_authorization_input(
+    auth_input: &super::types::AuthorizationInput,
+) -> Result<(String, String), EncodingError> {
+    match auth_input {
+        super::types::AuthorizationInput::Generic => {
+            // GenericAuthorization has empty value
+            Ok((
+                "/cosmos.authz.v1beta1.GenericAuthorization".to_string(),
+                "".to_string(),
+            ))
+        }
+        super::types::AuthorizationInput::Send {
+            spend_limit,
+            allow_list,
+        } => {
+            let coins = parse_coin_string(spend_limit)?;
+            let encoded = encode_send_authorization(coins, allow_list.clone())?;
+            Ok((
+                "/cosmos.bank.v1beta1.SendAuthorization".to_string(),
+                encoded,
+            ))
+        }
+        super::types::AuthorizationInput::Stake {
+            max_tokens,
+            validators,
+            deny_validators,
+            authorization_type,
+        } => {
+            let coin = parse_single_denom(max_tokens)?;
+            let encoded = encode_stake_authorization(
+                coin,
+                validators.clone(),
+                deny_validators.clone(),
+                *authorization_type,
+            )?;
+            Ok((
+                "/cosmos.staking.v1beta1.StakeAuthorization".to_string(),
+                encoded,
+            ))
+        }
+        super::types::AuthorizationInput::IbcTransfer { allocations } => {
+            let ibc_allocations: Vec<IbcAllocation> = allocations
+                .iter()
+                .map(|a| {
+                    let coins = parse_coin_string(&a.spend_limit).map_err(|e| {
+                        EncodingError::InvalidInput(format!("Invalid spend_limit: {}", e))
+                    })?;
+                    Ok(IbcAllocation {
+                        source_port: a.source_port.clone(),
+                        source_channel: a.source_channel.clone(),
+                        spend_limit: coins,
+                        allow_list: a.allow_list.clone(),
+                    })
+                })
+                .collect::<Result<Vec<_>, EncodingError>>()?;
+
+            let encoded = encode_ibc_transfer_authorization(ibc_allocations)?;
+            Ok((
+                "/ibc.applications.transfer.v1.TransferAuthorization".to_string(),
+                encoded,
+            ))
+        }
+        super::types::AuthorizationInput::ContractExecution { grants } => {
+            let contract_grants: Vec<ContractGrant> = grants
+                .iter()
+                .map(|g| {
+                    let max_funds = if let Some(ref funds) = g.max_funds {
+                        Some(parse_coin_string(funds)?)
+                    } else {
+                        None
+                    };
+
+                    Ok(ContractGrant {
+                        address: g.address.clone(),
+                        max_calls: g.max_calls,
+                        max_funds,
+                        filter_type: g.filter_type.clone(),
+                        keys: g.keys.clone(),
+                    })
+                })
+                .collect::<Result<Vec<_>, EncodingError>>()?;
+
+            let encoded = encode_contract_execution_authorization(contract_grants)?;
+            Ok((
+                "/cosmwasm.wasm.v1.ContractExecutionAuthorization".to_string(),
+                encoded,
+            ))
+        }
+    }
+}
+
+/// Encode FeeConfigInput to (allowance_type_url, base64_value)
+///
+/// # Arguments
+/// * `fee_config` - Fee config input from CLI
+///
+/// # Returns
+/// Tuple of (allowance_type_url, base64_encoded_value)
+pub fn encode_fee_config_input(
+    fee_config: &super::types::FeeConfigInput,
+) -> Result<(String, String), EncodingError> {
+    match fee_config {
+        super::types::FeeConfigInput::Basic { spend_limit, .. } => {
+            let coins = parse_coin_string(spend_limit)?;
+            let encoded = encode_basic_allowance(coins)?;
+            Ok((
+                "/cosmos.feegrant.v1beta1.BasicAllowance".to_string(),
+                encoded,
+            ))
+        }
+        super::types::FeeConfigInput::Periodic {
+            basic_spend_limit,
+            period_seconds,
+            period_spend_limit,
+            ..
+        } => {
+            let basic_limit = if let Some(ref limit) = basic_spend_limit {
+                Some(parse_coin_string(limit)?)
+            } else {
+                None
+            };
+            let period_limit = parse_coin_string(period_spend_limit)?;
+            let encoded = encode_periodic_allowance(basic_limit, *period_seconds, period_limit)?;
+            Ok((
+                "/cosmos.feegrant.v1beta1.PeriodicAllowance".to_string(),
+                encoded,
+            ))
+        }
+        super::types::FeeConfigInput::AllowedMsg {
+            allowed_messages,
+            nested_allowance,
+            ..
+        } => {
+            // Recursively encode nested allowance
+            let (nested_type_url, nested_value) = encode_fee_config_input(nested_allowance)?;
+            let encoded = encode_allowed_msg_allowance(
+                allowed_messages.clone(),
+                &nested_type_url,
+                &nested_value,
+            )?;
+            Ok((
+                "/cosmos.feegrant.v1beta1.AllowedMsgAllowance".to_string(),
+                encoded,
+            ))
+        }
+    }
+}
+
+// ============================================================================
 // Tests
 // ============================================================================
 

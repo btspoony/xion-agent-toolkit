@@ -1,15 +1,9 @@
 #!/bin/bash
 #
-# xion-treasury/grant-config.sh - Configure Authz Grants (Coming Soon)
+# xion-treasury/grant-config.sh - Configure Authz Grants for Treasury
 #
-# This script will configure Authz Grants for a Treasury.
-# Currently not implemented.
+# This script configures Authz Grants for a Treasury.
 #
-# Usage:
-#   ./grant-config.sh <ADDRESS> --config <CONFIG_FILE> [--network NETWORK]
-#
-# Output:
-#   JSON to stdout with feature status
 
 set -e
 
@@ -25,46 +19,96 @@ log_info() {
     echo "[INFO] $1" >&2
 }
 
+log_error() {
+    echo "[ERROR] $1" >&2
+}
+
+# ==============================================================================
+# Argument Parsing
+# ==============================================================================
+
+ADDRESS=""
+TYPE_URL=""
+CONFIG_FILE=""
+NETWORK="testnet"
+ACTION=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1"
+        ADDRESS="$2"
+        shift 2
+        ;;
+    --type-url)
+        TYPE_URL="$2"
+        shift 2
+        ;;
+    --config)
+        CONFIG_FILE="$2"
+        shift 2
+        ;;
+    --network)
+        NETWORK="$2"
+        shift 2
+        ;;
+    *)
+        shift
+        ;;
+    --action)
+        ACTION="$2"
+        shift 2
+        ;;
+    *)
+        log_error "Missing required arguments"
+        output_json '{
+            "success": false,
+            "error": "Missing required arguments: --address, --type-url, --config, and --action",
+            "error_code": "INVALID_ARGS"
+        }'
+        exit 1
+        ;;
+    esac
+done
+
 # ==============================================================================
 # Main Logic
 # ==============================================================================
 
-log_info "Grant configuration requested..."
+case "$ACTION" in
+    add | remove | list)
+        ;;
+    *)
+        ;;
+esac
 
-# Return feature not available message with example config
-output_json '{
-  "success": false,
-  "error": "Grant configuration is not yet implemented in the CLI",
-  "error_code": "FEATURE_NOT_AVAILABLE",
-  "alternatives": [
-    {
-      "method": "Developer Portal",
-      "url": "https://dev.testnet2.burnt.com",
-      "description": "Configure grants through the web interface"
-    }
-  ],
-  "example_config": {
-    "type_url": "/cosmwasm.wasm.v1.MsgExecuteContract",
-    "authorization": {
-      "type": "ContractExecutionAuthorization",
-      "contract": "xion1...",
-      "limits": {
-        "max_calls": 100,
-        "max_funds": [
-          {
-            "denom": "uxion",
-            "amount": "10000000"
-          }
-        ]
-      }
-    }
-  },
-  "planned_features": [
-    "Configure Authz Grants for specific message types",
-    "Set execution limits (max calls, max funds)",
-    "Grant contract execution permissions",
-    "Revoke existing grants"
-  ]
-}'
+log_info "Processing grant config: action=$ACTION for treasury $ADDRESS"
 
-exit 0
+# Build the command
+CMD="xion --network $NETWORK"
+
+case "$ACTION" in
+    add)
+        CMD="$CMD treasury grant-config add --address $ADDRESS --config $CONFIG_FILE"
+        ;;
+    remove)
+        CMD="$CMD treasury grant-config remove --address $ADDRESS --type-url $TYPE_URL"
+        ;;
+    list)
+        CMD="$CMD treasury grant-config list --address $ADDRESS"
+        ;;
+esac
+
+# Execute command and capture output
+OUTPUT=$($CMD 2>&1)
+
+# Check if successful
+if [ $? -eq 0 ]; then
+    output_json "$OUTPUT"
+else
+    log_error "Command failed with exit code $?"
+    output_json "{
+        \"success\": false,
+        \"error": "Command failed with exit code $?",
+        \"error_code": "COMMAND_FAILED"
+    }'
+    exit 1
+fi

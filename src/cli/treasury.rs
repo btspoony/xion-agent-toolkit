@@ -38,6 +38,70 @@ pub enum TreasuryCommands {
         #[arg(short, long)]
         amount: String,
     },
+
+    /// Manage grant configurations
+    #[command(subcommand)]
+    GrantConfig(GrantConfigCommands),
+
+    /// Manage fee configurations
+    #[command(subcommand)]
+    FeeConfig(FeeConfigCommands),
+}
+
+/// Grant configuration subcommands
+#[derive(Subcommand)]
+pub enum GrantConfigCommands {
+    /// Add a grant configuration
+    Add {
+        /// Treasury contract address
+        address: String,
+
+        /// Path to JSON config file
+        #[arg(short, long)]
+        config: PathBuf,
+    },
+
+    /// Remove a grant configuration
+    Remove {
+        /// Treasury contract address
+        address: String,
+
+        /// Type URL of the grant to remove
+        #[arg(long)]
+        type_url: String,
+    },
+
+    /// List all grant configurations
+    List {
+        /// Treasury contract address
+        address: String,
+    },
+}
+
+/// Fee configuration subcommands
+#[derive(Subcommand)]
+pub enum FeeConfigCommands {
+    /// Set fee configuration
+    Set {
+        /// Treasury contract address
+        address: String,
+
+        /// Path to JSON config file
+        #[arg(short, long)]
+        config: PathBuf,
+    },
+
+    /// Remove fee configuration
+    Remove {
+        /// Treasury contract address
+        address: String,
+    },
+
+    /// Query fee configuration
+    Query {
+        /// Treasury contract address
+        address: String,
+    },
 }
 
 #[derive(Args, Clone)]
@@ -108,6 +172,8 @@ pub async fn handle_command(cmd: TreasuryCommands) -> Result<()> {
         TreasuryCommands::Create(args) => handle_create(args).await,
         TreasuryCommands::Fund { address, amount } => handle_fund(&address, &amount).await,
         TreasuryCommands::Withdraw { address, amount } => handle_withdraw(&address, &amount).await,
+        TreasuryCommands::GrantConfig(sub) => handle_grant_config(sub).await,
+        TreasuryCommands::FeeConfig(sub) => handle_fee_config(sub).await,
     }
 }
 
@@ -496,6 +562,338 @@ async fn handle_withdraw(address: &str, amount: &str) -> Result<()> {
                 "error": format!("Failed to withdraw from treasury: {}", e),
                 "code": code,
                 "suggestion": suggestion
+            });
+            print_json(&result)
+        }
+    }
+}
+
+// ============================================================================
+// Grant Config Handlers
+// ============================================================================
+
+async fn handle_grant_config(cmd: GrantConfigCommands) -> Result<()> {
+    match cmd {
+        GrantConfigCommands::Add { address, config } => {
+            handle_grant_config_add(&address, &config).await
+        }
+        GrantConfigCommands::Remove { address, type_url } => {
+            handle_grant_config_remove(&address, &type_url).await
+        }
+        GrantConfigCommands::List { address } => {
+            handle_grant_config_list(&address).await
+        }
+    }
+}
+
+async fn handle_grant_config_add(address: &str, config_path: &PathBuf) -> Result<()> {
+    use crate::config::ConfigManager;
+    use crate::oauth::OAuthClient;
+    use crate::treasury::TreasuryManager;
+    use crate::utils::output::{print_json, print_info};
+    
+    print_info(&format!("Adding grant config to treasury {}...", address));
+    
+    // Load config from file
+    let content = fs::read_to_string(config_path)
+        .map_err(|e| anyhow::anyhow!("Failed to read config file: {}", e))?;
+    let grant_config: crate::treasury::types::GrantConfigInput = serde_json::from_str(&content)
+        .map_err(|e| anyhow::anyhow!("Invalid config file format: {}", e))?;
+    
+    // Create manager
+    let config_manager = ConfigManager::new()?;
+    let network_config = config_manager.get_network_config()?;
+    let oauth_client = OAuthClient::new(network_config.clone())?;
+    let manager = TreasuryManager::new(oauth_client, network_config.clone());
+    
+    // Check authentication
+    if !manager.is_authenticated()? {
+        let result = serde_json::json!({
+            "success": false,
+            "error": "Not authenticated. Please run 'xion auth login' first.",
+            "code": "NOT_AUTHENTICATED"
+        });
+        return print_json(&result);
+    }
+    
+    // Add grant config
+    match manager.add_grant_config(address, grant_config).await {
+        Ok(result) => {
+            let response = serde_json::json!({
+                "success": true,
+                "treasury_address": result.treasury_address,
+                "operation": result.operation,
+                "tx_hash": result.tx_hash
+            });
+            print_json(&response)
+        }
+        Err(e) => {
+            let result = serde_json::json!({
+                "success": false,
+                "error": format!("Failed to add grant config: {}", e),
+                "code": "GRANT_CONFIG_ADD_FAILED"
+            });
+            print_json(&result)
+        }
+    }
+}
+
+async fn handle_grant_config_remove(address: &str, type_url: &str) -> Result<()> {
+    use crate::config::ConfigManager;
+    use crate::oauth::OAuthClient;
+    use crate::treasury::TreasuryManager;
+    use crate::utils::output::{print_json, print_info};
+    
+    print_info(&format!("Removing grant config {} from treasury {}...", type_url, address));
+    
+    // Create manager
+    let config_manager = ConfigManager::new()?;
+    let network_config = config_manager.get_network_config()?;
+    let oauth_client = OAuthClient::new(network_config.clone())?;
+    let manager = TreasuryManager::new(oauth_client, network_config.clone());
+    
+    // Check authentication
+    if !manager.is_authenticated()? {
+        let result = serde_json::json!({
+            "success": false,
+            "error": "Not authenticated. Please run 'xion auth login' first.",
+            "code": "NOT_AUTHENTICATED"
+        });
+        return print_json(&result);
+    }
+    
+    // Remove grant config
+    match manager.remove_grant_config(address, type_url).await {
+        Ok(result) => {
+            let response = serde_json::json!({
+                "success": true,
+                "treasury_address": result.treasury_address,
+                "operation": result.operation,
+                "tx_hash": result.tx_hash
+            });
+            print_json(&response)
+        }
+        Err(e) => {
+            let result = serde_json::json!({
+                "success": false,
+                "error": format!("Failed to remove grant config: {}", e),
+                "code": "GRANT_CONFIG_REMOVE_FAILED"
+            });
+            print_json(&result)
+        }
+    }
+}
+
+async fn handle_grant_config_list(address: &str) -> Result<()> {
+    use crate::config::ConfigManager;
+    use crate::oauth::OAuthClient;
+    use crate::treasury::TreasuryManager;
+    use crate::utils::output::{print_json, print_info};
+    
+    print_info(&format!("Listing grant configs for treasury {}...", address));
+    
+    // Create manager
+    let config_manager = ConfigManager::new()?;
+    let network_config = config_manager.get_network_config()?;
+    let oauth_client = OAuthClient::new(network_config.clone())?;
+    let manager = TreasuryManager::new(oauth_client, network_config.clone());
+    
+    // Check authentication
+    if !manager.is_authenticated()? {
+        let result = serde_json::json!({
+            "success": false,
+            "error": "Not authenticated. Please run 'xion auth login' first.",
+            "code": "NOT_AUTHENTICATED"
+        });
+        return print_json(&result);
+    }
+    
+    // List grant configs
+    match manager.list_grant_configs(address).await {
+        Ok(configs) => {
+            let response = serde_json::json!({
+                "success": true,
+                "treasury_address": address,
+                "grant_configs": configs,
+                "count": configs.len()
+            });
+            print_json(&response)
+        }
+        Err(e) => {
+            let result = serde_json::json!({
+                "success": false,
+                "error": format!("Failed to list grant configs: {}", e),
+                "code": "GRANT_CONFIG_LIST_FAILED"
+            });
+            print_json(&result)
+        }
+    }
+}
+
+// ============================================================================
+// Fee Config Handlers
+// ============================================================================
+
+async fn handle_fee_config(cmd: FeeConfigCommands) -> Result<()> {
+    match cmd {
+        FeeConfigCommands::Set { address, config } => {
+            handle_fee_config_set(&address, &config).await
+        }
+        FeeConfigCommands::Remove { address } => {
+            handle_fee_config_remove(&address).await
+        }
+        FeeConfigCommands::Query { address } => {
+            handle_fee_config_query(&address).await
+        }
+    }
+}
+
+async fn handle_fee_config_set(address: &str, config_path: &PathBuf) -> Result<()> {
+    use crate::config::ConfigManager;
+    use crate::oauth::OAuthClient;
+    use crate::treasury::TreasuryManager;
+    use crate::utils::output::{print_json, print_info};
+    
+    print_info(&format!("Setting fee config for treasury {}...", address));
+    
+    // Load config from file
+    let content = fs::read_to_string(config_path)
+        .map_err(|e| anyhow::anyhow!("Failed to read config file: {}", e))?;
+    let fee_config: crate::treasury::types::FeeConfigInput = serde_json::from_str(&content)
+        .map_err(|e| anyhow::anyhow!("Invalid config file format: {}", e))?;
+    
+    // Create manager
+    let config_manager = ConfigManager::new()?;
+    let network_config = config_manager.get_network_config()?;
+    let oauth_client = OAuthClient::new(network_config.clone())?;
+    let manager = TreasuryManager::new(oauth_client, network_config.clone());
+    
+    // Check authentication
+    if !manager.is_authenticated()? {
+        let result = serde_json::json!({
+            "success": false,
+            "error": "Not authenticated. Please run 'xion auth login' first.",
+            "code": "NOT_AUTHENTICATED"
+        });
+        return print_json(&result);
+    }
+    
+    // Set fee config
+    match manager.set_fee_config(address, fee_config).await {
+        Ok(result) => {
+            let response = serde_json::json!({
+                "success": true,
+                "treasury_address": result.treasury_address,
+                "operation": result.operation,
+                "tx_hash": result.tx_hash
+            });
+            print_json(&response)
+        }
+        Err(e) => {
+            let result = serde_json::json!({
+                "success": false,
+                "error": format!("Failed to set fee config: {}", e),
+                "code": "FEE_CONFIG_SET_FAILED"
+            });
+            print_json(&result)
+        }
+    }
+}
+
+async fn handle_fee_config_remove(address: &str) -> Result<()> {
+    use crate::config::ConfigManager;
+    use crate::oauth::OAuthClient;
+    use crate::treasury::TreasuryManager;
+    use crate::utils::output::{print_json, print_info};
+    
+    print_info(&format!("Removing fee config from treasury {}...", address));
+    
+    // Create manager
+    let config_manager = ConfigManager::new()?;
+    let network_config = config_manager.get_network_config()?;
+    let oauth_client = OAuthClient::new(network_config.clone())?;
+    let manager = TreasuryManager::new(oauth_client, network_config.clone());
+    
+    // Check authentication
+    if !manager.is_authenticated()? {
+        let result = serde_json::json!({
+            "success": false,
+            "error": "Not authenticated. Please run 'xion auth login' first.",
+            "code": "NOT_AUTHENTICATED"
+        });
+        return print_json(&result);
+    }
+    
+    // Remove fee config
+    match manager.remove_fee_config(address).await {
+        Ok(result) => {
+            let response = serde_json::json!({
+                "success": true,
+                "treasury_address": result.treasury_address,
+                "operation": result.operation,
+                "tx_hash": result.tx_hash
+            });
+            print_json(&response)
+        }
+        Err(e) => {
+            let result = serde_json::json!({
+                "success": false,
+                "error": format!("Failed to remove fee config: {}", e),
+                "code": "FEE_CONFIG_REMOVE_FAILED"
+            });
+            print_json(&result)
+        }
+    }
+}
+
+async fn handle_fee_config_query(address: &str) -> Result<()> {
+    use crate::config::ConfigManager;
+    use crate::oauth::OAuthClient;
+    use crate::treasury::TreasuryManager;
+    use crate::utils::output::{print_json, print_info};
+    
+    print_info(&format!("Querying fee config for treasury {}...", address));
+    
+    // Create manager
+    let config_manager = ConfigManager::new()?;
+    let network_config = config_manager.get_network_config()?;
+    let oauth_client = OAuthClient::new(network_config.clone())?;
+    let manager = TreasuryManager::new(oauth_client, network_config.clone());
+    
+    // Check authentication
+    if !manager.is_authenticated()? {
+        let result = serde_json::json!({
+            "success": false,
+            "error": "Not authenticated. Please run 'xion auth login' first.",
+            "code": "NOT_AUTHENTICATED"
+        });
+        return print_json(&result);
+    }
+    
+    // Query fee config
+    match manager.query_fee_config(address).await {
+        Ok(Some(config)) => {
+            let response = serde_json::json!({
+                "success": true,
+                "treasury_address": address,
+                "fee_config": config
+            });
+            print_json(&response)
+        }
+        Ok(None) => {
+            let response = serde_json::json!({
+                "success": true,
+                "treasury_address": address,
+                "fee_config": null,
+                "message": "No fee config set"
+            });
+            print_json(&response)
+        }
+        Err(e) => {
+            let result = serde_json::json!({
+                "success": false,
+                "error": format!("Failed to query fee config: {}", e),
+                "code": "FEE_CONFIG_QUERY_FAILED"
             });
             print_json(&result)
         }
