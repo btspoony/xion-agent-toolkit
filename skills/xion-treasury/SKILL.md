@@ -11,8 +11,8 @@ This skill wraps the `xion` CLI tool to provide Agent-friendly Treasury manageme
 - **create.sh** - Create a new Treasury contract with fee grant and authz grant configuration
 - **fund.sh** - Fund a Treasury contract
 - **withdraw.sh** - Withdraw funds from a Treasury
-- **grant-config.sh** - Configure Authz Grants (coming soon)
-- **fee-config.sh** - Configure Fee Grants (coming soon)
+- **grant-config.sh** - Configure Authz Grants
+- **fee-config.sh** - Configure Fee Grants
 - **update-params.sh** - Update Treasury parameters (coming soon)
 
 ## Prerequisites
@@ -359,39 +359,204 @@ Withdraws funds from a Treasury to the admin account.
 ./scripts/withdraw.sh xion1abc123... 5000000uxion --network testnet
 ```
 
-### grant-config.sh (Coming Soon)
+### grant-config.sh
 
-Configures Authz Grants for a Treasury.
+Manages Authz Grants for a Treasury contract.
 
 **Usage:**
 ```bash
-./scripts/grant-config.sh <ADDRESS> --config <CONFIG_FILE> [--network NETWORK]
+# Add a grant configuration
+./scripts/grant-config.sh <ADDRESS> --action add --config <CONFIG_FILE> [--network NETWORK]
+
+# Remove a grant configuration
+./scripts/grant-config.sh <ADDRESS> --action remove --type-url <TYPE_URL> [--network NETWORK]
+
+# List all grant configurations
+./scripts/grant-config.sh <ADDRESS> --action list [--network NETWORK]
 ```
 
-**Status:**
+**Arguments:**
+- `ADDRESS` - Treasury contract address (required)
+
+**Options:**
+- `--action <ACTION>` - Action to perform: add, remove, list (required)
+- `--config <FILE>` - JSON config file (required for add)
+- `--type-url <URL>` - Type URL to remove (required for remove)
+- `--network NETWORK` - Network to use (default: testnet)
+
+**Config File Format (grant-config.json):**
 ```json
 {
-  "success": false,
-  "error": "Grant configuration is not yet implemented",
-  "error_code": "FEATURE_NOT_AVAILABLE"
+  "type_url": "/cosmos.bank.v1beta1.MsgSend",
+  "description": "Allow sending funds",
+  "authorization": {
+    "auth_type": "send",
+    "spend_limit": "1000000uxion",
+    "allow_list": ["xion1recipient..."]
+  },
+  "optional": false
 }
 ```
 
-### fee-config.sh (Coming Soon)
+**Authorization Types:**
 
-Configures Fee Grants for a Treasury.
+1. **Generic Authorization:**
+```json
+{
+  "type_url": "/cosmwasm.wasm.v1.MsgExecuteContract",
+  "description": "Generic contract execution",
+  "authorization": {
+    "auth_type": "generic"
+  }
+}
+```
+
+2. **Send Authorization:**
+```json
+{
+  "type_url": "/cosmos.bank.v1beta1.MsgSend",
+  "description": "Allow sending funds",
+  "authorization": {
+    "auth_type": "send",
+    "spend_limit": "1000000uxion",
+    "allow_list": ["xion1recipient..."]
+  }
+}
+```
+
+3. **Stake Authorization:**
+```json
+{
+  "type_url": "/cosmos.staking.v1beta1.MsgDelegate",
+  "description": "Allow staking operations",
+  "authorization": {
+    "auth_type": "stake",
+    "max_tokens": "1000000uxion",
+    "validators": ["xionvaloper1..."],
+    "authorization_type": 1
+  }
+}
+```
+
+4. **IBC Transfer Authorization:**
+```json
+{
+  "type_url": "/ibc.applications.transfer.v1.MsgTransfer",
+  "description": "Allow IBC transfers",
+  "authorization": {
+    "auth_type": "ibc_transfer",
+    "allocations": [{
+      "source_port": "transfer",
+      "source_channel": "channel-0",
+      "spend_limit": "1000000uxion"
+    }]
+  }
+}
+```
+
+5. **Contract Execution Authorization:**
+```json
+{
+  "type_url": "/cosmwasm.wasm.v1.MsgExecuteContract",
+  "description": "Allow contract execution",
+  "authorization": {
+    "auth_type": "contract_execution",
+    "grants": [{
+      "address": "xion1contract...",
+      "max_calls": 100,
+      "max_funds": "1000000uxion",
+      "filter_type": "allow_all"
+    }]
+  }
+}
+```
+
+**Output (stdout):**
+```json
+{
+  "success": true,
+  "treasury": "xion1abc123...",
+  "action": "add",
+  "type_url": "/cosmos.bank.v1beta1.MsgSend",
+  "tx_hash": "ABC123..."
+}
+```
+
+### fee-config.sh
+
+Manages Fee Grants for a Treasury contract.
 
 **Usage:**
 ```bash
-./scripts/fee-config.sh <ADDRESS> --config <CONFIG_FILE> [--network NETWORK]
+# Set fee configuration
+./scripts/fee-config.sh <ADDRESS> --action set --config <CONFIG_FILE> [--network NETWORK]
+
+# Remove fee configuration
+./scripts/fee-config.sh <ADDRESS> --action remove [--network NETWORK]
+
+# Query fee configuration
+./scripts/fee-config.sh <ADDRESS> --action query [--network NETWORK]
 ```
 
-**Status:**
+**Arguments:**
+- `ADDRESS` - Treasury contract address (required)
+
+**Options:**
+- `--action <ACTION>` - Action to perform: set, remove, query (required)
+- `--config <FILE>` - JSON config file (required for set)
+- `--network NETWORK` - Network to use (default: testnet)
+
+**Config File Formats:**
+
+1. **Basic Allowance:**
 ```json
 {
-  "success": false,
-  "error": "Fee grant configuration is not yet implemented",
-  "error_code": "FEATURE_NOT_AVAILABLE"
+  "basic": {
+    "spend_limit": "1000000uxion",
+    "description": "Basic fee allowance for gasless transactions"
+  }
+}
+```
+
+2. **Periodic Allowance:**
+```json
+{
+  "periodic": {
+    "basic_spend_limit": "10000000uxion",
+    "period_seconds": 86400,
+    "period_spend_limit": "100000uxion",
+    "description": "Daily fee allowance with 10 XION total cap"
+  }
+}
+```
+
+3. **Allowed Message Allowance:**
+```json
+{
+  "allowed_msg": {
+    "allowed_messages": [
+      "/cosmos.bank.v1beta1.MsgSend",
+      "/cosmwasm.wasm.v1.MsgExecuteContract"
+    ],
+    "nested_allowance": {
+      "basic": {
+        "spend_limit": "1000000uxion",
+        "description": "Nested basic allowance"
+      }
+    },
+    "description": "Fee allowance for specific message types"
+  }
+}
+```
+
+**Output (stdout):**
+```json
+{
+  "success": true,
+  "treasury": "xion1abc123...",
+  "action": "set",
+  "allowance_type": "BasicAllowance",
+  "tx_hash": "ABC123..."
 }
 ```
 
