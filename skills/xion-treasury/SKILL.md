@@ -9,8 +9,8 @@ This skill wraps the `xion` CLI tool to provide Agent-friendly Treasury manageme
 - **list.sh** - List all Treasury contracts owned by the authenticated user
 - **query.sh** - Query detailed information about a specific Treasury
 - **create.sh** - Create a new Treasury contract with fee grant and authz grant configuration
-- **fund.sh** - Fund a Treasury contract (coming soon)
-- **withdraw.sh** - Withdraw funds from a Treasury (coming soon)
+- **fund.sh** - Fund a Treasury contract
+- **withdraw.sh** - Withdraw funds from a Treasury
 - **grant-config.sh** - Configure Authz Grants (coming soon)
 - **fee-config.sh** - Configure Fee Grants (coming soon)
 - **update-params.sh** - Update Treasury parameters (coming soon)
@@ -286,40 +286,77 @@ Creates a new Treasury contract with full configuration support including fee gr
 
 **Note:** The CLI will poll for treasury indexing (up to 30 seconds) to return the complete treasury information.
 
-### fund.sh (Coming Soon)
+### fund.sh
 
-Funds a Treasury contract.
+Funds a Treasury contract with tokens from the authenticated account.
 
 **Usage:**
 ```bash
 ./scripts/fund.sh <ADDRESS> <AMOUNT> [--network NETWORK]
 ```
 
-**Status:**
+**Arguments:**
+- `ADDRESS` - Treasury contract address (required)
+- `AMOUNT` - Amount to fund with denomination (required, e.g., "1000000uxion")
+
+**Options:**
+- `--network NETWORK` - Network to use (default: testnet)
+
+**Output (stdout):**
 ```json
 {
-  "success": false,
-  "error": "Treasury funding is not yet implemented",
-  "error_code": "FEATURE_NOT_AVAILABLE"
+  "success": true,
+  "treasury": "xion1abc123...",
+  "amount": "1000000uxion",
+  "tx_hash": "ABC123...",
+  "new_balance": "2000000uxion"
 }
 ```
 
-### withdraw.sh (Coming Soon)
+**Examples:**
+```bash
+# Fund treasury with 1 XION
+./scripts/fund.sh xion1abc123... 1000000uxion
 
-Withdraws funds from a Treasury.
+# Fund with 5 XION on testnet
+./scripts/fund.sh xion1abc123... 5000000uxion --network testnet
+```
+
+### withdraw.sh
+
+Withdraws funds from a Treasury to the admin account.
 
 **Usage:**
 ```bash
-./scripts/withdraw.sh <ADDRESS> <AMOUNT> <RECIPIENT> [--network NETWORK]
+./scripts/withdraw.sh <ADDRESS> <AMOUNT> [--network NETWORK]
 ```
 
-**Status:**
+**Arguments:**
+- `ADDRESS` - Treasury contract address (required)
+- `AMOUNT` - Amount to withdraw with denomination (required, e.g., "1000000uxion")
+
+**Options:**
+- `--network NETWORK` - Network to use (default: testnet)
+
+**Output (stdout):**
 ```json
 {
-  "success": false,
-  "error": "Treasury withdrawal is not yet implemented",
-  "error_code": "FEATURE_NOT_AVAILABLE"
+  "success": true,
+  "treasury": "xion1abc123...",
+  "amount": "1000000uxion",
+  "recipient": "xion1admin...",
+  "tx_hash": "ABC123...",
+  "remaining_balance": "500000uxion"
 }
+```
+
+**Examples:**
+```bash
+# Withdraw 1 XION from treasury
+./scripts/withdraw.sh xion1abc123... 1000000uxion
+
+# Withdraw 5 XION on testnet
+./scripts/withdraw.sh xion1abc123... 5000000uxion --network testnet
 ```
 
 ### grant-config.sh (Coming Soon)
