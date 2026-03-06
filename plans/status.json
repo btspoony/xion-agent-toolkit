@@ -7,7 +7,7 @@
       "title": "Treasury Automation Plan",
       "file": "plans/treasury-automation.md",
       "status": "InProgress",
-      "progress": 92,
+      "progress": 95,
       "owner": "@project-manager",
       "agents": [
         "@architect",
@@ -25,7 +25,7 @@
       "created_at": "2025-03-05",
       "updated_at": "2026-03-06",
       "done_at": null,
-      "notes": "OAuth2 fully functional with xion_address fix. Treasury list/query/fund/withdraw implemented. Create command in progress. Integration tests completed."
+      "notes": "OAuth2 fully functional with xion_address fix. Treasury list/query/fund/withdraw implemented. Create command in progress. Integration tests completed. Fund and withdraw operations implemented, ready for testing."
     },
     {
       "id": "oauth2-client-architecture",

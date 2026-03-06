@@ -278,7 +278,7 @@ xion treasury query <treasury-address>
   - [x] Default network set to testnet
   - [x] Local network requires explicit `--network local` flag
 
-### Phase 3: Treasury API (Days 15-21) ✅ **PARTIALLY COMPLETED**
+### Phase 3: Treasury API (Days 15-21) ✅ **95% COMPLETED**
 - [x] API clients
   - [x] Treasury API client (OAuth2 API Service)
   - [ ] xiond Query client (optional)
@@ -287,8 +287,8 @@ xion treasury query <treasury-address>
   - [x] list - List Treasury contracts
   - [x] query - Query details
   - [ ] create - Create Treasury (placeholder, future)
-  - [ ] fund - Fund Treasury (placeholder, future)
-  - [ ] withdraw - Withdraw from Treasury (placeholder, future)
+  - [x] fund - Fund Treasury (implemented, needs testing)
+  - [x] withdraw - Withdraw from Treasury (implemented, needs testing)
 - [ ] Grant configuration
   - [ ] fee-grant configuration (future)
   - [ ] authz-grant configuration (future)
@@ -297,6 +297,10 @@ xion treasury query <treasury-address>
   - [x] OAuth2 integration
   - [x] Auto token refresh
   - [x] Caching (5-minute TTL)
+- [x] Transaction broadcasting
+  - [x] broadcast_transaction() API method
+  - [x] BroadcastRequest and BroadcastResponse types
+  - [x] FundResult and WithdrawResult types
 
 ### Phase 4: Skills & Documentation (Days 22-28) ✅ **COMPLETED**
 - [x] xion-oauth2 Skill
@@ -395,6 +399,10 @@ xion treasury query <treasury-address>
 | 2026-03-06 | All tests passing (65 tests) | ✅ |
 | 2026-03-06 | Fixed: xion_address field returning null | ✅ |
 | 2026-03-06 | OAuth2: Call /api/v1/me to get MetaAccount address | ✅ |
+| 2026-03-06 | Treasury: Implement fund operation with MsgSend | ✅ |
+| 2026-03-06 | Treasury: Implement withdraw operation with MsgExecuteContract | ✅ |
+| 2026-03-06 | Treasury: Add transaction broadcasting support | ✅ |
+| 2026-03-06 | All tests passing (68 tests) | ✅ |
 
 ---
 *Created: 2025-03-05*
