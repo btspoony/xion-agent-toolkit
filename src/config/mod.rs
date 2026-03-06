@@ -1,5 +1,6 @@
 pub mod constants;
 pub mod credentials;
+pub mod encryption;
 pub mod manager;
 pub mod oauth_discovery;
 pub mod schema;

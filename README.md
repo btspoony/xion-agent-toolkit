@@ -3,7 +3,7 @@
 A CLI-driven, Agent-oriented toolkit for developing on the Xion blockchain.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Test Coverage](https://img.shields.io/badge/tests-63%20passing-green)]()
+[![Test Coverage](https://img.shields.io/badge/tests-120%20passing-green)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
 ## Overview
@@ -16,7 +16,7 @@ Xion Agent Toolkit provides a command-line interface for interacting with Xion's
 
 #### Authentication (Phase 2 - Complete)
 - ✅ **OAuth2 Login Flow** - Browser-based authentication with PKCE security
-- ✅ **Token Management** - Auto-refresh, secure storage (OS keyring)
+- ✅ **Token Management** - Auto-refresh, encrypted file storage
 - ✅ **Multi-Network Support** - Local, testnet, and mainnet
 - ✅ **Session Persistence** - Per-network credential storage
 
@@ -97,7 +97,7 @@ This will:
 - Generate a PKCE challenge for security
 - Start a localhost callback server (port 54321)
 - Open your browser for OAuth2 authorization
-- Save tokens securely in OS keyring
+- Save tokens securely in encrypted files
 - Return JSON with authentication details
 
 Output:
@@ -282,9 +282,9 @@ xion --network mainnet treasury list
                 ↓
 ┌─────────────────────────────────────────┐
 │  3. Credentials (Encrypted)             │
-│  - OS Keyring (tokens)                  │
+│  - AES-256-GCM encrypted files          │
 │  - Per-network storage                  │
-│  - credentials/{network}.json (metadata)│
+│  - credentials/{network}.enc            │
 └─────────────────────────────────────────┘
 ```
 
@@ -298,18 +298,10 @@ xion --network mainnet treasury list
 }
 ```
 
-**Credentials Metadata** (`~/.xion-toolkit/credentials/testnet.json`):
-```json
-{
-  "expires_at": "2024-01-01T01:00:00Z",
-  "xion_address": "xion1..."
-}
-```
-
-**Sensitive Tokens** (OS Keyring):
-- Service: `xion-toolkit-testnet`
-- Username: `access_token`, `refresh_token`
-- Encrypted by OS (Keychain on macOS, Secret Service on Linux, Credential Manager on Windows)
+**Credentials** (`~/.xion-toolkit/credentials/{network}.enc`):
+- AES-256-GCM encrypted JSON files
+- Per-network storage
+- Key derived from machine ID or `XION_TOOLKIT_KEY` env var
 
 ## Security Features
 
@@ -317,7 +309,7 @@ xion --network mainnet treasury list
 - ✅ **PKCE (RFC 7636)** - Prevents authorization code interception
 - ✅ **State Parameter** - CSRF protection
 - ✅ **Localhost Only** - Callback server only accepts localhost connections
-- ✅ **Secure Storage** - Tokens encrypted in OS keyring
+- ✅ **Encrypted Storage** - Tokens encrypted with AES-256-GCM
 - ✅ **Auto Token Refresh** - Seamless session management
 
 ### Treasury Security
@@ -384,7 +376,18 @@ cargo build
 cargo test
 ```
 
-Current test status: ✅ **63 tests passing**
+Current test status: ✅ **120 tests passing**
+
+### CI/CD Testing
+
+In CI/CD environments, set the `XION_TOOLKIT_KEY` environment variable for credential encryption:
+
+```bash
+export XION_TOOLKIT_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+cargo test
+```
+
+**Note**: Local development does NOT require this variable - it automatically uses machine ID for key derivation.
 
 ### Running in Development
 
@@ -410,8 +413,9 @@ cargo test          # Run tests
 - `thiserror` / `anyhow` - Error handling
 
 ### Security Dependencies
-- `keyring` - OS-native credential storage
-- `sha2` / `base64` / `rand` - PKCE implementation
+- `aes-gcm` - AES-256-GCM encryption for credential storage
+- `machine-uid` - Machine ID for key derivation
+- `sha2` / `base64` / `rand` - PKCE and encryption utilities
 - `hex` - Hex encoding
 
 ### Web Dependencies

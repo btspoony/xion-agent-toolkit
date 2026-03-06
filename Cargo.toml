@@ -45,18 +45,24 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # Configuration
 toml = "0.8"
 
-# Credential storage (OS keyring)
-keyring = "2.3"
-
-# Crypto for PKCE
+# Crypto for PKCE and credential encryption
 sha2 = "0.10"
 base64 = "0.22"
 rand = "0.8"
 hex = "0.4"
+aes-gcm = { version = "0.10", features = ["aes"] }
+machine-uid = "0.5"
 
 # URL handling
 url = "2.5"
 urlencoding = "2.1"
+
+# Protobuf encoding
+prost = "0.12"
+prost-types = "0.12"
+
+# Regex for parsing
+regex = "1.10"
 
 # Date/time
 chrono = { version = "0.4", features = ["serde"] }
@@ -77,6 +83,7 @@ dotenvy = "0.15"
 # Testing
 tempfile = "3.10"
 mockito = "1.4"
+serial_test = "3.4.0"
 
 [profile.release]
 opt-level = 3
