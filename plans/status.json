@@ -7,16 +7,16 @@
       "title": "Treasury Create Command Enhancement",
       "file": "plans/treasury-create-enhancement.md",
       "status": "Blocked",
-      "progress": 85,
+      "progress": 90,
       "updated_at": "2026-03-06",
-      "notes": "BLOCKED: OAuth2 API does not support MsgInstantiateContract2. CLI implementation complete (encoding + types + polling). Waiting for OAuth2 API update to add MsgInstantiateContract2 support. Workaround: Could use MsgInstantiateContract but would lose predictable address feature."
+      "notes": "BLOCKED: OAuth2 API does not support MsgInstantiateContract2. CLI implementation complete (encoding + types + polling). Skills updated. Waiting for OAuth2 API update."
     },
     {
       "id": "treasury-automation",
       "title": "Treasury Automation Plan",
       "file": "plans/treasury-automation.md",
       "status": "InProgress",
-      "progress": 98,
+      "progress": 99,
       "owner": "@project-manager",
       "agents": [
         "@architect",
@@ -34,7 +34,7 @@
       "created_at": "2025-03-05",
       "updated_at": "2026-03-06",
       "done_at": null,
-      "notes": "OAuth2 fully functional with xion_address fix VERIFIED. Treasury list/query/fund/withdraw implemented. All 122 tests passing (68 unit + 20 integration + 34 doc). Testnet login tested successfully with correct xion_address."
+      "notes": "OAuth2 fully functional. All treasury commands implemented (list/query/create/fund/withdraw). Skills scripts updated. All 330+ tests passing with 0 warnings. Blocked: treasury create E2E test needs OAuth2 API MsgInstantiateContract2 support."
     },
     {
       "id": "oauth2-client-architecture",
