@@ -6,10 +6,10 @@
 //! # Key Derivation
 //!
 //! The encryption key is derived from (in order of priority):
-//! 1. `XION_TOOLKIT_KEY` environment variable (for CI/CD only)
-//! 2. Machine ID via `machine-uid` crate (for local development)
+//! 1. `XION_CI_ENCRYPTION_KEY` environment variable (for CI/CD only)
+//! 2. Machine ID via `machine-uid` crate (for local development, default)
 //!
-//! **Note**: Local development does NOT require `XION_TOOLKIT_KEY`.
+//! **Note**: Local development does NOT need `XION_CI_ENCRYPTION_KEY`.
 //! It is only needed in CI/CD environments where machine ID may be unstable.
 //!
 //! # File Format
@@ -21,9 +21,9 @@
 //!
 //! # CI/CD Setup
 //!
-//! For automated testing, set a fixed encryption key:
+//! For automated testing in CI environments, set a fixed encryption key:
 //! ```bash
-//! export XION_TOOLKIT_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+//! export XION_CI_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 //! ```
 //!
 //! This enables headless testing without OS keychain interaction.
@@ -233,7 +233,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(encryption_key)]
     fn test_save_and_load_credentials() {
         let (temp_dir, test_key) = setup_isolated_test_env();
         let original_key = env::var(encryption::ENV_KEY_NAME).ok();
@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(encryption_key)]
     fn test_has_credentials() {
         let (temp_dir, test_key) = setup_isolated_test_env();
         let original_key = env::var(encryption::ENV_KEY_NAME).ok();
@@ -296,7 +296,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(encryption_key)]
     fn test_clear_credentials() {
         let (temp_dir, test_key) = setup_isolated_test_env();
         let original_key = env::var(encryption::ENV_KEY_NAME).ok();
@@ -325,7 +325,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(encryption_key)]
     fn test_update_access_token() {
         let (temp_dir, test_key) = setup_isolated_test_env();
         let original_key = env::var(encryption::ENV_KEY_NAME).ok();
@@ -361,7 +361,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(encryption_key)]
     fn test_different_networks_isolated() {
         let (temp_dir, test_key) = setup_isolated_test_env();
         let original_key = env::var(encryption::ENV_KEY_NAME).ok();
@@ -409,7 +409,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(encryption_key)]
     fn test_load_nonexistent_credentials() {
         let (temp_dir, test_key) = setup_isolated_test_env();
         let original_key = env::var(encryption::ENV_KEY_NAME).ok();
@@ -430,7 +430,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(encryption_key)]
     fn test_credentials_encrypted_on_disk() {
         let (temp_dir, test_key) = setup_isolated_test_env();
         let original_key = env::var(encryption::ENV_KEY_NAME).ok();

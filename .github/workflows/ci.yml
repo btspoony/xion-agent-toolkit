@@ -44,7 +44,7 @@ jobs:
           # Encryption key for credential storage tests (CI/CD only)
           # Local development uses machine ID derivation automatically
           # This fixed key enables automated testing without OS keychain interaction
-          XION_TOOLKIT_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          XION_CI_ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
   lint:
     name: Lint

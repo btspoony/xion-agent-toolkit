@@ -380,10 +380,10 @@ Current test status: ✅ **120 tests passing**
 
 ### CI/CD Testing
 
-In CI/CD environments, set the `XION_TOOLKIT_KEY` environment variable for credential encryption:
+In CI environments, set the `XION_CI_ENCRYPTION_KEY` environment variable for credential encryption:
 
 ```bash
-export XION_TOOLKIT_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+export XION_CI_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 cargo test
 ```
 

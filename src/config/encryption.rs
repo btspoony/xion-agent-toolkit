@@ -37,8 +37,8 @@ use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use rand::RngCore;
 use std::env;
 
-/// Environment variable name for the encryption key
-pub const ENV_KEY_NAME: &str = "XION_TOOLKIT_KEY";
+/// Environment variable name for CI/CD encryption key
+pub const ENV_KEY_NAME: &str = "XION_CI_ENCRYPTION_KEY";
 
 /// Key length in bytes (AES-256)
 const KEY_LEN: usize = 32;
@@ -49,7 +49,7 @@ const NONCE_LEN: usize = 12;
 /// Get or derive the encryption key.
 ///
 /// Priority:
-/// 1. `XION_TOOLKIT_KEY` environment variable (hex-encoded 32 bytes)
+/// 1. `XION_CI_ENCRYPTION_KEY` environment variable (hex-encoded 32 bytes)
 /// 2. Machine ID derivation
 pub fn get_encryption_key() -> Result<[u8; KEY_LEN]> {
     // Try environment variable first (for CI/CD)
@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(encryption_key)]
     fn test_encrypt_decrypt_roundtrip() {
         let original = setup_test_key();
 
@@ -199,7 +199,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(encryption_key)]
     fn test_encrypt_produces_different_ciphertext() {
         let original = setup_test_key();
 
