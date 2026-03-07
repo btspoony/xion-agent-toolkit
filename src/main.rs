@@ -5,9 +5,9 @@ mod oauth;
 mod treasury;
 mod utils;
 
+use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Commands};
-use anyhow::Result;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]

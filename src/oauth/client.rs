@@ -77,7 +77,7 @@ impl OAuthClient {
     /// use xion_agent_toolkit::config::NetworkConfig;
     /// use xion_agent_toolkit::oauth::OAuthClient;
     ///
-/// let config = NetworkConfig {
+    /// let config = NetworkConfig {
     ///     network_name: "testnet".to_string(),
     ///     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
     ///     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
@@ -92,7 +92,10 @@ impl OAuthClient {
     /// # Ok::<(), anyhow::Error>(())
     /// ```
     pub fn new(network_config: NetworkConfig) -> Result<Self> {
-        debug!("Creating OAuth2 client for network: {}", network_config.chain_id);
+        debug!(
+            "Creating OAuth2 client for network: {}",
+            network_config.chain_id
+        );
 
         // Create OAuth2 API client
         let api_client = OAuth2ApiClient::new(network_config.oauth_api_url.clone());
@@ -145,7 +148,7 @@ impl OAuthClient {
     /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-/// # let config = NetworkConfig {
+    /// # let config = NetworkConfig {
     /// #     network_name: "testnet".to_string(),
     /// #     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
@@ -179,15 +182,11 @@ impl OAuthClient {
             "Using authorization endpoint: {}",
             oauth_endpoints.authorization_endpoint
         );
-        info!(
-            "Using token endpoint: {}",
-            oauth_endpoints.token_endpoint
-        );
+        info!("Using token endpoint: {}", oauth_endpoints.token_endpoint);
 
         // Step 1: Generate PKCE challenge
         debug!("Generating PKCE challenge");
-        let pkce = PKCEChallenge::generate()
-            .context("Failed to generate PKCE challenge")?;
+        let pkce = PKCEChallenge::generate().context("Failed to generate PKCE challenge")?;
 
         // Step 2: Build redirect URI (using 127.0.0.1 instead of localhost for consistency)
         let redirect_uri = format!(
@@ -205,7 +204,10 @@ impl OAuthClient {
         info!("Authorization URL: {}", auth_url);
 
         // Step 4: Start callback server
-        debug!("Starting callback server on port {}", self.network_config.callback_port);
+        debug!(
+            "Starting callback server on port {}",
+            self.network_config.callback_port
+        );
         let callback_server = CallbackServer::new(self.network_config.callback_port);
 
         // Step 5: Open browser
@@ -245,7 +247,7 @@ impl OAuthClient {
             .get_user_info(&token_response.access_token)
             .await
             .context("Failed to get user info")?;
-        
+
         info!("Retrieved MetaAccount address: {}", user_info.id);
 
         // Step 9: Save credentials with xion_address
@@ -253,7 +255,7 @@ impl OAuthClient {
             Some(expires_at) => expires_at,
             None => token_response.calculate_expires_at(),
         };
-        
+
         let credentials = UserCredentials {
             access_token: token_response.access_token,
             refresh_token: token_response.refresh_token,
@@ -284,7 +286,7 @@ impl OAuthClient {
     /// # use xion_agent_toolkit::oauth::OAuthClient;
     /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # fn main() -> anyhow::Result<()> {
-/// # let config = NetworkConfig {
+    /// # let config = NetworkConfig {
     /// #     network_name: "testnet".to_string(),
     /// #     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
@@ -325,7 +327,7 @@ impl OAuthClient {
     /// # use xion_agent_toolkit::oauth::OAuthClient;
     /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # fn main() -> anyhow::Result<()> {
-/// # let config = NetworkConfig {
+    /// # let config = NetworkConfig {
     /// #     network_name: "testnet".to_string(),
     /// #     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
@@ -367,7 +369,7 @@ impl OAuthClient {
     /// # use xion_agent_toolkit::oauth::OAuthClient;
     /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # fn main() -> anyhow::Result<()> {
-/// # let config = NetworkConfig {
+    /// # let config = NetworkConfig {
     /// #     network_name: "testnet".to_string(),
     /// #     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
@@ -412,7 +414,7 @@ impl OAuthClient {
     /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-/// # let config = NetworkConfig {
+    /// # let config = NetworkConfig {
     /// #     network_name: "testnet".to_string(),
     /// #     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
@@ -456,7 +458,7 @@ impl OAuthClient {
     /// # use xion_agent_toolkit::config::NetworkConfig;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-/// # let config = NetworkConfig {
+    /// # let config = NetworkConfig {
     /// #     network_name: "testnet".to_string(),
     /// #     oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
@@ -592,7 +594,7 @@ mod tests {
     fn test_is_authenticated_without_credentials() {
         let config = create_test_config();
         let client = OAuthClient::new(config).unwrap();
-        
+
         // Should not be authenticated initially
         let is_auth = client.is_authenticated().unwrap();
         assert!(!is_auth);
@@ -602,7 +604,7 @@ mod tests {
     fn test_get_credentials_without_credentials() {
         let config = create_test_config();
         let client = OAuthClient::new(config).unwrap();
-        
+
         // Should return None when no credentials
         let creds = client.get_credentials().unwrap();
         assert!(creds.is_none());
@@ -612,7 +614,7 @@ mod tests {
     fn test_logout_without_credentials() {
         let config = create_test_config();
         let client = OAuthClient::new(config).unwrap();
-        
+
         // Should succeed even without credentials
         let result = client.logout();
         assert!(result.is_ok());
@@ -622,7 +624,7 @@ mod tests {
     fn test_client_debug() {
         let config = create_test_config();
         let client = OAuthClient::new(config).unwrap();
-        
+
         // Should implement Debug
         let debug_str = format!("{:?}", client);
         assert!(debug_str.contains("OAuthClient"));

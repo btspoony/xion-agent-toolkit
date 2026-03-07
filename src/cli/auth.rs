@@ -1,5 +1,5 @@
-use clap::Subcommand;
 use anyhow::Result;
+use clap::Subcommand;
 
 #[derive(Subcommand)]
 pub enum AuthCommands {
@@ -31,25 +31,28 @@ pub async fn handle_command(cmd: AuthCommands) -> Result<()> {
 }
 
 async fn handle_login(port: Option<u16>) -> Result<()> {
-    use crate::utils::output::{print_json, print_info};
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
+    use crate::utils::output::{print_info, print_json};
     use tracing::info;
 
     let config_manager = ConfigManager::new()?;
     let mut network_config = config_manager.get_network_config()?;
-    
+
     // Override callback port if specified
     if let Some(p) = port {
         network_config.callback_port = p;
     }
 
-    print_info(&format!("Starting OAuth2 login on network: {}...", config_manager.get_current_network()));
+    print_info(&format!(
+        "Starting OAuth2 login on network: {}...",
+        config_manager.get_current_network()
+    ));
     print_info(&format!("OAuth API: {}", network_config.oauth_api_url));
     print_info(&format!("Callback port: {}", network_config.callback_port));
 
     info!("Creating OAuth2 client");
-    
+
     // Create OAuth client
     let oauth_client = OAuthClient::new(network_config.clone())?;
 
@@ -80,9 +83,9 @@ async fn handle_login(port: Option<u16>) -> Result<()> {
 }
 
 fn handle_logout() -> Result<()> {
-    use crate::utils::output::{print_json, print_info};
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
+    use crate::utils::output::{print_info, print_json};
     use tracing::info;
 
     print_info("Logging out...");
@@ -91,8 +94,11 @@ fn handle_logout() -> Result<()> {
     let network_config = config_manager.get_network_config()?;
     let oauth_client = OAuthClient::new(network_config)?;
 
-    info!("Logging out from network: {}", config_manager.get_current_network());
-    
+    info!(
+        "Logging out from network: {}",
+        config_manager.get_current_network()
+    );
+
     match oauth_client.logout() {
         Ok(()) => {
             info!("Logout successful");
@@ -116,9 +122,9 @@ fn handle_logout() -> Result<()> {
 }
 
 fn handle_status() -> Result<()> {
-    use crate::utils::output::print_json;
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
+    use crate::utils::output::print_json;
     use tracing::info;
 
     let config_manager = ConfigManager::new()?;
@@ -158,7 +164,8 @@ fn handle_status() -> Result<()> {
             }
         }
     } else {
-        result["message"] = serde_json::json!("Not authenticated. Please run 'xion auth login' first.");
+        result["message"] =
+            serde_json::json!("Not authenticated. Please run 'xion auth login' first.");
         info!("User is not authenticated");
     }
 
@@ -166,9 +173,9 @@ fn handle_status() -> Result<()> {
 }
 
 async fn handle_refresh() -> Result<()> {
-    use crate::utils::output::{print_json, print_info};
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
+    use crate::utils::output::{print_info, print_json};
     use tracing::info;
 
     print_info("Refreshing access token...");
@@ -178,7 +185,7 @@ async fn handle_refresh() -> Result<()> {
     let oauth_client = OAuthClient::new(network_config)?;
 
     info!("Attempting to refresh token");
-    
+
     // Refresh token
     match oauth_client.refresh_token().await {
         Ok(credentials) => {
@@ -203,4 +210,3 @@ async fn handle_refresh() -> Result<()> {
         }
     }
 }
-

@@ -2,8 +2,8 @@ pub mod auth;
 pub mod config;
 pub mod treasury;
 
-use clap::{Parser, Subcommand};
 use anyhow::Result;
+use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(name = "xion-toolkit")]

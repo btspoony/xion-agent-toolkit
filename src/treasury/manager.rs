@@ -8,12 +8,14 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, instrument};
 
-use crate::oauth::OAuthClient;
 use crate::config::NetworkConfig;
+use crate::oauth::OAuthClient;
 
 use super::api_client::TreasuryApiClient;
 use super::cache::TreasuryCache;
-use super::types::{FundResult, QueryOptions, TreasuryInfo, TreasuryListItem, TreasuryParams, WithdrawResult};
+use super::types::{
+    FundResult, QueryOptions, TreasuryInfo, TreasuryListItem, TreasuryParams, WithdrawResult,
+};
 
 /// Treasury Manager
 ///
@@ -247,7 +249,10 @@ impl TreasuryManager {
 
         // Call API with full options
         let options = QueryOptions::default();
-        let treasury = self.api_client.query_treasury(&token, address, options).await?;
+        let treasury = self
+            .api_client
+            .query_treasury(&token, address, options)
+            .await?;
 
         // Update cache
         if let Some(cache) = &self.cache {
@@ -423,9 +428,9 @@ impl TreasuryManager {
             .get_credentials()?
             .ok_or_else(|| anyhow::anyhow!("Not authenticated. Please login first."))?;
 
-        let admin_address = credentials
-            .xion_address
-            .ok_or_else(|| anyhow::anyhow!("User address not found in credentials. Please login again."))?;
+        let admin_address = credentials.xion_address.ok_or_else(|| {
+            anyhow::anyhow!("User address not found in credentials. Please login again.")
+        })?;
 
         // Step 1: Encode params metadata
         let metadata = serde_json::json!({
@@ -484,25 +489,41 @@ impl TreasuryManager {
             admin: admin_address.clone(),
             fee_config: super::types::FeeConfigMessage {
                 allowance: super::types::TypeUrlValue {
-                    type_url: instantiate_msg.fee_config.as_ref().map(|f| f.allowance.type_url.clone()).unwrap_or_default(),
-                    value: instantiate_msg.fee_config.as_ref().map(|f| f.allowance.value.clone()).unwrap_or_default(),
+                    type_url: instantiate_msg
+                        .fee_config
+                        .as_ref()
+                        .map(|f| f.allowance.type_url.clone())
+                        .unwrap_or_default(),
+                    value: instantiate_msg
+                        .fee_config
+                        .as_ref()
+                        .map(|f| f.allowance.value.clone())
+                        .unwrap_or_default(),
                 },
-                description: instantiate_msg.fee_config.as_ref().map(|f| f.description.clone()).unwrap_or_default(),
+                description: instantiate_msg
+                    .fee_config
+                    .as_ref()
+                    .map(|f| f.description.clone())
+                    .unwrap_or_default(),
             },
-            grant_configs: instantiate_msg.grant_configs.iter().map(|gc| {
-                super::types::GrantConfigMessage {
+            grant_configs: instantiate_msg
+                .grant_configs
+                .iter()
+                .map(|gc| super::types::GrantConfigMessage {
                     authorization: super::types::TypeUrlValue {
                         type_url: gc.authorization.type_url.clone(),
                         value: gc.authorization.value.clone(),
                     },
                     description: Some(gc.description.clone()),
-                }
-            }).collect(),
+                })
+                .collect(),
             params: super::types::TreasuryParamsMessage {
                 redirect_url: instantiate_msg.params.redirect_url.clone(),
                 icon_url: instantiate_msg.params.icon_url.clone(),
                 display_url: None,
-                metadata: Some(serde_json::from_str(&instantiate_msg.params.metadata).unwrap_or_default()),
+                metadata: Some(
+                    serde_json::from_str(&instantiate_msg.params.metadata).unwrap_or_default(),
+                ),
             },
             name: request.params.name.clone(),
             is_oauth2_app: request.params.is_oauth2_app.unwrap_or(false),
@@ -522,7 +543,9 @@ impl TreasuryManager {
                 display_url: None,
                 redirect_url: instantiate_msg.params.redirect_url,
                 icon_url: instantiate_msg.params.icon_url,
-                metadata: Some(serde_json::from_str(&instantiate_msg.params.metadata).unwrap_or_default()),
+                metadata: Some(
+                    serde_json::from_str(&instantiate_msg.params.metadata).unwrap_or_default(),
+                ),
             },
             fee_config: None,
             grant_configs: None,
@@ -550,9 +573,9 @@ impl TreasuryManager {
             .get_credentials()?
             .ok_or_else(|| anyhow::anyhow!("Not authenticated. Please login first."))?;
 
-        let from_address = credentials
-            .xion_address
-            .ok_or_else(|| anyhow::anyhow!("User address not found in credentials. Please login again."))?;
+        let from_address = credentials.xion_address.ok_or_else(|| {
+            anyhow::anyhow!("User address not found in credentials. Please login again.")
+        })?;
 
         // Get valid access token
         let access_token = self.oauth_client.get_valid_token().await?;
@@ -592,9 +615,9 @@ impl TreasuryManager {
             .get_credentials()?
             .ok_or_else(|| anyhow::anyhow!("Not authenticated. Please login first."))?;
 
-        let from_address = credentials
-            .xion_address
-            .ok_or_else(|| anyhow::anyhow!("User address not found in credentials. Please login again."))?;
+        let from_address = credentials.xion_address.ok_or_else(|| {
+            anyhow::anyhow!("User address not found in credentials. Please login again.")
+        })?;
 
         // Get valid access token
         let access_token = self.oauth_client.get_valid_token().await?;
@@ -641,9 +664,9 @@ impl TreasuryManager {
             .get_credentials()?
             .ok_or_else(|| anyhow::anyhow!("Not authenticated. Please login first."))?;
 
-        let from_address = credentials
-            .xion_address
-            .ok_or_else(|| anyhow::anyhow!("User address not found in credentials. Please login again."))?;
+        let from_address = credentials.xion_address.ok_or_else(|| {
+            anyhow::anyhow!("User address not found in credentials. Please login again.")
+        })?;
 
         // Get valid access token
         let access_token = self.oauth_client.get_valid_token().await?;
@@ -653,7 +676,13 @@ impl TreasuryManager {
 
         // Call API client to add grant config
         self.api_client
-            .add_grant_config(&access_token, address, &type_url, grant_config, &from_address)
+            .add_grant_config(
+                &access_token,
+                address,
+                &type_url,
+                grant_config,
+                &from_address,
+            )
             .await
     }
 
@@ -671,7 +700,10 @@ impl TreasuryManager {
         address: &str,
         type_url: &str,
     ) -> Result<super::types::GrantConfigResult> {
-        debug!("Removing grant config {} from treasury {}", type_url, address);
+        debug!(
+            "Removing grant config {} from treasury {}",
+            type_url, address
+        );
 
         // Get user credentials to obtain xion_address
         let credentials = self
@@ -679,9 +711,9 @@ impl TreasuryManager {
             .get_credentials()?
             .ok_or_else(|| anyhow::anyhow!("Not authenticated. Please login first."))?;
 
-        let from_address = credentials
-            .xion_address
-            .ok_or_else(|| anyhow::anyhow!("User address not found in credentials. Please login again."))?;
+        let from_address = credentials.xion_address.ok_or_else(|| {
+            anyhow::anyhow!("User address not found in credentials. Please login again.")
+        })?;
 
         // Get valid access token
         let access_token = self.oauth_client.get_valid_token().await?;
@@ -710,7 +742,9 @@ impl TreasuryManager {
         let access_token = self.oauth_client.get_valid_token().await?;
 
         // Call API client to list grant configs
-        self.api_client.list_grant_configs(&access_token, address).await
+        self.api_client
+            .list_grant_configs(&access_token, address)
+            .await
     }
 
     // ========================================================================
@@ -739,9 +773,9 @@ impl TreasuryManager {
             .get_credentials()?
             .ok_or_else(|| anyhow::anyhow!("Not authenticated. Please login first."))?;
 
-        let from_address = credentials
-            .xion_address
-            .ok_or_else(|| anyhow::anyhow!("User address not found in credentials. Please login again."))?;
+        let from_address = credentials.xion_address.ok_or_else(|| {
+            anyhow::anyhow!("User address not found in credentials. Please login again.")
+        })?;
 
         // Get valid access token
         let access_token = self.oauth_client.get_valid_token().await?;
@@ -760,10 +794,7 @@ impl TreasuryManager {
     /// # Returns
     /// Fee config result with transaction hash
     #[instrument(skip(self))]
-    pub async fn remove_fee_config(
-        &self,
-        address: &str,
-    ) -> Result<super::types::FeeConfigResult> {
+    pub async fn remove_fee_config(&self, address: &str) -> Result<super::types::FeeConfigResult> {
         debug!("Removing fee config from treasury {}", address);
 
         // Get user credentials to obtain xion_address
@@ -772,9 +803,9 @@ impl TreasuryManager {
             .get_credentials()?
             .ok_or_else(|| anyhow::anyhow!("Not authenticated. Please login first."))?;
 
-        let from_address = credentials
-            .xion_address
-            .ok_or_else(|| anyhow::anyhow!("User address not found in credentials. Please login again."))?;
+        let from_address = credentials.xion_address.ok_or_else(|| {
+            anyhow::anyhow!("User address not found in credentials. Please login again.")
+        })?;
 
         // Get valid access token
         let access_token = self.oauth_client.get_valid_token().await?;
@@ -803,7 +834,9 @@ impl TreasuryManager {
         let access_token = self.oauth_client.get_valid_token().await?;
 
         // Call API client to query fee config
-        self.api_client.query_fee_config(&access_token, address).await
+        self.api_client
+            .query_fee_config(&access_token, address)
+            .await
     }
 }
 
@@ -816,7 +849,7 @@ fn encode_fee_config_input(
     input: &super::types::FeeConfigInput,
 ) -> Result<super::types::FeeConfigChain> {
     use super::encoding::{
-        encode_basic_allowance, encode_periodic_allowance, encode_allowed_msg_allowance,
+        encode_allowed_msg_allowance, encode_basic_allowance, encode_periodic_allowance,
         parse_coin_string,
     };
 
@@ -889,9 +922,9 @@ fn encode_grant_config_input(
     input: &super::types::GrantConfigInput,
 ) -> Result<(String, super::types::GrantConfigChain)> {
     use super::encoding::{
-        encode_generic_authorization, encode_send_authorization, encode_stake_authorization,
-        encode_ibc_transfer_authorization, encode_contract_execution_authorization,
-        parse_coin_string, parse_single_denom, IbcAllocation, ContractGrant,
+        encode_contract_execution_authorization, encode_generic_authorization,
+        encode_ibc_transfer_authorization, encode_send_authorization, encode_stake_authorization,
+        parse_coin_string, parse_single_denom, ContractGrant, IbcAllocation,
     };
 
     let (auth_type_url, auth_value) = match &input.authorization {
@@ -1045,8 +1078,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_requires_auth() {
-        use crate::treasury::types::{TreasuryCreateRequest, TreasuryParamsInput, FeeConfigInput};
-        
+        use crate::treasury::types::{FeeConfigInput, TreasuryCreateRequest, TreasuryParamsInput};
+
         let config = create_test_config();
         let oauth_client = OAuthClient::new(config.clone()).unwrap();
         let manager = TreasuryManager::new(oauth_client, config.clone());
@@ -1067,7 +1100,10 @@ mod tests {
 
         let result = manager.create(request).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Not authenticated"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Not authenticated"));
     }
 
     #[tokio::test]
@@ -1078,7 +1114,10 @@ mod tests {
 
         let result = manager.fund("xion1abc", "1000uxion").await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Not authenticated"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Not authenticated"));
     }
 
     #[tokio::test]
@@ -1089,6 +1128,9 @@ mod tests {
 
         let result = manager.withdraw("xion1abc", "1000uxion").await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Not authenticated"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Not authenticated"));
     }
 }

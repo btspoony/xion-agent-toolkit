@@ -15,9 +15,9 @@ use xion_agent_toolkit::treasury::encoding::{
     encode_send_authorization, parse_coin_string, Coin,
 };
 use xion_agent_toolkit::treasury::types::{
-    AuthorizationInput, FeeConfigInput, GrantConfigInput, TreasuryCreateRequest,
-    TreasuryParamsInput, CreateTreasuryRequest, FeeConfigMessage, GrantConfigMessage,
-    TreasuryParamsMessage, TypeUrlValue,
+    AuthorizationInput, CreateTreasuryRequest, FeeConfigInput, FeeConfigMessage, GrantConfigInput,
+    GrantConfigMessage, TreasuryCreateRequest, TreasuryParamsInput, TreasuryParamsMessage,
+    TypeUrlValue,
 };
 use xion_agent_toolkit::treasury::{TreasuryApiClient, TreasuryManager};
 
@@ -48,19 +48,19 @@ fn test_basic_allowance_encoding_single_coin() {
         denom: "uxion".to_string(),
         amount: "1000000".to_string(),
     }];
-    
+
     let encoded = encode_basic_allowance(coins).expect("Failed to encode BasicAllowance");
-    
+
     // Should be valid base64
     let decoded = base64::engine::general_purpose::STANDARD
         .decode(&encoded)
         .expect("Failed to decode base64");
-    
+
     assert!(!decoded.is_empty());
-    
+
     // First byte should be field 1, wire type 2 = 0x0a
     assert_eq!(decoded[0], 0x0a);
-    
+
     // Verify the encoded amount is present
     let decoded_str = String::from_utf8_lossy(&decoded);
     assert!(decoded_str.contains("1000000"));
@@ -79,16 +79,16 @@ fn test_basic_allowance_encoding_multiple_coins() {
             amount: "1000000".to_string(),
         },
     ];
-    
+
     let encoded = encode_basic_allowance(coins).expect("Failed to encode BasicAllowance");
-    
+
     // Should be valid base64
     let decoded = base64::engine::general_purpose::STANDARD
         .decode(&encoded)
         .expect("Failed to decode base64");
-    
+
     assert!(!decoded.is_empty());
-    
+
     // Verify both coins are present (sorted alphabetically by denom)
     let decoded_str = String::from_utf8_lossy(&decoded);
     assert!(decoded_str.contains("500"));
@@ -102,7 +102,9 @@ fn test_basic_allowance_encoding_empty_spend_limit() {
     let result = encode_basic_allowance(vec![]);
     assert!(result.is_err());
     let err = result.unwrap_err();
-    assert!(err.to_string().contains("requires at least one spend_limit"));
+    assert!(err
+        .to_string()
+        .contains("requires at least one spend_limit"));
 }
 
 // ============================================================================
@@ -115,17 +117,17 @@ fn test_periodic_allowance_encoding() {
         denom: "uxion".to_string(),
         amount: "1000000".to_string(),
     }];
-    
+
     let encoded = encode_periodic_allowance(None, 86400, period_limit)
         .expect("Failed to encode PeriodicAllowance");
-    
+
     // Should be valid base64
     let decoded = base64::engine::general_purpose::STANDARD
         .decode(&encoded)
         .expect("Failed to decode base64");
-    
+
     assert!(!decoded.is_empty());
-    
+
     // Verify coin data is present
     let decoded_str = String::from_utf8_lossy(&decoded);
     assert!(decoded_str.contains("uxion"));
@@ -142,21 +144,21 @@ fn test_periodic_allowance_encoding_with_basic_limit() {
         denom: "uxion".to_string(),
         amount: "1000000".to_string(),
     }];
-    
+
     let encoded = encode_periodic_allowance(Some(basic_limit), 3600, period_limit)
         .expect("Failed to encode PeriodicAllowance");
-    
+
     // Should be valid base64
     let decoded = base64::engine::general_purpose::STANDARD
         .decode(&encoded)
         .expect("Failed to decode base64");
-    
+
     assert!(!decoded.is_empty());
-    
+
     // Both limits should be present
     let decoded_str = String::from_utf8_lossy(&decoded);
     assert!(decoded_str.contains("10000000")); // basic
-    assert!(decoded_str.contains("1000000"));  // period
+    assert!(decoded_str.contains("1000000")); // period
 }
 
 #[test]
@@ -173,14 +175,14 @@ fn test_periodic_allowance_encoding_empty_period_spend_limit() {
 fn test_generic_authorization_encoding() {
     let encoded = encode_generic_authorization("/cosmos.bank.v1beta1.MsgSend")
         .expect("Failed to encode GenericAuthorization");
-    
+
     // Should be valid base64
     let decoded = base64::engine::general_purpose::STANDARD
         .decode(&encoded)
         .expect("Failed to decode base64");
-    
+
     assert!(!decoded.is_empty());
-    
+
     // Verify the message type is present
     let decoded_str = String::from_utf8_lossy(&decoded);
     assert!(decoded_str.contains("MsgSend"));
@@ -202,17 +204,17 @@ fn test_send_authorization_encoding() {
         denom: "uxion".to_string(),
         amount: "1000000".to_string(),
     }];
-    
-    let encoded = encode_send_authorization(coins, None)
-        .expect("Failed to encode SendAuthorization");
-    
+
+    let encoded =
+        encode_send_authorization(coins, None).expect("Failed to encode SendAuthorization");
+
     // Should be valid base64
     let decoded = base64::engine::general_purpose::STANDARD
         .decode(&encoded)
         .expect("Failed to decode base64");
-    
+
     assert!(!decoded.is_empty());
-    
+
     // Verify coin data is present
     let decoded_str = String::from_utf8_lossy(&decoded);
     assert!(decoded_str.contains("1000000"));
@@ -229,17 +231,17 @@ fn test_send_authorization_encoding_with_allow_list() {
         "xion1abc123456789".to_string(),
         "xion1def456789012".to_string(),
     ];
-    
+
     let encoded = encode_send_authorization(coins, Some(allow_list.clone()))
         .expect("Failed to encode SendAuthorization");
-    
+
     // Should be valid base64
     let decoded = base64::engine::general_purpose::STANDARD
         .decode(&encoded)
         .expect("Failed to decode base64");
-    
+
     assert!(!decoded.is_empty());
-    
+
     // Verify allow list is present
     let decoded_str = String::from_utf8_lossy(&decoded);
     assert!(decoded_str.contains("xion1abc"));
@@ -428,60 +430,74 @@ fn test_parse_coin_string_invalid_no_denom() {
 #[tokio::test]
 async fn test_create_treasury_api_success() {
     let mut server = Server::new_async().await;
-    
+
     let tx_hash = "tx_create_1234567890abcdef";
     let treasury_address = "xion1newtreasury123456789";
     let admin_address = "xion1admin123456789";
-    
+
     // Mock the broadcast endpoint
-    let _mock_broadcast = server.mock("POST", "/api/v1/transaction")
-        .match_header("authorization", mockito::Matcher::Regex(r"Bearer .+".to_string()))
+    let _mock_broadcast = server
+        .mock("POST", "/api/v1/transaction")
+        .match_header(
+            "authorization",
+            mockito::Matcher::Regex(r"Bearer .+".to_string()),
+        )
         .with_status(200)
         .with_header("content-type", "application/json")
-        .with_body(json!({
-            "success": true,
-            "tx_hash": tx_hash,
-            "from": admin_address,
-            "gas_used": "200000",
-            "gas_wanted": "300000"
-        }).to_string())
+        .with_body(
+            json!({
+                "success": true,
+                "tx_hash": tx_hash,
+                "from": admin_address,
+                "gas_used": "200000",
+                "gas_wanted": "300000"
+            })
+            .to_string(),
+        )
         .create();
-    
+
     // Mock the list treasuries endpoint (for waiting for indexing)
-    let _mock_list = server.mock("GET", "/mgr-api/treasuries")
-        .match_header("authorization", mockito::Matcher::Regex(r"Bearer .+".to_string()))
+    let _mock_list = server
+        .mock("GET", "/mgr-api/treasuries")
+        .match_header(
+            "authorization",
+            mockito::Matcher::Regex(r"Bearer .+".to_string()),
+        )
         .with_status(200)
         .with_header("content-type", "application/json")
-        .with_body(json!({
-            "treasuries": [{
-                "address": treasury_address,
-                "admin": admin_address,
-                "balance": "0",
-                "name": "Test Treasury"
-            }]
-        }).to_string())
+        .with_body(
+            json!({
+                "treasuries": [{
+                    "address": treasury_address,
+                    "admin": admin_address,
+                    "balance": "0",
+                    "name": "Test Treasury"
+                }]
+            })
+            .to_string(),
+        )
         .create();
-    
+
     let client = TreasuryApiClient::new(server.url());
-    
+
     let request = CreateTreasuryRequest {
         admin: "xion1admin123456789".to_string(),
         fee_config: FeeConfigMessage {
             allowance: TypeUrlValue {
                 type_url: "/cosmos.feegrant.v1beta1.BasicAllowance".to_string(),
-                value: base64::engine::general_purpose::STANDARD.encode(b"{spend_limit:{amount:\"1000000\",denom:\"uxion\"}}"),
+                value: base64::engine::general_purpose::STANDARD
+                    .encode(b"{spend_limit:{amount:\"1000000\",denom:\"uxion\"}}"),
             },
             description: "Basic fee allowance".to_string(),
         },
-        grant_configs: vec![
-            GrantConfigMessage {
-                authorization: TypeUrlValue {
-                    type_url: "/cosmos.bank.v1beta1.SendAuthorization".to_string(),
-                    value: base64::engine::general_purpose::STANDARD.encode(b"{spend_limit:{amount:\"500000\",denom:\"uxion\"}}"),
-                },
-                description: Some("Send funds".to_string()),
-            }
-        ],
+        grant_configs: vec![GrantConfigMessage {
+            authorization: TypeUrlValue {
+                type_url: "/cosmos.bank.v1beta1.SendAuthorization".to_string(),
+                value: base64::engine::general_purpose::STANDARD
+                    .encode(b"{spend_limit:{amount:\"500000\",denom:\"uxion\"}}"),
+            },
+            description: Some("Send funds".to_string()),
+        }],
         params: TreasuryParamsMessage {
             redirect_url: "https://myapp.com/callback".to_string(),
             icon_url: "https://myapp.com/icon.png".to_string(),
@@ -491,33 +507,43 @@ async fn test_create_treasury_api_success() {
         name: Some("Test Treasury".to_string()),
         is_oauth2_app: false,
     };
-    
+
     let salt: [u8; 32] = [0u8; 32];
-    let result = client.create_treasury("mock_token", 1260, request, &salt).await;
-    
-    assert!(result.is_ok(), "Create treasury should succeed: {:?}", result.err());
+    let result = client
+        .create_treasury("mock_token", 1260, request, &salt)
+        .await;
+
+    assert!(
+        result.is_ok(),
+        "Create treasury should succeed: {:?}",
+        result.err()
+    );
     let response = result.unwrap();
     assert_eq!(response.tx_hash, tx_hash);
-    
+
     _mock_broadcast.assert();
 }
 
 #[tokio::test]
 async fn test_create_treasury_api_unauthorized() {
     let mut server = Server::new_async().await;
-    
+
     // Mock unauthorized response
-    let mock = server.mock("POST", "/api/v1/transaction")
+    let mock = server
+        .mock("POST", "/api/v1/transaction")
         .with_status(401)
         .with_header("content-type", "application/json")
-        .with_body(json!({
-            "error": "UNAUTHORIZED",
-            "message": "Invalid or expired access token"
-        }).to_string())
+        .with_body(
+            json!({
+                "error": "UNAUTHORIZED",
+                "message": "Invalid or expired access token"
+            })
+            .to_string(),
+        )
         .create();
-    
+
     let client = TreasuryApiClient::new(server.url());
-    
+
     let request = CreateTreasuryRequest {
         admin: "xion1admin123456789".to_string(),
         fee_config: FeeConfigMessage {
@@ -537,14 +563,16 @@ async fn test_create_treasury_api_unauthorized() {
         name: None,
         is_oauth2_app: false,
     };
-    
+
     let salt: [u8; 32] = [0u8; 32];
-    let result = client.create_treasury("invalid_token", 1260, request, &salt).await;
-    
+    let result = client
+        .create_treasury("invalid_token", 1260, request, &salt)
+        .await;
+
     assert!(result.is_err());
     let err = result.unwrap_err();
     assert!(err.to_string().contains("401") || err.to_string().contains("Unauthorized"));
-    
+
     mock.assert();
 }
 
@@ -554,7 +582,7 @@ async fn test_manager_create_requires_auth() {
     let config = create_test_config(&server.url());
     let oauth_client = OAuthClient::new(config.clone()).expect("Failed to create OAuthClient");
     let manager = TreasuryManager::new(oauth_client, config.clone());
-    
+
     let request = TreasuryCreateRequest {
         params: TreasuryParamsInput {
             redirect_url: "https://example.com/callback".to_string(),
@@ -573,7 +601,7 @@ async fn test_manager_create_requires_auth() {
             optional: false,
         }],
     };
-    
+
     let result = manager.create(request).await;
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -588,11 +616,11 @@ async fn test_manager_create_requires_auth() {
 fn test_load_config_from_file() {
     use std::fs;
     use tempfile::TempDir;
-    
+
     // Create a temp config file
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let config_path = temp_dir.path().join("treasury_config.json");
-    
+
     let config_content = r#"{
         "params": {
             "redirect_url": "https://myapp.com/callback",
@@ -617,25 +645,29 @@ fn test_load_config_from_file() {
             }
         ]
     }"#;
-    
+
     fs::write(&config_path, config_content).expect("Failed to write config file");
-    
+
     // Test loading
     let content = fs::read_to_string(&config_path).expect("Failed to read config");
-    let request: TreasuryCreateRequest = serde_json::from_str(&content).expect("Failed to parse config");
-    
+    let request: TreasuryCreateRequest =
+        serde_json::from_str(&content).expect("Failed to parse config");
+
     assert_eq!(request.params.redirect_url, "https://myapp.com/callback");
     assert_eq!(request.params.name, Some("Config Treasury".to_string()));
     assert!(request.params.is_oauth2_app.is_some());
-    
+
     match request.fee_config.unwrap() {
-        FeeConfigInput::Basic { spend_limit, description } => {
+        FeeConfigInput::Basic {
+            spend_limit,
+            description,
+        } => {
             assert_eq!(spend_limit, "1000000uxion");
             assert_eq!(description, "From config file");
         }
         _ => panic!("Expected Basic fee config"),
     }
-    
+
     assert_eq!(request.grant_configs.len(), 1);
 }
 
@@ -643,18 +675,18 @@ fn test_load_config_from_file() {
 fn test_load_invalid_config_file() {
     use std::fs;
     use tempfile::TempDir;
-    
+
     // Create a temp invalid config file
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let config_path = temp_dir.path().join("invalid_config.json");
-    
+
     let config_content = "not valid json";
     fs::write(&config_path, config_content).expect("Failed to write config");
-    
+
     // Try to parse invalid JSON
     let content = fs::read_to_string(&config_path).expect("Failed to read config");
     let result: Result<TreasuryCreateRequest, _> = serde_json::from_str(&content);
-    
+
     assert!(result.is_err());
 }
 
@@ -665,59 +697,73 @@ fn test_load_invalid_config_file() {
 #[tokio::test]
 async fn test_full_create_flow_with_mocks() {
     let mut server = Server::new_async().await;
-    
+
     let tx_hash = "tx_full_flow_abcdef123456";
     let admin_address = "xion1admin123456789";
     let treasury_address = "xion1treasury_fullflow";
-    
+
     // Mock broadcast transaction
-    let _mock_broadcast = server.mock("POST", "/api/v1/transaction")
-        .match_header("authorization", mockito::Matcher::Regex(r"Bearer .+".to_string()))
+    let _mock_broadcast = server
+        .mock("POST", "/api/v1/transaction")
+        .match_header(
+            "authorization",
+            mockito::Matcher::Regex(r"Bearer .+".to_string()),
+        )
         .with_status(200)
         .with_header("content-type", "application/json")
-        .with_body(json!({
-            "success": true,
-            "tx_hash": tx_hash,
-            "from": admin_address,
-            "gas_used": "250000",
-            "gas_wanted": "350000"
-        }).to_string())
+        .with_body(
+            json!({
+                "success": true,
+                "tx_hash": tx_hash,
+                "from": admin_address,
+                "gas_used": "250000",
+                "gas_wanted": "350000"
+            })
+            .to_string(),
+        )
         .create();
-    
+
     // Mock list treasuries for wait_for_treasury_creation
-    let _mock_list = server.mock("GET", "/mgr-api/treasuries")
-        .match_header("authorization", mockito::Matcher::Regex(r"Bearer .+".to_string()))
+    let _mock_list = server
+        .mock("GET", "/mgr-api/treasuries")
+        .match_header(
+            "authorization",
+            mockito::Matcher::Regex(r"Bearer .+".to_string()),
+        )
         .with_status(200)
         .with_header("content-type", "application/json")
-        .with_body(json!({
-            "treasuries": [{
-                "address": treasury_address,
-                "admin": admin_address,
-                "balance": "0",
-                "name": "Full Flow Treasury"
-            }]
-        }).to_string())
+        .with_body(
+            json!({
+                "treasuries": [{
+                    "address": treasury_address,
+                    "admin": admin_address,
+                    "balance": "0",
+                    "name": "Full Flow Treasury"
+                }]
+            })
+            .to_string(),
+        )
         .create();
-    
+
     let client = TreasuryApiClient::new(server.url());
-    
+
     // Test that we can build and encode a treasury create request
     let coins = vec![Coin {
         denom: "uxion".to_string(),
         amount: "1000000".to_string(),
     }];
-    
-    let basic_allowance_encoded = encode_basic_allowance(coins.clone())
-        .expect("Failed to encode basic allowance");
-    
+
+    let basic_allowance_encoded =
+        encode_basic_allowance(coins.clone()).expect("Failed to encode basic allowance");
+
     let send_coins = vec![Coin {
         denom: "uxion".to_string(),
         amount: "500000".to_string(),
     }];
-    
-    let send_auth_encoded = encode_send_authorization(send_coins, None)
-        .expect("Failed to encode send authorization");
-    
+
+    let send_auth_encoded =
+        encode_send_authorization(send_coins, None).expect("Failed to encode send authorization");
+
     let request = CreateTreasuryRequest {
         admin: "xion1admin123456789".to_string(),
         fee_config: FeeConfigMessage {
@@ -727,15 +773,13 @@ async fn test_full_create_flow_with_mocks() {
             },
             description: "Basic fee allowance".to_string(),
         },
-        grant_configs: vec![
-            GrantConfigMessage {
-                authorization: TypeUrlValue {
-                    type_url: "/cosmos.bank.v1beta1.SendAuthorization".to_string(),
-                    value: send_auth_encoded,
-                },
-                description: Some("Send funds".to_string()),
-            }
-        ],
+        grant_configs: vec![GrantConfigMessage {
+            authorization: TypeUrlValue {
+                type_url: "/cosmos.bank.v1beta1.SendAuthorization".to_string(),
+                value: send_auth_encoded,
+            },
+            description: Some("Send funds".to_string()),
+        }],
         params: TreasuryParamsMessage {
             redirect_url: "https://myapp.com/callback".to_string(),
             icon_url: "https://myapp.com/icon.png".to_string(),
@@ -745,15 +789,21 @@ async fn test_full_create_flow_with_mocks() {
         name: Some("Full Flow Treasury".to_string()),
         is_oauth2_app: true,
     };
-    
+
     let salt: [u8; 32] = [1u8; 32];
-    let result = client.create_treasury("test_token_123", 1260, request, &salt).await;
-    
-    assert!(result.is_ok(), "Full flow should succeed: {:?}", result.err());
+    let result = client
+        .create_treasury("test_token_123", 1260, request, &salt)
+        .await;
+
+    assert!(
+        result.is_ok(),
+        "Full flow should succeed: {:?}",
+        result.err()
+    );
     let response = result.unwrap();
     assert_eq!(response.tx_hash, tx_hash);
     assert_eq!(response.admin, "xion1admin123456789");
-    
+
     _mock_broadcast.assert();
 }
 
@@ -773,8 +823,8 @@ fn test_coin_parsing_with_large_amounts() {
 #[test]
 fn test_coin_parsing_ibc_denom() {
     // Test IBC denom with multiple slashes
-    let coins = parse_coin_string("1000ibc/partner/channel-1/uatom")
-        .expect("Failed to parse IBC denom");
+    let coins =
+        parse_coin_string("1000ibc/partner/channel-1/uatom").expect("Failed to parse IBC denom");
     assert_eq!(coins.len(), 1);
     assert_eq!(coins[0].amount, "1000");
     assert_eq!(coins[0].denom, "ibc/partner/channel-1/uatom");

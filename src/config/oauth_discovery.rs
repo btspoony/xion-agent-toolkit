@@ -122,11 +122,10 @@ impl OAuth2EndpointsCache {
             return Ok(HashMap::new());
         }
 
-        let content = fs::read_to_string(&cache_path)
-            .context("Failed to read endpoints cache")?;
+        let content = fs::read_to_string(&cache_path).context("Failed to read endpoints cache")?;
 
-        let caches: Vec<Self> = serde_json::from_str(&content)
-            .context("Failed to parse endpoints cache")?;
+        let caches: Vec<Self> =
+            serde_json::from_str(&content).context("Failed to parse endpoints cache")?;
 
         Ok(caches.into_iter().map(|c| (c.network.clone(), c)).collect())
     }
@@ -139,8 +138,7 @@ impl OAuth2EndpointsCache {
         let content = serde_json::to_string_pretty(&caches_vec)
             .context("Failed to serialize endpoints cache")?;
 
-        fs::write(&cache_path, content)
-            .context("Failed to write endpoints cache")?;
+        fs::write(&cache_path, content).context("Failed to write endpoints cache")?;
 
         Ok(())
     }
@@ -205,10 +203,7 @@ pub async fn fetch_oauth2_metadata(base_url: &str) -> Result<OAuth2ServerMetadat
 /// 1. Check if valid cached endpoints exist
 /// 2. If not, fetch from well-known endpoint
 /// 3. Cache the result for future use
-pub async fn get_oauth2_endpoints(
-    network: &str,
-    base_url: &str,
-) -> Result<OAuth2ServerMetadata> {
+pub async fn get_oauth2_endpoints(network: &str, base_url: &str) -> Result<OAuth2ServerMetadata> {
     // Try to load from cache
     if let Some(cached) = OAuth2EndpointsCache::load(network)? {
         if cached.is_valid() {

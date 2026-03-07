@@ -1,9 +1,12 @@
-use clap::{Args, Subcommand};
 use anyhow::Result;
-use std::path::PathBuf;
+use clap::{Args, Subcommand};
 use std::fs;
+use std::path::PathBuf;
 
-use crate::treasury::types::{TreasuryCreateRequest, TreasuryParamsInput, FeeConfigInput, GrantConfigInput, AuthorizationInput};
+use crate::treasury::types::{
+    AuthorizationInput, FeeConfigInput, GrantConfigInput, TreasuryCreateRequest,
+    TreasuryParamsInput,
+};
 
 #[derive(Subcommand)]
 pub enum TreasuryCommands {
@@ -109,57 +112,57 @@ pub struct CreateArgs {
     /// Path to JSON config file
     #[arg(short, long, value_name = "FILE")]
     pub config: Option<PathBuf>,
-    
+
     /// OAuth callback URL (required unless using --config)
     #[arg(short = 'r', long)]
     pub redirect_url: Option<String>,
-    
+
     /// Treasury icon URL (required unless using --config)
     #[arg(short = 'i', long)]
     pub icon_url: Option<String>,
-    
-/// Treasury display name
+
+    /// Treasury display name
     #[arg(short = 'N', long)]
     pub name: Option<String>,
-    
+
     /// Mark as OAuth2 application
     #[arg(long)]
     pub is_oauth2_app: bool,
-    
+
     // Fee grant flags
     /// Fee allowance type: basic, periodic, or allowed-msg
     #[arg(long)]
     pub fee_allowance_type: Option<String>,
-    
+
     /// Fee spend limit (e.g., "1000000uxion")
     #[arg(long)]
     pub fee_spend_limit: Option<String>,
-    
+
     /// Fee period seconds (for periodic allowance)
     #[arg(long)]
     pub fee_period_seconds: Option<u64>,
-    
+
     /// Fee period spend limit (for periodic allowance)
     #[arg(long)]
     pub fee_period_spend_limit: Option<String>,
-    
+
     /// Fee grant description
     #[arg(long)]
     pub fee_description: Option<String>,
-    
+
     // Grant flags (simplified)
     /// Grant permission type URL
     #[arg(long)]
     pub grant_type_url: Option<String>,
-    
+
     /// Grant authorization type (generic, send, stake)
     #[arg(long)]
     pub grant_auth_type: Option<String>,
-    
+
     /// Grant description
     #[arg(long)]
     pub grant_description: Option<String>,
-    
+
     /// Grant spend limit (for send authorization)
     #[arg(long)]
     pub grant_spend_limit: Option<String>,
@@ -181,16 +184,16 @@ async fn handle_list() -> Result<()> {
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
     use crate::treasury::TreasuryManager;
-    use crate::utils::output::{print_json, print_info};
-    
+    use crate::utils::output::{print_info, print_json};
+
     print_info("Listing treasury contracts...");
-    
+
     // Create manager
     let config_manager = ConfigManager::new()?;
     let network_config = config_manager.get_network_config()?;
     let oauth_client = OAuthClient::new(network_config.clone())?;
     let manager = TreasuryManager::new(oauth_client, network_config.clone());
-    
+
     // Check authentication
     if !manager.is_authenticated()? {
         let result = serde_json::json!({
@@ -200,7 +203,7 @@ async fn handle_list() -> Result<()> {
         });
         return print_json(&result);
     }
-    
+
     // List treasuries
     match manager.list().await {
         Ok(treasuries) => {
@@ -226,16 +229,16 @@ async fn handle_query(address: &str) -> Result<()> {
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
     use crate::treasury::TreasuryManager;
-    use crate::utils::output::{print_json, print_info};
-    
+    use crate::utils::output::{print_info, print_json};
+
     print_info(&format!("Querying treasury: {}", address));
-    
+
     // Create manager
     let config_manager = ConfigManager::new()?;
     let network_config = config_manager.get_network_config()?;
     let oauth_client = OAuthClient::new(network_config.clone())?;
     let manager = TreasuryManager::new(oauth_client, network_config.clone());
-    
+
     // Check authentication
     if !manager.is_authenticated()? {
         let result = serde_json::json!({
@@ -245,7 +248,7 @@ async fn handle_query(address: &str) -> Result<()> {
         });
         return print_json(&result);
     }
-    
+
     // Query treasury
     match manager.query(address).await {
         Ok(treasury) => {
@@ -270,26 +273,26 @@ async fn handle_create(args: CreateArgs) -> Result<()> {
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
     use crate::treasury::TreasuryManager;
-    use crate::utils::output::{print_json, print_info};
-    
+    use crate::utils::output::{print_info, print_json};
+
     print_info("Creating treasury contract...");
-    
+
     // Load from config file or build from flags
     let request = if let Some(config_path) = args.config {
         load_treasury_config(&config_path)?
     } else {
         build_request_from_flags(&args)?
     };
-    
+
     // Validate request
     validate_create_request(&request)?;
-    
+
     // Create manager
     let config_manager = ConfigManager::new()?;
     let network_config = config_manager.get_network_config()?;
     let oauth_client = OAuthClient::new(network_config.clone())?;
     let manager = TreasuryManager::new(oauth_client, network_config.clone());
-    
+
     // Check authentication
     if !manager.is_authenticated()? {
         let result = serde_json::json!({
@@ -299,24 +302,32 @@ async fn handle_create(args: CreateArgs) -> Result<()> {
         });
         return print_json(&result);
     }
-    
+
     // Call manager to create treasury
     match manager.create(request).await {
-        Ok(result) => {
-            print_json(&result)
-        }
+        Ok(result) => print_json(&result),
         Err(e) => {
             let error_msg = e.to_string();
-            let (code, suggestion) = if error_msg.contains("insufficient") || error_msg.contains("balance") {
-                ("INSUFFICIENT_BALANCE", "Fund your account before creating a treasury")
-            } else if error_msg.contains("invalid") || error_msg.contains("format") {
-                ("INVALID_INPUT", "Check your input parameters")
-            } else if error_msg.contains("unauthorized") {
-                ("UNAUTHORIZED", "You may not have permission to perform this action")
-            } else {
-                ("TREASURY_CREATE_FAILED", "Check the error message for details")
-            };
-            
+            let (code, suggestion) =
+                if error_msg.contains("insufficient") || error_msg.contains("balance") {
+                    (
+                        "INSUFFICIENT_BALANCE",
+                        "Fund your account before creating a treasury",
+                    )
+                } else if error_msg.contains("invalid") || error_msg.contains("format") {
+                    ("INVALID_INPUT", "Check your input parameters")
+                } else if error_msg.contains("unauthorized") {
+                    (
+                        "UNAUTHORIZED",
+                        "You may not have permission to perform this action",
+                    )
+                } else {
+                    (
+                        "TREASURY_CREATE_FAILED",
+                        "Check the error message for details",
+                    )
+                };
+
             let result = serde_json::json!({
                 "success": false,
                 "error": format!("Failed to create treasury: {}", e),
@@ -340,11 +351,15 @@ fn load_treasury_config(path: &PathBuf) -> Result<TreasuryCreateRequest> {
 /// Build treasury creation request from CLI flags
 pub fn build_request_from_flags(args: &CreateArgs) -> Result<TreasuryCreateRequest> {
     // Validate required fields
-    let redirect_url = args.redirect_url.clone()
+    let redirect_url = args
+        .redirect_url
+        .clone()
         .ok_or_else(|| anyhow::anyhow!("--redirect-url is required"))?;
-    let icon_url = args.icon_url.clone()
+    let icon_url = args
+        .icon_url
+        .clone()
         .ok_or_else(|| anyhow::anyhow!("--icon-url is required"))?;
-    
+
     // Build params
     let params = TreasuryParamsInput {
         redirect_url,
@@ -352,23 +367,30 @@ pub fn build_request_from_flags(args: &CreateArgs) -> Result<TreasuryCreateReque
         name: args.name.clone(),
         is_oauth2_app: if args.is_oauth2_app { Some(true) } else { None },
     };
-    
+
     // Build fee config
     let fee_config = if let Some(ref allowance_type) = args.fee_allowance_type {
-        let description = args.fee_description.clone()
-            .ok_or_else(|| anyhow::anyhow!("--fee-description is required when fee allowance is specified"))?;
-        
+        let description = args.fee_description.clone().ok_or_else(|| {
+            anyhow::anyhow!("--fee-description is required when fee allowance is specified")
+        })?;
+
         Some(match allowance_type.as_str() {
             "basic" => {
-                let spend_limit = args.fee_spend_limit.clone()
-                    .ok_or_else(|| anyhow::anyhow!("--fee-spend-limit is required for basic allowance"))?;
-                FeeConfigInput::Basic { spend_limit, description }
+                let spend_limit = args.fee_spend_limit.clone().ok_or_else(|| {
+                    anyhow::anyhow!("--fee-spend-limit is required for basic allowance")
+                })?;
+                FeeConfigInput::Basic {
+                    spend_limit,
+                    description,
+                }
             }
             "periodic" => {
-                let period_seconds = args.fee_period_seconds
-                    .ok_or_else(|| anyhow::anyhow!("--fee-period-seconds is required for periodic allowance"))?;
-                let period_spend_limit = args.fee_period_spend_limit.clone()
-                    .ok_or_else(|| anyhow::anyhow!("--fee-period-spend-limit is required for periodic allowance"))?;
+                let period_seconds = args.fee_period_seconds.ok_or_else(|| {
+                    anyhow::anyhow!("--fee-period-seconds is required for periodic allowance")
+                })?;
+                let period_spend_limit = args.fee_period_spend_limit.clone().ok_or_else(|| {
+                    anyhow::anyhow!("--fee-period-spend-limit is required for periodic allowance")
+                })?;
                 FeeConfigInput::Periodic {
                     basic_spend_limit: args.fee_spend_limit.clone(),
                     period_seconds,
@@ -376,28 +398,42 @@ pub fn build_request_from_flags(args: &CreateArgs) -> Result<TreasuryCreateReque
                     description,
                 }
             }
-            _ => return Err(anyhow::anyhow!("Invalid fee allowance type: {}. Supported: basic, periodic", allowance_type)),
+            _ => {
+                return Err(anyhow::anyhow!(
+                    "Invalid fee allowance type: {}. Supported: basic, periodic",
+                    allowance_type
+                ))
+            }
         })
     } else {
         None
     };
-    
+
     // Build grant configs (simplified for now - just one grant)
-    let grant_configs = if let (Some(type_url), Some(auth_type), Some(description)) = 
-        (&args.grant_type_url, &args.grant_auth_type, &args.grant_description) {
+    let grant_configs = if let (Some(type_url), Some(auth_type), Some(description)) = (
+        &args.grant_type_url,
+        &args.grant_auth_type,
+        &args.grant_description,
+    ) {
         let authorization = match auth_type.as_str() {
             "generic" => AuthorizationInput::Generic,
             "send" => {
-                let spend_limit = args.grant_spend_limit.clone()
-                    .ok_or_else(|| anyhow::anyhow!("--grant-spend-limit is required for send authorization"))?;
+                let spend_limit = args.grant_spend_limit.clone().ok_or_else(|| {
+                    anyhow::anyhow!("--grant-spend-limit is required for send authorization")
+                })?;
                 AuthorizationInput::Send {
                     spend_limit,
                     allow_list: None,
                 }
             }
-            _ => return Err(anyhow::anyhow!("Invalid grant auth type: {}. Supported: generic, send", auth_type)),
+            _ => {
+                return Err(anyhow::anyhow!(
+                    "Invalid grant auth type: {}. Supported: generic, send",
+                    auth_type
+                ))
+            }
         };
-        
+
         vec![GrantConfigInput {
             type_url: type_url.clone(),
             description: description.clone(),
@@ -408,13 +444,13 @@ pub fn build_request_from_flags(args: &CreateArgs) -> Result<TreasuryCreateReque
         // For now, we'll create an empty vec and let the user know they need grants
         vec![]
     };
-    
+
     if grant_configs.is_empty() {
         return Err(anyhow::anyhow!(
             "At least one grant configuration is required. Use --grant-type-url, --grant-auth-type, and --grant-description flags, or provide a config file with --config"
         ));
     }
-    
+
     Ok(TreasuryCreateRequest {
         params,
         fee_config,
@@ -426,17 +462,23 @@ pub fn build_request_from_flags(args: &CreateArgs) -> Result<TreasuryCreateReque
 pub fn validate_create_request(request: &TreasuryCreateRequest) -> Result<()> {
     // Validate URLs
     if !request.params.redirect_url.starts_with("http") {
-        return Err(anyhow::anyhow!("redirect_url must be a valid URL starting with http:// or https://"));
+        return Err(anyhow::anyhow!(
+            "redirect_url must be a valid URL starting with http:// or https://"
+        ));
     }
     if !request.params.icon_url.starts_with("http") {
-        return Err(anyhow::anyhow!("icon_url must be a valid URL starting with http:// or https://"));
+        return Err(anyhow::anyhow!(
+            "icon_url must be a valid URL starting with http:// or https://"
+        ));
     }
-    
+
     // Validate at least one grant config exists
     if request.grant_configs.is_empty() {
-        return Err(anyhow::anyhow!("At least one grant configuration is required"));
+        return Err(anyhow::anyhow!(
+            "At least one grant configuration is required"
+        ));
     }
-    
+
     // Validate each grant config
     for grant in &request.grant_configs {
         if grant.type_url.is_empty() {
@@ -446,7 +488,7 @@ pub fn validate_create_request(request: &TreasuryCreateRequest) -> Result<()> {
             return Err(anyhow::anyhow!("Grant description cannot be empty"));
         }
     }
-    
+
     Ok(())
 }
 
@@ -454,16 +496,16 @@ async fn handle_fund(address: &str, amount: &str) -> Result<()> {
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
     use crate::treasury::TreasuryManager;
-    use crate::utils::output::{print_json, print_info};
-    
+    use crate::utils::output::{print_info, print_json};
+
     print_info(&format!("Funding treasury {} with {}...", address, amount));
-    
+
     // Create manager
     let config_manager = ConfigManager::new()?;
     let network_config = config_manager.get_network_config()?;
     let oauth_client = OAuthClient::new(network_config.clone())?;
     let manager = TreasuryManager::new(oauth_client, network_config.clone());
-    
+
     // Check authentication
     if !manager.is_authenticated()? {
         let result = serde_json::json!({
@@ -473,7 +515,7 @@ async fn handle_fund(address: &str, amount: &str) -> Result<()> {
         });
         return print_json(&result);
     }
-    
+
     // Fund treasury
     match manager.fund(address, amount).await {
         Ok(result) => {
@@ -487,16 +529,26 @@ async fn handle_fund(address: &str, amount: &str) -> Result<()> {
         }
         Err(e) => {
             let error_msg = e.to_string();
-            let (code, suggestion) = if error_msg.contains("insufficient") || error_msg.contains("balance") {
-                ("INSUFFICIENT_BALANCE", "Check your wallet balance and try with a smaller amount")
-            } else if error_msg.contains("invalid") || error_msg.contains("format") {
-                ("INVALID_AMOUNT", "Amount should be in format like '1000000uxion'")
-            } else if error_msg.contains("not found") {
-                ("TREASURY_NOT_FOUND", "Verify the treasury address is correct")
-            } else {
-                ("FUND_FAILED", "Check the error message for details")
-            };
-            
+            let (code, suggestion) =
+                if error_msg.contains("insufficient") || error_msg.contains("balance") {
+                    (
+                        "INSUFFICIENT_BALANCE",
+                        "Check your wallet balance and try with a smaller amount",
+                    )
+                } else if error_msg.contains("invalid") || error_msg.contains("format") {
+                    (
+                        "INVALID_AMOUNT",
+                        "Amount should be in format like '1000000uxion'",
+                    )
+                } else if error_msg.contains("not found") {
+                    (
+                        "TREASURY_NOT_FOUND",
+                        "Verify the treasury address is correct",
+                    )
+                } else {
+                    ("FUND_FAILED", "Check the error message for details")
+                };
+
             let result = serde_json::json!({
                 "success": false,
                 "error": format!("Failed to fund treasury: {}", e),
@@ -512,16 +564,19 @@ async fn handle_withdraw(address: &str, amount: &str) -> Result<()> {
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
     use crate::treasury::TreasuryManager;
-    use crate::utils::output::{print_json, print_info};
-    
-    print_info(&format!("Withdrawing {} from treasury {}...", amount, address));
-    
+    use crate::utils::output::{print_info, print_json};
+
+    print_info(&format!(
+        "Withdrawing {} from treasury {}...",
+        amount, address
+    ));
+
     // Create manager
     let config_manager = ConfigManager::new()?;
     let network_config = config_manager.get_network_config()?;
     let oauth_client = OAuthClient::new(network_config.clone())?;
     let manager = TreasuryManager::new(oauth_client, network_config.clone());
-    
+
     // Check authentication
     if !manager.is_authenticated()? {
         let result = serde_json::json!({
@@ -531,7 +586,7 @@ async fn handle_withdraw(address: &str, amount: &str) -> Result<()> {
         });
         return print_json(&result);
     }
-    
+
     // Withdraw from treasury
     match manager.withdraw(address, amount).await {
         Ok(result) => {
@@ -545,18 +600,28 @@ async fn handle_withdraw(address: &str, amount: &str) -> Result<()> {
         }
         Err(e) => {
             let error_msg = e.to_string();
-            let (code, suggestion) = if error_msg.contains("unauthorized") || error_msg.contains("admin") {
-                ("UNAUTHORIZED", "Only the treasury admin can withdraw funds")
-            } else if error_msg.contains("insufficient") || error_msg.contains("balance") {
-                ("INSUFFICIENT_BALANCE", "The treasury doesn't have enough balance for this withdrawal")
-            } else if error_msg.contains("invalid") || error_msg.contains("format") {
-                ("INVALID_AMOUNT", "Amount should be in format like '1000000uxion'")
-            } else if error_msg.contains("not found") {
-                ("TREASURY_NOT_FOUND", "Verify the treasury address is correct")
-            } else {
-                ("WITHDRAW_FAILED", "Check the error message for details")
-            };
-            
+            let (code, suggestion) =
+                if error_msg.contains("unauthorized") || error_msg.contains("admin") {
+                    ("UNAUTHORIZED", "Only the treasury admin can withdraw funds")
+                } else if error_msg.contains("insufficient") || error_msg.contains("balance") {
+                    (
+                        "INSUFFICIENT_BALANCE",
+                        "The treasury doesn't have enough balance for this withdrawal",
+                    )
+                } else if error_msg.contains("invalid") || error_msg.contains("format") {
+                    (
+                        "INVALID_AMOUNT",
+                        "Amount should be in format like '1000000uxion'",
+                    )
+                } else if error_msg.contains("not found") {
+                    (
+                        "TREASURY_NOT_FOUND",
+                        "Verify the treasury address is correct",
+                    )
+                } else {
+                    ("WITHDRAW_FAILED", "Check the error message for details")
+                };
+
             let result = serde_json::json!({
                 "success": false,
                 "error": format!("Failed to withdraw from treasury: {}", e),
@@ -580,9 +645,7 @@ async fn handle_grant_config(cmd: GrantConfigCommands) -> Result<()> {
         GrantConfigCommands::Remove { address, type_url } => {
             handle_grant_config_remove(&address, &type_url).await
         }
-        GrantConfigCommands::List { address } => {
-            handle_grant_config_list(&address).await
-        }
+        GrantConfigCommands::List { address } => handle_grant_config_list(&address).await,
     }
 }
 
@@ -590,22 +653,22 @@ async fn handle_grant_config_add(address: &str, config_path: &PathBuf) -> Result
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
     use crate::treasury::TreasuryManager;
-    use crate::utils::output::{print_json, print_info};
-    
+    use crate::utils::output::{print_info, print_json};
+
     print_info(&format!("Adding grant config to treasury {}...", address));
-    
+
     // Load config from file
     let content = fs::read_to_string(config_path)
         .map_err(|e| anyhow::anyhow!("Failed to read config file: {}", e))?;
     let grant_config: crate::treasury::types::GrantConfigInput = serde_json::from_str(&content)
         .map_err(|e| anyhow::anyhow!("Invalid config file format: {}", e))?;
-    
+
     // Create manager
     let config_manager = ConfigManager::new()?;
     let network_config = config_manager.get_network_config()?;
     let oauth_client = OAuthClient::new(network_config.clone())?;
     let manager = TreasuryManager::new(oauth_client, network_config.clone());
-    
+
     // Check authentication
     if !manager.is_authenticated()? {
         let result = serde_json::json!({
@@ -615,7 +678,7 @@ async fn handle_grant_config_add(address: &str, config_path: &PathBuf) -> Result
         });
         return print_json(&result);
     }
-    
+
     // Add grant config
     match manager.add_grant_config(address, grant_config).await {
         Ok(result) => {
@@ -642,16 +705,19 @@ async fn handle_grant_config_remove(address: &str, type_url: &str) -> Result<()>
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
     use crate::treasury::TreasuryManager;
-    use crate::utils::output::{print_json, print_info};
-    
-    print_info(&format!("Removing grant config {} from treasury {}...", type_url, address));
-    
+    use crate::utils::output::{print_info, print_json};
+
+    print_info(&format!(
+        "Removing grant config {} from treasury {}...",
+        type_url, address
+    ));
+
     // Create manager
     let config_manager = ConfigManager::new()?;
     let network_config = config_manager.get_network_config()?;
     let oauth_client = OAuthClient::new(network_config.clone())?;
     let manager = TreasuryManager::new(oauth_client, network_config.clone());
-    
+
     // Check authentication
     if !manager.is_authenticated()? {
         let result = serde_json::json!({
@@ -661,7 +727,7 @@ async fn handle_grant_config_remove(address: &str, type_url: &str) -> Result<()>
         });
         return print_json(&result);
     }
-    
+
     // Remove grant config
     match manager.remove_grant_config(address, type_url).await {
         Ok(result) => {
@@ -688,16 +754,19 @@ async fn handle_grant_config_list(address: &str) -> Result<()> {
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
     use crate::treasury::TreasuryManager;
-    use crate::utils::output::{print_json, print_info};
-    
-    print_info(&format!("Listing grant configs for treasury {}...", address));
-    
+    use crate::utils::output::{print_info, print_json};
+
+    print_info(&format!(
+        "Listing grant configs for treasury {}...",
+        address
+    ));
+
     // Create manager
     let config_manager = ConfigManager::new()?;
     let network_config = config_manager.get_network_config()?;
     let oauth_client = OAuthClient::new(network_config.clone())?;
     let manager = TreasuryManager::new(oauth_client, network_config.clone());
-    
+
     // Check authentication
     if !manager.is_authenticated()? {
         let result = serde_json::json!({
@@ -707,7 +776,7 @@ async fn handle_grant_config_list(address: &str) -> Result<()> {
         });
         return print_json(&result);
     }
-    
+
     // List grant configs
     match manager.list_grant_configs(address).await {
         Ok(configs) => {
@@ -739,12 +808,8 @@ async fn handle_fee_config(cmd: FeeConfigCommands) -> Result<()> {
         FeeConfigCommands::Set { address, config } => {
             handle_fee_config_set(&address, &config).await
         }
-        FeeConfigCommands::Remove { address } => {
-            handle_fee_config_remove(&address).await
-        }
-        FeeConfigCommands::Query { address } => {
-            handle_fee_config_query(&address).await
-        }
+        FeeConfigCommands::Remove { address } => handle_fee_config_remove(&address).await,
+        FeeConfigCommands::Query { address } => handle_fee_config_query(&address).await,
     }
 }
 
@@ -752,22 +817,22 @@ async fn handle_fee_config_set(address: &str, config_path: &PathBuf) -> Result<(
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
     use crate::treasury::TreasuryManager;
-    use crate::utils::output::{print_json, print_info};
-    
+    use crate::utils::output::{print_info, print_json};
+
     print_info(&format!("Setting fee config for treasury {}...", address));
-    
+
     // Load config from file
     let content = fs::read_to_string(config_path)
         .map_err(|e| anyhow::anyhow!("Failed to read config file: {}", e))?;
     let fee_config: crate::treasury::types::FeeConfigInput = serde_json::from_str(&content)
         .map_err(|e| anyhow::anyhow!("Invalid config file format: {}", e))?;
-    
+
     // Create manager
     let config_manager = ConfigManager::new()?;
     let network_config = config_manager.get_network_config()?;
     let oauth_client = OAuthClient::new(network_config.clone())?;
     let manager = TreasuryManager::new(oauth_client, network_config.clone());
-    
+
     // Check authentication
     if !manager.is_authenticated()? {
         let result = serde_json::json!({
@@ -777,7 +842,7 @@ async fn handle_fee_config_set(address: &str, config_path: &PathBuf) -> Result<(
         });
         return print_json(&result);
     }
-    
+
     // Set fee config
     match manager.set_fee_config(address, fee_config).await {
         Ok(result) => {
@@ -804,16 +869,16 @@ async fn handle_fee_config_remove(address: &str) -> Result<()> {
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
     use crate::treasury::TreasuryManager;
-    use crate::utils::output::{print_json, print_info};
-    
+    use crate::utils::output::{print_info, print_json};
+
     print_info(&format!("Removing fee config from treasury {}...", address));
-    
+
     // Create manager
     let config_manager = ConfigManager::new()?;
     let network_config = config_manager.get_network_config()?;
     let oauth_client = OAuthClient::new(network_config.clone())?;
     let manager = TreasuryManager::new(oauth_client, network_config.clone());
-    
+
     // Check authentication
     if !manager.is_authenticated()? {
         let result = serde_json::json!({
@@ -823,7 +888,7 @@ async fn handle_fee_config_remove(address: &str) -> Result<()> {
         });
         return print_json(&result);
     }
-    
+
     // Remove fee config
     match manager.remove_fee_config(address).await {
         Ok(result) => {
@@ -850,16 +915,16 @@ async fn handle_fee_config_query(address: &str) -> Result<()> {
     use crate::config::ConfigManager;
     use crate::oauth::OAuthClient;
     use crate::treasury::TreasuryManager;
-    use crate::utils::output::{print_json, print_info};
-    
+    use crate::utils::output::{print_info, print_json};
+
     print_info(&format!("Querying fee config for treasury {}...", address));
-    
+
     // Create manager
     let config_manager = ConfigManager::new()?;
     let network_config = config_manager.get_network_config()?;
     let oauth_client = OAuthClient::new(network_config.clone())?;
     let manager = TreasuryManager::new(oauth_client, network_config.clone());
-    
+
     // Check authentication
     if !manager.is_authenticated()? {
         let result = serde_json::json!({
@@ -869,7 +934,7 @@ async fn handle_fee_config_query(address: &str) -> Result<()> {
         });
         return print_json(&result);
     }
-    
+
     // Query fee config
     match manager.query_fee_config(address).await {
         Ok(Some(config)) => {

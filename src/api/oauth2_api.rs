@@ -254,7 +254,10 @@ impl OAuth2ApiClient {
         client_id: &str,
         token_endpoint: &str,
     ) -> Result<TokenResponse> {
-        debug!("Exchanging authorization code for token using custom endpoint: {}", token_endpoint);
+        debug!(
+            "Exchanging authorization code for token using custom endpoint: {}",
+            token_endpoint
+        );
 
         let request = TokenRequest {
             grant_type: "authorization_code".to_string(),
@@ -370,12 +373,11 @@ impl OAuth2ApiClient {
         debug!("User info response status: {}", status);
 
         if !status.is_success() {
-            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
-            anyhow::bail!(
-                "Failed to get user info: HTTP {} - {}",
-                status,
-                error_text
-            );
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
+            anyhow::bail!("Failed to get user info: HTTP {} - {}", status, error_text);
         }
 
         let user_info = response
@@ -383,7 +385,10 @@ impl OAuth2ApiClient {
             .await
             .context("Failed to parse user info response")?;
 
-        debug!("Successfully retrieved user info for MetaAccount: {}", user_info.id);
+        debug!(
+            "Successfully retrieved user info for MetaAccount: {}",
+            user_info.id
+        );
         Ok(user_info)
     }
 
@@ -414,7 +419,9 @@ impl OAuth2ApiClient {
                     anyhow::bail!(
                         "OAuth2 error: {} - {}",
                         oauth_error.error,
-                        oauth_error.error_description.unwrap_or_else(|| "No description".to_string())
+                        oauth_error
+                            .error_description
+                            .unwrap_or_else(|| "No description".to_string())
                     );
                 } else {
                     anyhow::bail!("Token request failed: HTTP {} - {}", status, error_text);
@@ -450,7 +457,10 @@ impl OAuth2ApiClient {
         request: &TokenRequest,
         token_endpoint: &str,
     ) -> Result<TokenResponse> {
-        debug!("Making token request to custom endpoint: {}", token_endpoint);
+        debug!(
+            "Making token request to custom endpoint: {}",
+            token_endpoint
+        );
 
         let response = self
             .http_client
@@ -471,7 +481,9 @@ impl OAuth2ApiClient {
                     anyhow::bail!(
                         "OAuth2 error: {} - {}",
                         oauth_error.error,
-                        oauth_error.error_description.unwrap_or_else(|| "No description".to_string())
+                        oauth_error
+                            .error_description
+                            .unwrap_or_else(|| "No description".to_string())
                     );
                 } else {
                     anyhow::bail!("Token request failed: HTTP {} - {}", status, error_text);

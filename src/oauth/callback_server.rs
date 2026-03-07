@@ -6,13 +6,9 @@ use axum::{
     Router,
 };
 use serde::Deserialize;
-use std::{
-    net::SocketAddr,
-    sync::Arc,
-    time::Duration,
-};
+use std::{net::SocketAddr, sync::Arc, time::Duration};
 use thiserror::Error;
-use tokio::sync::{Mutex, oneshot};
+use tokio::sync::{oneshot, Mutex};
 
 /// Callback server errors
 #[derive(Debug, Error)]

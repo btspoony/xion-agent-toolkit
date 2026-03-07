@@ -105,10 +105,7 @@ impl TreasuryApiClient {
     /// # }
     /// ```
     #[instrument(skip(self, access_token))]
-    pub async fn list_treasuries(
-        &self,
-        access_token: &str,
-    ) -> Result<Vec<TreasuryListItem>> {
+    pub async fn list_treasuries(&self, access_token: &str) -> Result<Vec<TreasuryListItem>> {
         let url = format!("{}/mgr-api/treasuries", self.base_url);
         debug!("Listing treasuries from: {}", url);
 
@@ -124,7 +121,10 @@ impl TreasuryApiClient {
         debug!("List treasuries response status: {}", status);
 
         if !status.is_success() {
-            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
             anyhow::bail!(
                 "List treasuries failed with status {}: {}",
                 status,
@@ -137,9 +137,9 @@ impl TreasuryApiClient {
             .await
             .context("Failed to parse list treasuries response")?;
 
-        let treasuries: Vec<TreasuryListItem> = serde_json::from_value(
-            result.get("treasuries").cloned().unwrap_or_default()
-        ).context("Failed to parse treasuries list")?;
+        let treasuries: Vec<TreasuryListItem> =
+            serde_json::from_value(result.get("treasuries").cloned().unwrap_or_default())
+                .context("Failed to parse treasuries list")?;
 
         debug!("Successfully retrieved {} treasuries", treasuries.len());
         Ok(treasuries)
@@ -221,7 +221,10 @@ impl TreasuryApiClient {
         debug!("Query treasury response status: {}", status);
 
         if !status.is_success() {
-            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
             anyhow::bail!(
                 "Query treasury failed with status {}: {}",
                 status,
@@ -234,9 +237,9 @@ impl TreasuryApiClient {
             .await
             .context("Failed to parse query treasury response")?;
 
-        let treasury: TreasuryInfo = serde_json::from_value(
-            result.get("treasury").cloned().unwrap_or_default()
-        ).context("Failed to parse treasury info")?;
+        let treasury: TreasuryInfo =
+            serde_json::from_value(result.get("treasury").cloned().unwrap_or_default())
+                .context("Failed to parse treasury info")?;
 
         debug!("Successfully queried treasury: {}", treasury.address);
         Ok(treasury)
@@ -307,7 +310,10 @@ impl TreasuryApiClient {
         debug!("Broadcast transaction response status: {}", status);
 
         if !status.is_success() {
-            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
             anyhow::bail!(
                 "Broadcast transaction failed with status {}: {}",
                 status,
@@ -545,10 +551,7 @@ impl TreasuryApiClient {
         let msg_base64 = base64_encode(&instantiate_msg)?;
 
         // Convert salt to base64
-        let salt_base64 = base64::Engine::encode(
-            &base64::engine::general_purpose::STANDARD,
-            salt,
-        );
+        let salt_base64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, salt);
 
         // Build the MsgInstantiateContract2 message
         let msg_value = serde_json::json!({
@@ -570,9 +573,14 @@ impl TreasuryApiClient {
         };
 
         // Broadcast the transaction
-        let response = self.broadcast_transaction(access_token, broadcast_request).await?;
-        
-        debug!("Treasury creation transaction broadcast: {}", response.tx_hash);
+        let response = self
+            .broadcast_transaction(access_token, broadcast_request)
+            .await?;
+
+        debug!(
+            "Treasury creation transaction broadcast: {}",
+            response.tx_hash
+        );
 
         // Wait for the treasury to be indexed and return the actual address
         let treasury_address = self
@@ -652,7 +660,10 @@ impl TreasuryApiClient {
                     );
                 }
                 Err(e) => {
-                    warn!("Failed to list treasuries while waiting for creation: {}", e);
+                    warn!(
+                        "Failed to list treasuries while waiting for creation: {}",
+                        e
+                    );
                 }
             }
 
@@ -673,7 +684,9 @@ impl TreasuryApiClient {
 // ============================================================================
 
 /// Build the treasury instantiation message
-fn build_treasury_instantiate_msg(request: &super::types::CreateTreasuryRequest) -> Result<serde_json::Value> {
+fn build_treasury_instantiate_msg(
+    request: &super::types::CreateTreasuryRequest,
+) -> Result<serde_json::Value> {
     // Build the metadata JSON string
     let metadata = serde_json::json!({
         "name": request.name.as_deref().unwrap_or(""),
@@ -682,13 +695,15 @@ fn build_treasury_instantiate_msg(request: &super::types::CreateTreasuryRequest)
     });
 
     // Extract type URLs from grant configs
-    let type_urls: Vec<String> = request.grant_configs
+    let type_urls: Vec<String> = request
+        .grant_configs
         .iter()
         .map(|gc| gc.authorization.type_url.clone())
         .collect();
 
     // Build the grant configs array (without type_url, that's in type_urls)
-    let grant_configs: Vec<serde_json::Value> = request.grant_configs
+    let grant_configs: Vec<serde_json::Value> = request
+        .grant_configs
         .iter()
         .map(|gc| {
             serde_json::json!({
@@ -769,10 +784,14 @@ impl TreasuryApiClient {
         grant_config: super::types::GrantConfigInput,
         from_address: &str,
     ) -> Result<super::types::GrantConfigResult> {
-        debug!("Adding grant config for type_url: {} to treasury: {}", type_url, treasury_address);
+        debug!(
+            "Adding grant config for type_url: {} to treasury: {}",
+            type_url, treasury_address
+        );
 
         // Encode the authorization
-        let (auth_type_url, auth_value) = super::encoding::encode_authorization_input(&grant_config.authorization)?;
+        let (auth_type_url, auth_value) =
+            super::encoding::encode_authorization_input(&grant_config.authorization)?;
 
         // Build the grant config for chain
         let grant_config_chain = super::types::GrantConfigChain {
@@ -825,7 +844,10 @@ impl TreasuryApiClient {
         type_url: &str,
         from_address: &str,
     ) -> Result<super::types::GrantConfigResult> {
-        debug!("Removing grant config for type_url: {} from treasury: {}", type_url, treasury_address);
+        debug!(
+            "Removing grant config for type_url: {} from treasury: {}",
+            type_url, treasury_address
+        );
 
         // Create the remove_grant_config message
         let remove_msg = super::types::RemoveGrantConfigMsg {
@@ -872,31 +894,34 @@ impl TreasuryApiClient {
             fee: false,
             admin: false,
         };
-        let treasury = self.query_treasury(access_token, treasury_address, options).await?;
+        let treasury = self
+            .query_treasury(access_token, treasury_address, options)
+            .await?;
 
         // Extract grant configs
         let grant_configs = treasury.grant_configs.unwrap_or_default();
         let configs: Vec<super::types::GrantConfigInfo> = grant_configs
             .into_iter()
-            .map(|gc| {
-                super::types::GrantConfigInfo {
-                    type_url: gc.type_url,
-                    description: gc.grant_config
-                        .get("description")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string(),
-                    authorization_type_url: gc.grant_config
-                        .get("authorization")
-                        .and_then(|a| a.get("type_url"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string(),
-                    optional: gc.grant_config
-                        .get("optional")
-                        .and_then(|v| v.as_bool())
-                        .unwrap_or(false),
-                }
+            .map(|gc| super::types::GrantConfigInfo {
+                type_url: gc.type_url,
+                description: gc
+                    .grant_config
+                    .get("description")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                authorization_type_url: gc
+                    .grant_config
+                    .get("authorization")
+                    .and_then(|a| a.get("type_url"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                optional: gc
+                    .grant_config
+                    .get("optional")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false),
             })
             .collect();
 
@@ -915,7 +940,8 @@ impl TreasuryApiClient {
         debug!("Setting fee config for treasury: {}", treasury_address);
 
         // Encode the fee allowance
-        let (allowance_type_url, allowance_value) = super::encoding::encode_fee_config_input(&fee_config)?;
+        let (allowance_type_url, allowance_value) =
+            super::encoding::encode_fee_config_input(&fee_config)?;
 
         // Build the fee config for chain
         let fee_config_chain = super::types::FeeConfigChain {
@@ -1010,17 +1036,20 @@ impl TreasuryApiClient {
             fee: true,
             admin: false,
         };
-        let treasury = self.query_treasury(access_token, treasury_address, options).await?;
+        let treasury = self
+            .query_treasury(access_token, treasury_address, options)
+            .await?;
 
         // Extract fee config
         if let Some(fee_config) = treasury.fee_config {
-            let description = fee_config.additional
+            let description = fee_config
+                .additional
                 .as_ref()
                 .and_then(|a| a.get("description"))
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string())
                 .unwrap_or_default();
-            
+
             Ok(Some(super::types::FeeConfigInfo {
                 allowance_type_url: fee_config.config_type,
                 description,
@@ -1126,16 +1155,14 @@ mod tests {
 
     #[test]
     fn test_base64_encode() {
-        let value = serde_json::json!({"withdraw": {"coins": [{"amount": "1000", "denom": "uxion"}]}});
+        let value =
+            serde_json::json!({"withdraw": {"coins": [{"amount": "1000", "denom": "uxion"}]}});
         let encoded = base64_encode(&value).unwrap();
         assert!(!encoded.is_empty());
 
         // Verify we can decode it back
-        let decoded = base64::Engine::decode(
-            &base64::engine::general_purpose::STANDARD,
-            encoded,
-        )
-        .unwrap();
+        let decoded =
+            base64::Engine::decode(&base64::engine::general_purpose::STANDARD, encoded).unwrap();
         let decoded_value: serde_json::Value = serde_json::from_slice(&decoded).unwrap();
         assert_eq!(value, decoded_value);
     }
@@ -1144,36 +1171,40 @@ mod tests {
     async fn test_wait_for_treasury_creation_success() {
         // This test verifies the polling mechanism finds the treasury
         let mut server = mockito::Server::new_async().await;
-        
+
         let admin_address = "xion1admin123";
         let treasury_address = "xion1treasury456";
-        
+
         // Mock the list treasuries endpoint - return treasury with matching admin
-        let mock = server.mock("GET", "/mgr-api/treasuries")
+        let mock = server
+            .mock("GET", "/mgr-api/treasuries")
             .match_header("authorization", "Bearer test_token")
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(serde_json::json!({
-                "treasuries": [
-                    {
-                        "address": treasury_address,
-                        "admin": admin_address,
-                        "balance": "0"
-                    }
-                ]
-            }).to_string())
+            .with_body(
+                serde_json::json!({
+                    "treasuries": [
+                        {
+                            "address": treasury_address,
+                            "admin": admin_address,
+                            "balance": "0"
+                        }
+                    ]
+                })
+                .to_string(),
+            )
             .create();
-        
+
         let client = TreasuryApiClient::new(server.url());
-        
+
         // Call the wait_for_treasury_creation method
         let result = client
             .wait_for_treasury_creation("test_token", admin_address, "tx123")
             .await;
-        
+
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), treasury_address);
-        
+
         mock.assert();
     }
 
@@ -1181,44 +1212,48 @@ mod tests {
     async fn test_wait_for_treasury_creation_multiple_treasuries() {
         // Test that it finds the correct treasury when there are multiple
         let mut server = mockito::Server::new_async().await;
-        
+
         let admin_address = "xion1admin999";
         let treasury_address = "xion1treasury999";
-        
+
         // Mock returning multiple treasuries, one with matching admin
-        let mock = server.mock("GET", "/mgr-api/treasuries")
+        let mock = server
+            .mock("GET", "/mgr-api/treasuries")
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(serde_json::json!({
-                "treasuries": [
-                    {
-                        "address": "xion1other1",
-                        "admin": "xion1admin1",
-                        "balance": "1000"
-                    },
-                    {
-                        "address": "xion1other2",
-                        "admin": "xion1admin2",
-                        "balance": "2000"
-                    },
-                    {
-                        "address": treasury_address,
-                        "admin": admin_address,
-                        "balance": "0"
-                    }
-                ]
-            }).to_string())
+            .with_body(
+                serde_json::json!({
+                    "treasuries": [
+                        {
+                            "address": "xion1other1",
+                            "admin": "xion1admin1",
+                            "balance": "1000"
+                        },
+                        {
+                            "address": "xion1other2",
+                            "admin": "xion1admin2",
+                            "balance": "2000"
+                        },
+                        {
+                            "address": treasury_address,
+                            "admin": admin_address,
+                            "balance": "0"
+                        }
+                    ]
+                })
+                .to_string(),
+            )
             .create();
-        
+
         let client = TreasuryApiClient::new(server.url());
-        
+
         let result = client
             .wait_for_treasury_creation("test_token", admin_address, "tx456")
             .await;
-        
+
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), treasury_address);
-        
+
         mock.assert();
     }
 }

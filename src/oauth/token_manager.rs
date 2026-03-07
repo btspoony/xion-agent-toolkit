@@ -109,13 +109,13 @@ impl TokenManager {
                 "Token will expire within {} seconds, refreshing",
                 EXPIRY_BUFFER_SECS
             );
-            
+
             // Refresh token
             let new_credentials = self
                 .refresh_access_token()
                 .await
                 .context("Failed to refresh token")?;
-            
+
             return Ok(new_credentials.access_token);
         }
 
@@ -154,11 +154,11 @@ impl TokenManager {
             .load_credentials()
             .context("Failed to load credentials")?;
 
-        let expires_at = parse_expiry_time(&credentials.expires_at)
-            .context("Failed to parse expiry time")?;
-        
+        let expires_at =
+            parse_expiry_time(&credentials.expires_at).context("Failed to parse expiry time")?;
+
         let now = Utc::now();
-        
+
         Ok(expires_at <= now)
     }
 
@@ -196,12 +196,12 @@ impl TokenManager {
             .load_credentials()
             .context("Failed to load credentials")?;
 
-        let expires_at = parse_expiry_time(&credentials.expires_at)
-            .context("Failed to parse expiry time")?;
-        
+        let expires_at =
+            parse_expiry_time(&credentials.expires_at).context("Failed to parse expiry time")?;
+
         let now = Utc::now();
         let time_until_expiry = expires_at.signed_duration_since(now);
-        
+
         Ok(time_until_expiry.num_seconds() < buffer_secs)
     }
 
@@ -258,14 +258,12 @@ impl TokenManager {
             .expires_at
             .clone()
             .unwrap_or_else(|| calculate_expiry_time(token_response.expires_in));
-        
+
         let new_credentials = UserCredentials {
             access_token: token_response.access_token,
             refresh_token: token_response.refresh_token,
             expires_at,
-            xion_address: token_response
-                .xion_address
-                .or(credentials.xion_address),
+            xion_address: token_response.xion_address.or(credentials.xion_address),
         };
 
         // Save updated credentials
@@ -440,7 +438,7 @@ mod tests {
         let expires_at = calculate_expiry_time(-3600);
         let parsed = parse_expiry_time(&expires_at).unwrap();
         let now = Utc::now();
-        
+
         assert!(parsed < now);
     }
 
