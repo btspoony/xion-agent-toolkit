@@ -6,7 +6,7 @@ use clap::{Parser, Subcommand};
 use anyhow::Result;
 
 #[derive(Parser)]
-#[command(name = "xion")]
+#[command(name = "xion-toolkit")]
 #[command(about = "CLI-driven, Agent-oriented toolkit for Xion blockchain", long_about = None)]
 #[command(version)]
 pub struct Cli {

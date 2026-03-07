@@ -45,6 +45,7 @@ xion-agent-toolkit/
 ├── Cargo.toml                   # Rust project configuration
 ├── src/
 │   ├── main.rs                  # CLI entry point
+│   ├── lib.rs                   # Library exports
 │   ├── cli/                     # CLI command definitions
 │   │   ├── mod.rs
 │   │   ├── auth.rs              # OAuth2 authentication commands
@@ -53,17 +54,26 @@ xion-agent-toolkit/
 │   ├── oauth/                   # OAuth2 client implementation
 │   │   ├── mod.rs
 │   │   ├── client.rs            # OAuth2 client
-│   │   ├── token.rs             # Token management
+│   │   ├── token_manager.rs     # Token management
+│   │   ├── callback_server.rs   # Localhost callback server
 │   │   └── pkce.rs              # PKCE implementation
 │   ├── api/                     # API clients
 │   │   ├── mod.rs
 │   │   ├── oauth2_api.rs        # OAuth2 API Service client
 │   │   ├── treasury.rs          # Treasury API
 │   │   └── xiond.rs             # xiond query client
+│   ├── treasury/                # Treasury management
+│   │   ├── mod.rs
+│   │   ├── types.rs             # Data structures
+│   │   ├── manager.rs           # High-level manager
+│   │   ├── api_client.rs        # Treasury API client
+│   │   ├── encoding.rs          # Protobuf encoding (fee & authz)
+│   │   └── cache.rs             # Caching system
 │   ├── config/                  # Configuration management
 │   │   ├── mod.rs
 │   │   ├── manager.rs           # Configuration manager
-│   │   └── schema.rs            # Configuration Schema
+│   │   ├── credentials.rs       # Credential management
+│   │   └── constants.rs         # Network config (auto-generated)
 │   └── utils/                   # Utility functions
 │       ├── mod.rs
 │       ├── output.rs            # Output formatting
@@ -72,33 +82,54 @@ xion-agent-toolkit/
 │   ├── xion-oauth2/             # OAuth2 setup
 │   │   ├── SKILL.md
 │   │   └── scripts/
-│   ├── xion-treasury/           # Treasury management
-│   │   ├── SKILL.md
-│   │   └── scripts/
-│   └── xion-deploy/             # Smart contract deployment (future)
+│   └── xion-treasury/           # Treasury management
 │       ├── SKILL.md
 │       └── scripts/
 └── plans/                       # Development plan documents
-    └── treasury-automation.md
+    ├── status.json              # Plan status tracking (SSOT)
+    ├── treasury-automation.md
+    ├── oauth2-client-architecture.md
+    ├── oauth2-pkce-implementation.md
+    ├── treasury-api-architecture.md
+    ├── treasury-create-enhancement.md
+    └── treasury-grant-fee-config.md
 ```
 
 ## Development Phases
 
-### Phase 1: Foundation (Days 1-7)
+### Phase 1: Foundation ✅ Complete
+
 1. CLI framework setup
 2. Configuration management system
-3. OAuth2 client basic functionality
+3. Error handling and output formatting
 
-### Phase 2: Core Features (Days 8-21)
+### Phase 2: OAuth2 Authentication ✅ Complete
+
 1. OAuth2 authentication flow (PKCE)
 2. Token management and auto-refresh
-3. Treasury query and creation
-4. Grant configuration (Fee + Authz)
+3. Callback server for OAuth2 flow
+4. Per-network credential storage
 
-### Phase 3: Skills Development (Days 22-28)
+### Phase 3: Treasury Management ✅ Complete
+
+1. Treasury API client implementation
+2. Treasury list and query commands
+3. Treasury fund and withdraw operations
+4. Grant configuration (Fee + Authz)
+5. Protobuf encoding for all authorization types
+
+### Phase 4: Agent Skills ✅ Complete
+
 1. xion-oauth2 skill
 2. xion-treasury skill
-3. Documentation and examples
+3. JSON output for all commands
+
+### Phase 5: Treasury Creation 🚧 Blocked
+
+1. Treasury create command (CLI ready)
+2. Protobuf encoding for instantiate message
+3. Transaction polling mechanism
+4. **Blocked**: Waiting for OAuth2 API support for `MsgInstantiateContract2`
 
 ## Code Standards
 
@@ -141,18 +172,18 @@ pub fn output_error(error: &Error) {
 
 ```bash
 # 1. All commands support JSON output
-xion auth login --output json
-xion treasury list --output json
+xion-toolkit auth login --output json
+xion-toolkit treasury list --output json
 
 # 2. Errors include error codes
-xion treasury create --fee 1000
+xion-toolkit treasury create --fee 1000
 # Error: INSUFFICIENT_BALANCE
 # Message: Treasury requires at least 1000000 uxion
-# Suggestion: Fund your account with 'xion treasury fund'
+# Suggestion: Fund your account with 'xion-toolkit treasury fund'
 
 # 3. Support config file and command-line arguments
-xion --network testnet treasury list
-xion --config ~/.xion-toolkit/config.json treasury list
+xion-toolkit --network testnet treasury list
+xion-toolkit --config ~/.xion-toolkit/config.json treasury list
 ```
 
 ### Skills Script Standards
@@ -182,7 +213,7 @@ main() {
     log_info "Starting treasury creation..."
     
     # Call CLI tool
-    result=$(xion treasury create --output json 2>&1)
+    result=$(xion-toolkit treasury create --output json 2>&1)
     
     if [ $? -eq 0 ]; then
         output_json "$result"
@@ -230,9 +261,9 @@ Network configurations are embedded at compile time via environment variables:
 
 | Network | OAuth API | RPC | Chain ID | Treasury Code ID |
 |---------|-----------|-----|----------|------------------|
-| local | http://localhost:8787 | http://localhost:26657 | xion-local | - |
-| testnet | https://oauth2.testnet.burnt.com | https://rpc.xion-testnet-2.burnt.com:443 | xion-testnet-2 | 1260 |
-| mainnet | https://oauth2.burnt.com | https://rpc.xion-mainnet-1.burnt.com:443 | xion-mainnet-1 | 63 |
+| local | <http://localhost:8787> | <http://localhost:26657> | xion-local | - |
+| testnet | <https://oauth2.testnet.burnt.com> | <https://rpc.xion-testnet-2.burnt.com:443> | xion-testnet-2 | 1260 |
+| mainnet | <https://oauth2.burnt.com> | <https://rpc.xion-mainnet-1.burnt.com:443> | xion-mainnet-1 | 63 |
 
 #### Credentials Metadata (`~/.xion-toolkit/credentials/{network}.json`)
 
@@ -250,24 +281,25 @@ Network configurations are embedded at compile time via environment variables:
 The toolkit supports three network environments:
 
 ### Local Development
-- **OAuth API**: http://localhost:8787
-- **RPC**: http://localhost:26657
+
+- **OAuth API**: <http://localhost:8787>
+- **RPC**: <http://localhost:26657>
 - **Chain ID**: xion-local
 - **Usage**: For local development and testing
 
 ### Testnet
-- **OAuth API**: https://oauth2.testnet.burnt.com
-- **RPC**: https://rpc.xion-testnet-2.burnt.com:443
+
+- **OAuth API**: <https://oauth2.testnet.burnt.com>
+- **RPC**: <https://rpc.xion-testnet-2.burnt.com:443>
 - **Chain ID**: xion-testnet-2
 - **Treasury Code ID**: 1260
-- **Treasury Config**: xion175qd54keur7gkuwtctfupgtucvlvkrxhv0pgq753sfh5xueputvsms6nll
 
 ### Mainnet
-- **OAuth API**: Coming soon
-- **RPC**: https://rpc.xion-mainnet-1.burnt.com:443
+
+- **OAuth API**: <https://oauth2.burnt.com>
+- **RPC**: <https://rpc.xion-mainnet-1.burnt.com:443>
 - **Chain ID**: xion-mainnet-1
 - **Treasury Code ID**: 63
-- **Treasury Config**: xion1dlsvvgey26ernlj0sq2afjluh3qd4ap0k9eerekfkw5algqrwqkshmn3uq
 
 ## OAuth2 Authentication Flow
 
@@ -302,14 +334,74 @@ sequenceDiagram
 ### Callback Server
 
 The CLI implements a localhost callback server to handle OAuth2 redirects:
-- **Default Port**: 8080 (configurable)
+
+- **Default Port**: 54321 (configurable)
 - **Callback Path**: /callback
 - **Timeout**: 5 minutes
 - **Security**: Only accepts localhost connections
 
+## Treasury Commands
+
+### Available Commands
+
+```bash
+# List all treasuries for authenticated user
+xion-toolkit treasury list
+
+# Query specific treasury details
+xion-toolkit treasury query <address>
+
+# Fund a treasury
+xion-toolkit treasury fund <address> --amount <amount>
+
+# Withdraw from a treasury
+xion-toolkit treasury withdraw <address> --amount <amount> --to <recipient>
+
+# Configure authz grants
+xion-toolkit treasury grant-config <address> [options]
+
+# Configure fee grants
+xion-toolkit treasury fee-config <address> [options]
+```
+
+### Grant Configuration Options
+
+```bash
+# Generic authorization
+xion-toolkit treasury grant-config <address> \
+  --grant-type-url "/cosmos.bank.v1beta1.MsgSend" \
+  --grant-auth-type generic \
+  --grant-description "Generic permission"
+
+# Send authorization with spend limit
+xion-toolkit treasury grant-config <address> \
+  --grant-type-url "/cosmos.bank.v1beta1.MsgSend" \
+  --grant-auth-type send \
+  --grant-spend-limit "1000000uxion" \
+  --grant-description "Allow sending funds"
+```
+
+### Fee Configuration Options
+
+```bash
+# Basic fee allowance
+xion-toolkit treasury fee-config <address> \
+  --fee-allowance-type basic \
+  --fee-spend-limit "1000000uxion" \
+  --fee-description "Basic fee allowance"
+
+# Periodic fee allowance
+xion-toolkit treasury fee-config <address> \
+  --fee-allowance-type periodic \
+  --fee-period-seconds 86400 \
+  --fee-period-spend-limit "100000uxion" \
+  --fee-description "Daily fee allowance"
+```
+
 ## Git Standards
 
 ### Commit Messages
+
 ```
 feat(cli): add OAuth2 login command
 fix(treasury): handle insufficient balance error
@@ -318,6 +410,7 @@ chore(config): migrate to new config schema
 ```
 
 ### Branch Strategy
+
 - `main` - Stable release
 - `develop` - Development version
 - `feature/*` - Feature branches
@@ -326,6 +419,7 @@ chore(config): migrate to new config schema
 ## Testing Standards
 
 ### Unit Tests
+
 ```rust
 #[cfg(test)]
 mod tests {
@@ -341,6 +435,7 @@ mod tests {
 ```
 
 ### Integration Tests
+
 ```rust
 #[tokio::test]
 async fn test_oauth_login() {
@@ -349,6 +444,21 @@ async fn test_oauth_login() {
     assert!(result.is_ok());
 }
 ```
+
+### Running Tests
+
+```bash
+# Run all tests
+cargo test
+
+# Run specific test
+cargo test test_pkce_challenge
+
+# Run with output
+cargo test -- --nocapture
+```
+
+Current status: **330 tests passing**
 
 ## Security Standards
 

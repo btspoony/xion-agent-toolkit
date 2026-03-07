@@ -30,8 +30,8 @@ Implement full CLI support for Grant Config and Fee Config operations:
 
 ```bash
 # Add/Update grant config
-xion treasury grant-config add --address <TREASURY> --config <CONFIG_FILE>
-xion treasury grant-config add --address <TREASURY> \
+xion-toolkit treasury grant-config add --address <TREASURY> --config <CONFIG_FILE>
+xion-toolkit treasury grant-config add --address <TREASURY> \
   --type-url "/cosmwasm.wasm.v1.MsgExecuteContract" \
   --auth-type contract-execution \
   --description "Allow contract execution" \
@@ -40,10 +40,10 @@ xion treasury grant-config add --address <TREASURY> \
   --max-funds "1000000uxion"
 
 # Remove grant config
-xion treasury grant-config remove --address <TREASURY> --type-url <TYPE_URL>
+xion-toolkit treasury grant-config remove --address <TREASURY> --type-url <TYPE_URL>
 
 # List grant configs
-xion treasury grant-config list --address <TREASURY>
+xion-toolkit treasury grant-config list --address <TREASURY>
 ```
 
 #### 1.2 Supported Authorization Types
@@ -98,17 +98,17 @@ pub enum ContractFilter {
 
 ```bash
 # Add/Update fee config
-xion treasury fee-config set --address <TREASURY> --config <CONFIG_FILE>
-xion treasury fee-config set --address <TREASURY> \
+xion-toolkit treasury fee-config set --address <TREASURY> --config <CONFIG_FILE>
+xion-toolkit treasury fee-config set --address <TREASURY> \
   --allowance-type basic \
   --spend-limit "1000000uxion" \
   --expiration "2024-12-31T23:59:59Z"
 
 # Remove fee config
-xion treasury fee-config remove --address <TREASURY>
+xion-toolkit treasury fee-config remove --address <TREASURY>
 
 # Query fee config
-xion treasury fee-config query --address <TREASURY>
+xion-toolkit treasury fee-config query --address <TREASURY>
 ```
 
 #### 2.2 Supported Allowance Types
@@ -193,12 +193,12 @@ pub struct RemoveFeeConfigMsg {}
 
 ## Acceptance Criteria
 
-- [ ] `xion treasury grant-config add --address <ADDR> --config config.json` works
-- [ ] `xion treasury grant-config remove --address <ADDR> --type-url <TYPE>` works
-- [ ] `xion treasury grant-config list --address <ADDR>` works
-- [ ] `xion treasury fee-config set --address <ADDR> --config config.json` works
-- [ ] `xion treasury fee-config remove --address <ADDR>` works
-- [ ] `xion treasury fee-config query --address <ADDR>` works
+- [ ] `xion-toolkit treasury grant-config add --address <ADDR> --config config.json` works
+- [ ] `xion-toolkit treasury grant-config remove --address <ADDR> --type-url <TYPE>` works
+- [ ] `xion-toolkit treasury grant-config list --address <ADDR>` works
+- [ ] `xion-toolkit treasury fee-config set --address <ADDR> --config config.json` works
+- [ ] `xion-toolkit treasury fee-config remove --address <ADDR>` works
+- [ ] `xion-toolkit treasury fee-config query --address <ADDR>` works
 - [ ] Skills scripts work with CLI instead of placeholders
 - [ ] All commands output JSON to stdout
 - [ ] Errors include error codes and suggestions

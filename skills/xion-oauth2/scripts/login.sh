@@ -78,9 +78,9 @@ done
 
 log_info "Starting Xion OAuth2 login..."
 
-# Check if xion CLI is available
-if ! command -v xion &> /dev/null; then
-    handle_error "xion CLI not found in PATH. Please install xion-agent-toolkit first." "CLI_NOT_FOUND"
+# Check if xion-toolkit CLI is available
+if ! command -v xion-toolkit &> /dev/null; then
+    handle_error "xion-toolkit CLI not found in PATH. Please install xion-agent-toolkit first." "CLI_NOT_FOUND"
 fi
 
 # Build command arguments
@@ -94,11 +94,11 @@ if [ -n "$NETWORK" ]; then
     CMD_ARGS="$CMD_ARGS --network $NETWORK"
 fi
 
-log_info "Running: xion $CMD_ARGS"
+log_info "Running: xion-toolkit $CMD_ARGS"
 
-# Execute xion login command
+# Execute xion-toolkit login command
 # Capture both stdout and stderr, but keep them separate
-RESULT=$(xion $CMD_ARGS 2>&1)
+RESULT=$(xion-toolkit $CMD_ARGS 2>&1)
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -eq 0 ]; then

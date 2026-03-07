@@ -109,13 +109,13 @@ Use `prost` crate for protobuf encoding (already in dependencies):
 
 ```bash
 # Basic usage
-xion treasury create \
+xion-toolkit treasury create \
   --redirect-url "https://example.com/callback" \
   --icon-url "https://example.com/icon.png" \
   --name "My Treasury"
 
 # With fee grant (basic)
-xion treasury create \
+xion-toolkit treasury create \
   --redirect-url "..." \
   --icon-url "..." \
   --name "..." \
@@ -124,7 +124,7 @@ xion treasury create \
   --fee-description "Basic fee allowance"
 
 # With fee grant (periodic)
-xion treasury create \
+xion-toolkit treasury create \
   --redirect-url "..." \
   --icon-url "..." \
   --name "..." \
@@ -134,7 +134,7 @@ xion treasury create \
   --fee-description "Daily fee allowance"
 
 # With permissions
-xion treasury create \
+xion-toolkit treasury create \
   --redirect-url "..." \
   --icon-url "..." \
   --name "..." \
@@ -148,7 +148,7 @@ xion treasury create \
 
 For complex configurations, support JSON config file:
 ```bash
-xion treasury create --config treasury-config.json
+xion-toolkit treasury create --config treasury-config.json
 ```
 
 ```json

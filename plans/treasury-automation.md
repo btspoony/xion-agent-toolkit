@@ -83,21 +83,21 @@ The toolkit uses pre-configured OAuth clients that are already set up with Treas
 
 ```bash
 # 1. Check authentication status
-xion auth status
+xion-toolkit auth status
 
 # 2. Login if needed
-xion auth login
+xion-toolkit auth login
 
 # 3. List existing treasuries
-xion treasury list
+xion-toolkit treasury list
 
 # 4. Create a new treasury
-xion treasury create \
+xion-toolkit treasury create \
   --fee-grant basic:1000000uxion \
   --grant-config authz:cosmwasm.wasm.v1.MsgExecuteContract
 
 # 5. Query treasury details
-xion treasury query <treasury-address>
+xion-toolkit treasury query <treasury-address>
 ```
 
 **Network Support**:

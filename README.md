@@ -3,7 +3,7 @@
 A CLI-driven, Agent-oriented toolkit for developing on the Xion blockchain.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Test Coverage](https://img.shields.io/badge/tests-120%20passing-green)]()
+[![Test Coverage](https://img.shields.io/badge/tests-330%20passing-green)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
 ## Overview
@@ -20,11 +20,19 @@ Xion Agent Toolkit provides a command-line interface for interacting with Xion's
 - ✅ **Multi-Network Support** - Local, testnet, and mainnet
 - ✅ **Session Persistence** - Per-network credential storage
 
-#### Treasury Management (Phase 3 - Core Complete)
+#### Treasury Management (Phase 3 - Complete)
 - ✅ **List Treasuries** - View all Treasury contracts for authenticated user
 - ✅ **Query Treasury** - Get detailed Treasury information (balance, grants, configs)
-- ✅ **Caching** - Smart 5-minute TTL cache for performance
+- ✅ **Fund Treasury** - Deposit funds into a Treasury contract
+- ✅ **Withdraw Treasury** - Withdraw funds from a Treasury contract
+- ✅ **Grant Configuration** - Configure Fee Grants and Authz Grants
+- ✅ **Fee Configuration** - Basic, Periodic, and AllowedMsg allowances
+- ✅ **Protobuf Encoding** - Full support for Fee and Authz protobuf encoding
 - ✅ **JSON Output** - Agent-friendly structured output
+
+#### Agent Skills (Phase 4 - Complete)
+- ✅ **xion-oauth2** - OAuth2 authentication skill
+- ✅ **xion-treasury** - Treasury management skill
 
 #### Infrastructure (Phase 1 - Complete)
 - ✅ **CLI Framework** - Built with clap for powerful command-line interface
@@ -32,12 +40,9 @@ Xion Agent Toolkit provides a command-line interface for interacting with Xion's
 - ✅ **Error Handling** - Structured errors with helpful suggestions
 - ✅ **Network Management** - Easy switching between environments
 
-### 🚧 Planned Features
+### 🚧 Blocked Features
 
-- ⏳ **Treasury Creation** - Create new Treasury contracts (Phase 3.5)
-- ⏳ **Treasury Operations** - Fund and withdraw operations (Phase 3.5)
-- ⏳ **Grant Management** - Configure Fee Grants and Authz Grants (Phase 3.5)
-- ⏳ **Agent Skills** - Pre-built skills for common operations (Phase 4)
+- ⏳ **Treasury Creation** - CLI implementation complete, waiting for OAuth2 API support for `MsgInstantiateContract2`
 
 ## Installation
 
@@ -59,7 +64,7 @@ cargo install --path .
 ### 1. Check Status
 
 ```bash
-xion status
+xion-toolkit status
 ```
 
 Output:
@@ -90,7 +95,7 @@ Required variables:
 ### 3. Login
 
 ```bash
-xion auth login
+xion-toolkit auth login
 ```
 
 This will:
@@ -113,7 +118,7 @@ Output:
 ### 4. List Treasuries
 
 ```bash
-xion treasury list
+xion-toolkit treasury list
 ```
 
 Output:
@@ -138,7 +143,7 @@ Output:
 ### 5. Query Treasury Details
 
 ```bash
-xion treasury query xion1abc123...
+xion-toolkit treasury query xion1abc123...
 ```
 
 Output:
@@ -160,10 +165,92 @@ Output:
 }
 ```
 
-### 6. Check Authentication Status
+### 6. Fund a Treasury
 
 ```bash
-xion auth status
+xion-toolkit treasury fund xion1abc123... --amount 1000000
+```
+
+Output:
+```json
+{
+  "success": true,
+  "treasury_address": "xion1abc123...",
+  "amount": "1000000uxion",
+  "tx_hash": "ABC123...",
+  "new_balance": "2000000"
+}
+```
+
+### 7. Withdraw from a Treasury
+
+```bash
+xion-toolkit treasury withdraw xion1abc123... --amount 500000 --to xion1recipient...
+```
+
+Output:
+```json
+{
+  "success": true,
+  "treasury_address": "xion1abc123...",
+  "amount": "500000uxion",
+  "recipient": "xion1recipient...",
+  "tx_hash": "DEF456...",
+  "remaining_balance": "1500000"
+}
+```
+
+### 8. Configure Grants for a Treasury
+
+```bash
+xion-toolkit treasury grant-config xion1abc123... \
+  --grant-type-url "/cosmos.bank.v1beta1.MsgSend" \
+  --grant-auth-type send \
+  --grant-spend-limit "1000000uxion" \
+  --grant-description "Allow sending funds"
+```
+
+Output:
+```json
+{
+  "success": true,
+  "treasury_address": "xion1abc123...",
+  "grant_config": {
+    "type_url": "/cosmos.bank.v1beta1.MsgSend",
+    "description": "Allow sending funds",
+    "authorization": { ... }
+  },
+  "tx_hash": "GHI789..."
+}
+```
+
+### 9. Configure Fee Grant for a Treasury
+
+```bash
+xion-toolkit treasury fee-config xion1abc123... \
+  --fee-allowance-type basic \
+  --fee-spend-limit "5000000uxion" \
+  --fee-description "Basic fee allowance"
+```
+
+Output:
+```json
+{
+  "success": true,
+  "treasury_address": "xion1abc123...",
+  "fee_config": {
+    "description": "Basic fee allowance",
+    "allowance_type": "basic",
+    "spend_limit": "5000000uxion"
+  },
+  "tx_hash": "JKL012..."
+}
+```
+
+### 10. Check Authentication Status
+
+```bash
+xion-toolkit auth status
 ```
 
 Output (authenticated):
@@ -178,10 +265,10 @@ Output (authenticated):
 }
 ```
 
-### 7. Logout
+### 11. Logout
 
 ```bash
-xion auth logout
+xion-toolkit auth logout
 ```
 
 Output:
@@ -198,39 +285,41 @@ Output:
 ### Authentication Commands
 
 ```bash
-xion auth login [--port <PORT>]   # OAuth2 login (default port: 54321)
-xion auth logout                  # Clear credentials
-xion auth status                  # Check authentication status
-xion auth refresh                 # Refresh access token
+xion-toolkit auth login [--port <PORT>]   # OAuth2 login (default port: 54321)
+xion-toolkit auth logout                  # Clear credentials
+xion-toolkit auth status                  # Check authentication status
+xion-toolkit auth refresh                 # Refresh access token
 ```
 
 ### Treasury Commands
 
 ```bash
-xion treasury list                # List all treasuries
-xion treasury query <address>     # Query treasury details
+xion-toolkit treasury list                       # List all treasuries
+xion-toolkit treasury query <address>            # Query treasury details
+xion-toolkit treasury fund <address> --amount N  # Fund treasury
+xion-toolkit treasury withdraw <address> --amount N --to <addr>  # Withdraw from treasury
+xion-toolkit treasury grant-config <address> [options]  # Configure authz grants
+xion-toolkit treasury fee-config <address> [options]    # Configure fee grants
 
-# Future commands (not yet implemented)
-xion treasury create [options]    # Create new treasury
-xion treasury fund <address>      # Fund treasury
-xion treasury withdraw <address>  # Withdraw from treasury
+# Treasury creation (CLI ready, waiting for API support)
+xion-toolkit treasury create [options]           # Create new treasury
 ```
 
 ### Configuration Commands
 
 ```bash
-xion config show                  # Show current config
-xion config set-network <network> # Switch network (local/testnet/mainnet)
-xion config get <key>             # Get config value
-xion config reset                 # Reset to defaults
+xion-toolkit config show                  # Show current config
+xion-toolkit config set-network <network> # Switch network (local/testnet/mainnet)
+xion-toolkit config get <key>             # Get config value
+xion-toolkit config reset                 # Reset to defaults
 ```
 
 ### Utility Commands
 
 ```bash
-xion status                       # Show current network and auth status
-xion --help                       # Show help
-xion --version                    # Show version
+xion-toolkit status                       # Show current network and auth status
+xion-toolkit --help                       # Show help
+xion-toolkit --version                    # Show version
 ```
 
 ## Network Configuration
@@ -241,24 +330,24 @@ xion --version                    # Show version
 |---------|-----------|-----|----------|--------|
 | local | http://localhost:8787 | http://localhost:26657 | xion-local | ✅ Active |
 | testnet | https://oauth2.testnet.burnt.com | https://rpc.xion-testnet-2.burnt.com:443 | xion-testnet-2 | ✅ Active |
-| mainnet | https://oauth2.burnt.com | https://rpc.xion-mainnet-1.burnt.com:443 | xion-mainnet-1 | 🚧 Coming Soon |
+| mainnet | https://oauth2.burnt.com | https://rpc.xion-mainnet-1.burnt.com:443 | xion-mainnet-1 | ✅ Active |
 
 ### Switch Networks
 
 ```bash
 # Switch to local development
-xion config set-network local
+xion-toolkit config set-network local
 
 # Switch to testnet (default)
-xion config set-network testnet
+xion-toolkit config set-network testnet
 
 # Switch to mainnet
-xion config set-network mainnet
+xion-toolkit config set-network mainnet
 
 # Or use global flag
-xion --network local status
-xion --network testnet auth login
-xion --network mainnet treasury list
+xion-toolkit --network local status
+xion-toolkit --network testnet auth login
+xion-toolkit --network mainnet treasury list
 ```
 
 ## Configuration Architecture
@@ -341,10 +430,11 @@ xion-agent-toolkit/
 │   │   └── token_manager.rs   # Token lifecycle
 │   ├── api/                 # API clients
 │   │   ├── oauth2_api.rs    # OAuth2 API client
-│   │   └── treasury_api.rs  # Treasury API client
+│   │   └── treasury.rs      # Treasury API client
 │   ├── treasury/            # Treasury management
 │   │   ├── types.rs         # Data structures
 │   │   ├── manager.rs       # High-level manager
+│   │   ├── encoding.rs      # Protobuf encoding
 │   │   └── cache.rs         # Caching system
 │   ├── config/              # Configuration
 │   │   ├── constants.rs     # Network config (auto-generated)
@@ -353,10 +443,19 @@ xion-agent-toolkit/
 │   └── utils/               # Utilities
 │       ├── error.rs         # Error definitions
 │       └── output.rs        # Output formatting
+├── skills/                  # Agent Skills
+│   ├── xion-oauth2/         # OAuth2 authentication skill
+│   │   ├── SKILL.md
+│   │   └── scripts/
+│   └── xion-treasury/       # Treasury management skill
+│       ├── SKILL.md
+│       └── scripts/
 ├── plans/                   # Development plans
 │   ├── treasury-automation.md
 │   ├── oauth2-client-architecture.md
-│   └── treasury-api-architecture.md
+│   ├── treasury-api-architecture.md
+│   ├── treasury-create-enhancement.md
+│   └── treasury-grant-fee-config.md
 ├── .env.example             # Environment variables template
 ├── build.rs                 # Compile-time config generation
 └── Cargo.toml               # Rust dependencies
@@ -376,7 +475,7 @@ cargo build
 cargo test
 ```
 
-Current test status: ✅ **120 tests passing**
+Current test status: ✅ **330 tests passing**
 
 ### CI/CD Testing
 
@@ -443,21 +542,23 @@ cargo test          # Run tests
 - Callback server
 - CLI integration
 
-### ✅ Phase 3: Treasury Management - Core (Complete)
+### ✅ Phase 3: Treasury Management (Complete)
 - Treasury API client
 - Treasury manager
 - List and query commands
-- Caching system
-
-### 🚧 Phase 3.5: Treasury Advanced (Planned)
-- Treasury creation
 - Fund and withdraw operations
 - Grant configuration management
+- Fee configuration management
+- Caching system
 
-### 🚧 Phase 4: Agent Skills (Planned)
+### ✅ Phase 4: Agent Skills (Complete)
 - xion-oauth2 skill
 - xion-treasury skill
 - Documentation and examples
+
+### 🚧 Phase 5: Treasury Creation (Blocked)
+- Treasury create command (CLI ready)
+- Waiting for OAuth2 API support for `MsgInstantiateContract2`
 
 ## Contributing
 

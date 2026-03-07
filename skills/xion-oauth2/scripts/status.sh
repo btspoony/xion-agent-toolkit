@@ -68,9 +68,9 @@ done
 
 log_info "Checking authentication status..."
 
-# Check if xion CLI is available
-if ! command -v xion &> /dev/null; then
-    handle_error "xion CLI not found in PATH. Please install xion-agent-toolkit first." "CLI_NOT_FOUND"
+# Check if xion-toolkit CLI is available
+if ! command -v xion-toolkit &> /dev/null; then
+    handle_error "xion-toolkit CLI not found in PATH. Please install xion-agent-toolkit first." "CLI_NOT_FOUND"
 fi
 
 # Build command
@@ -80,10 +80,10 @@ if [ -n "$NETWORK" ]; then
     CMD_ARGS="$CMD_ARGS --network $NETWORK"
 fi
 
-log_info "Running: xion $CMD_ARGS"
+log_info "Running: xion-toolkit $CMD_ARGS"
 
-# Execute xion status command
-RESULT=$(xion $CMD_ARGS 2>&1)
+# Execute xion-toolkit status command
+RESULT=$(xion-toolkit $CMD_ARGS 2>&1)
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -eq 0 ]; then

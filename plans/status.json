@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-03-06",
+  "updated_at": "2026-03-07",
   "plans": [
     {
       "id": "treasury-grant-fee-config",
@@ -22,8 +22,13 @@
       "file": "plans/treasury-create-enhancement.md",
       "status": "Blocked",
       "progress": 90,
-      "updated_at": "2026-03-06",
-      "notes": "BLOCKED: OAuth2 API does not support MsgInstantiateContract2. CLI implementation complete (encoding + types + polling). Skills updated. Waiting for OAuth2 API update."
+      "owner": "@project-manager",
+      "agents": ["@fullstack-dev"],
+      "tags": ["treasury", "create", "encoding", "cli"],
+      "created_at": "2026-03-06",
+      "updated_at": "2026-03-07",
+      "done_at": null,
+      "notes": "BLOCKED: OAuth2 API does not support MsgInstantiateContract2. CLI implementation complete (encoding + types + polling). Skills updated. Waiting for OAuth2 API update to enable E2E testing."
     },
     {
       "id": "treasury-automation",
@@ -46,9 +51,9 @@
         "rust"
       ],
       "created_at": "2025-03-05",
-      "updated_at": "2026-03-06",
+      "updated_at": "2026-03-07",
       "done_at": null,
-      "notes": "OAuth2 fully functional. All treasury commands implemented (list/query/create/fund/withdraw). Skills scripts updated. All 330+ tests passing with 0 warnings. Blocked: treasury create E2E test needs OAuth2 API MsgInstantiateContract2 support."
+      "notes": "OAuth2 fully functional. All treasury commands implemented (list/query/create/fund/withdraw). Skills scripts updated. All 330 tests passing with 0 warnings. Blocked: treasury create E2E test needs OAuth2 API MsgInstantiateContract2 support."
     },
     {
       "id": "oauth2-client-architecture",
@@ -109,5 +114,11 @@
       "done_at": "2026-03-06",
       "notes": "Treasury API architecture completed. Core features implemented."
     }
-  ]
+  ],
+  "_notes": {
+    "untracked_files": [
+      "oauth-client-implementation.md - Development log (2026-03-05), not a plan",
+      "treasury-create-design.md - Design document referenced by treasury-create-enhancement"
+    ]
+  }
 }

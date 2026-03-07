@@ -16,7 +16,7 @@ name = "xion_agent_toolkit"
 path = "src/lib.rs"
 
 [[bin]]
-name = "xion"
+name = "xion-toolkit"
 path = "src/main.rs"
 
 [dependencies]

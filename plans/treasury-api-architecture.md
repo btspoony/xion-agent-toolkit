@@ -137,11 +137,11 @@ src/
 **Responsibility**: CLI command handlers for treasury operations
 
 **Commands**:
-- `xion treasury list` - List all treasuries
-- `xion treasury query <address>` - Query treasury details
-- `xion treasury create` - Create treasury (future)
-- `xion treasury fund <address> --amount <amount>` - Fund treasury (future)
-- `xion treasury withdraw <address> --amount <amount>` - Withdraw funds (future)
+- `xion-toolkit treasury list` - List all treasuries
+- `xion-toolkit treasury query <address>` - Query treasury details
+- `xion-toolkit treasury create` - Create treasury (future)
+- `xion-toolkit treasury fund <address> --amount <amount>` - Fund treasury (future)
+- `xion-toolkit treasury withdraw <address> --amount <amount>` - Withdraw funds (future)
 
 ## API Design
 
@@ -991,10 +991,10 @@ pub enum XionError {
 
 ```bash
 # List all treasuries (human-readable)
-xion treasury list
+xion-toolkit treasury list
 
 # List all treasuries (JSON output)
-xion treasury list --json
+xion-toolkit treasury list --json
 
 # Example output (JSON)
 {
@@ -1021,10 +1021,10 @@ xion treasury list --json
 
 ```bash
 # Query treasury details
-xion treasury query xion1abc...
+xion-toolkit treasury query xion1abc...
 
 # Query with JSON output
-xion treasury query xion1abc... --json
+xion-toolkit treasury query xion1abc... --json
 
 # Example output (JSON)
 {
@@ -1056,10 +1056,10 @@ xion treasury query xion1abc... --json
 
 ```bash
 # Create treasury with basic fee grant
-xion treasury create --fee-grant basic:1000000uxion
+xion-toolkit treasury create --fee-grant basic:1000000uxion
 
 # Create treasury with authz grant
-xion treasury create \
+xion-toolkit treasury create \
   --fee-grant basic:1000000uxion \
   --grant-config authz:cosmwasm.wasm.v1.MsgExecuteContract
 ```
@@ -1068,7 +1068,7 @@ xion treasury create \
 
 ```bash
 # Fund treasury with 10 XION
-xion treasury fund xion1abc... --amount 10000000uxion
+xion-toolkit treasury fund xion1abc... --amount 10000000uxion
 ```
 
 ## Conclusion

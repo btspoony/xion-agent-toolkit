@@ -110,12 +110,12 @@ fi
 
 log_info "Funding treasury $ADDRESS with $AMOUNT on $NETWORK..."
 
-# Check if xion CLI is available
-if ! command -v xion &> /dev/null; then
+# Check if xion-toolkit CLI is available
+if ! command -v xion-toolkit &> /dev/null; then
     # Try to use cargo run instead
     CLI_CMD="cargo run --quiet --"
 else
-    CLI_CMD="xion"
+    CLI_CMD="xion-toolkit"
 fi
 
 # Execute the fund command

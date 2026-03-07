@@ -50,11 +50,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive unit tests
 
 #### CLI Commands
-- `xion treasury list` - List all treasuries (✅ implemented)
-- `xion treasury query <address>` - Query treasury details (✅ implemented)
-- `xion treasury create` - Create treasury (🚧 placeholder)
-- `xion treasury fund` - Fund treasury (🚧 placeholder)
-- `xion treasury withdraw` - Withdraw from treasury (🚧 placeholder)
+- `xion-toolkit treasury list` - List all treasuries (✅ implemented)
+- `xion-toolkit treasury query <address>` - Query treasury details (✅ implemented)
+- `xion-toolkit treasury create` - Create treasury (🚧 placeholder)
+- `xion-toolkit treasury fund` - Fund treasury (🚧 placeholder)
+- `xion-toolkit treasury withdraw` - Withdraw from treasury (🚧 placeholder)
 
 ### Added - Phase 2: OAuth2 Authentication
 
@@ -92,10 +92,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error handling for OAuth2 errors
 
 #### CLI Commands
-- `xion auth login [--port]` - OAuth2 login
-- `xion auth logout` - Clear credentials
-- `xion auth status` - Check auth status
-- `xion auth refresh` - Refresh access token
+- `xion-toolkit auth login [--port]` - OAuth2 login
+- `xion-toolkit auth logout` - Clear credentials
+- `xion-toolkit auth status` - Check auth status
+- `xion-toolkit auth refresh` - Refresh access token
 
 ### Added - Phase 1: Foundation
 

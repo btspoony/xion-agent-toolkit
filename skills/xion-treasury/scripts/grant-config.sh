@@ -83,7 +83,7 @@ esac
 log_info "Processing grant config: action=$ACTION for treasury $ADDRESS"
 
 # Build the command
-CMD="xion --network $NETWORK"
+CMD="xion-toolkit --network $NETWORK"
 
 case "$ACTION" in
     add)

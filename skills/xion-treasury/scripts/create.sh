@@ -49,12 +49,12 @@ log_error() {
 }
 
 check_cli() {
-    if ! command -v xion &> /dev/null; then
+    if ! command -v xion-toolkit &> /dev/null; then
         output_json '{
             "success": false,
-            "error": "xion CLI not found in PATH",
+            "error": "xion-toolkit CLI not found in PATH",
             "error_code": "CLI_NOT_FOUND",
-            "suggestion": "Install xion CLI or ensure it is in your PATH"
+            "suggestion": "Install xion-toolkit CLI or ensure it is in your PATH"
         }'
         exit 1
     fi
@@ -222,8 +222,8 @@ else
 fi
 
 # Execute CLI command
-log_info "Executing: xion $CLI_ARGS"
-RESULT=$(eval xion $CLI_ARGS 2>&1)
+log_info "Executing: xion-toolkit $CLI_ARGS"
+RESULT=$(eval xion-toolkit $CLI_ARGS 2>&1)
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -eq 0 ]; then

@@ -4,7 +4,7 @@ OAuth2 authentication skill for Xion blockchain development. This skill enables 
 
 ## Overview
 
-This skill wraps the `xion` CLI tool to provide Agent-friendly OAuth2 authentication capabilities:
+This skill wraps the `xion-toolkit` CLI tool to provide Agent-friendly OAuth2 authentication capabilities:
 
 - **login.sh** - Initiate OAuth2 login flow via browser
 - **status.sh** - Check current authentication status
@@ -13,7 +13,7 @@ This skill wraps the `xion` CLI tool to provide Agent-friendly OAuth2 authentica
 
 ## Prerequisites
 
-- `xion` CLI tool installed and in PATH
+- `xion-toolkit` CLI tool installed and in PATH
 - Browser available for OAuth2 authorization
 - Network connectivity to Xion OAuth2 API
 
@@ -161,7 +161,7 @@ All scripts output JSON to stdout with a `success` field:
 ```
 
 **Common Error Codes:**
-- `CLI_NOT_FOUND` - xion CLI not found in PATH
+- `CLI_NOT_FOUND` - xion-toolkit CLI not found in PATH
 - `AUTH_FAILED` - Authentication failed
 - `TOKEN_EXPIRED` - Token has expired and refresh failed
 - `NETWORK_ERROR` - Failed to connect to OAuth2 API
@@ -244,9 +244,9 @@ If you get `TOKEN_EXPIRED` error:
 
 ### CLI Not Found
 
-Ensure `xion` CLI is in PATH:
+Ensure `xion-toolkit` CLI is in PATH:
 ```bash
-which xion
+which xion-toolkit
 # If not found, add to PATH or create alias
 ```
 

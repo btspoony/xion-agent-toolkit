@@ -4,7 +4,7 @@ Treasury management skill for Xion blockchain development. This skill enables AI
 
 ## Overview
 
-This skill wraps the `xion` CLI tool to provide Agent-friendly Treasury management capabilities:
+This skill wraps the `xion-toolkit` CLI tool to provide Agent-friendly Treasury management capabilities:
 
 - **list.sh** - List all Treasury contracts owned by the authenticated user
 - **query.sh** - Query detailed information about a specific Treasury
@@ -17,7 +17,7 @@ This skill wraps the `xion` CLI tool to provide Agent-friendly Treasury manageme
 
 ## Prerequisites
 
-- `xion` CLI tool installed and in PATH
+- `xion-toolkit` CLI tool installed and in PATH
 - Authenticated with `xion-oauth2` skill (required for most operations)
 - Network connectivity to Xion OAuth2 API
 
@@ -600,7 +600,7 @@ All scripts output JSON to stdout with a `success` field:
 ```
 
 **Common Error Codes:**
-- `CLI_NOT_FOUND` - xion CLI not found in PATH
+- `CLI_NOT_FOUND` - xion-toolkit CLI not found in PATH
 - `NOT_AUTHENTICATED` - User not authenticated, run `xion-oauth2/login.sh` first
 - `TREASURY_NOT_FOUND` - Treasury address not found
 - `INVALID_ADDRESS` - Invalid Treasury address format
