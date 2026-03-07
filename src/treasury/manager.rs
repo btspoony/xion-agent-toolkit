@@ -506,10 +506,12 @@ impl TreasuryManager {
                     .map(|f| f.description.clone())
                     .unwrap_or_default(),
             },
-            grant_configs: instantiate_msg
-                .grant_configs
+grant_configs: instantiate_msg
+                .type_urls
                 .iter()
-                .map(|gc| super::types::GrantConfigMessage {
+                .zip(instantiate_msg.grant_configs.iter())
+                .map(|(type_url, gc)| super::types::GrantConfigMessage {
+                    type_url: type_url.clone(),
                     authorization: super::types::TypeUrlValue {
                         type_url: gc.authorization.type_url.clone(),
                         value: gc.authorization.value.clone(),

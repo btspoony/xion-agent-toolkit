@@ -694,11 +694,11 @@ fn build_treasury_instantiate_msg(
         "is_oauth2_app": request.is_oauth2_app,
     });
 
-    // Extract type URLs from grant configs
+    // Extract type URLs from grant configs (message type URLs like /cosmos.bank.v1beta1.MsgSend)
     let type_urls: Vec<String> = request
         .grant_configs
         .iter()
-        .map(|gc| gc.authorization.type_url.clone())
+        .map(|gc| gc.type_url.clone())
         .collect();
 
     // Build the grant configs array (without type_url, that's in type_urls)

@@ -142,7 +142,10 @@ pub struct FeeConfigMessage {
 /// Grant config for treasury instantiation message
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GrantConfigMessage {
-    /// Authorization type URL
+    /// Message type URL (e.g., "/cosmos.bank.v1beta1.MsgSend")
+    #[serde(rename = "type_url")]
+    pub type_url: String,
+    /// Authorization type URL and encoded value
     pub authorization: TypeUrlValue,
     /// Description of the grant (optional)
     #[serde(skip_serializing_if = "Option::is_none")]
