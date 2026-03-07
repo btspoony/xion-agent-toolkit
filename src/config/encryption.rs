@@ -214,7 +214,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(encryption_key)]
     fn test_decrypt_wrong_key_fails() {
         let original_key = env::var(ENV_KEY_NAME).ok();
 
@@ -237,7 +237,7 @@ mod tests {
     }
 
     #[test]
-    #[serial]
+    #[serial(encryption_key)]
     fn test_env_key_validation() {
         let original_key = env::var(ENV_KEY_NAME).ok();
 
@@ -272,6 +272,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(encryption_key)]
     fn test_decrypt_malformed_data() {
         let original = setup_test_key();
 
