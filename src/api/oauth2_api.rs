@@ -465,6 +465,16 @@ impl OAuth2ApiClient {
             .await
             .context("Failed to parse token response")?;
 
+        // Debug: print token prefix
+        debug!(
+            "Parsed access_token prefix: {}...",
+            &token_response
+                .access_token
+                .chars()
+                .take(20)
+                .collect::<String>()
+        );
+
         // Calculate and set expires_at if not provided
         if token_response.expires_at.is_none() {
             token_response.expires_at = Some(token_response.calculate_expires_at());

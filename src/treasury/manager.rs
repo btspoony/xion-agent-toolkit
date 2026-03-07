@@ -38,9 +38,9 @@ use super::types::{
 /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
 /// #     chain_id: "xion-testnet-2".to_string(),
 /// #     oauth_client_id: "client-id".to_string(),
-/// #     treasury_code_id: Some(1260),
-/// #     treasury_config: Some("xion1...".to_string()),
+/// #     treasury_code_id: 1260,
 /// #     callback_port: 54321,
+/// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
 /// # };
 /// let oauth_client = OAuthClient::new(config.clone())?;
 /// let manager = TreasuryManager::new(oauth_client, config.clone());
@@ -83,8 +83,8 @@ impl TreasuryManager {
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     /// #     chain_id: "xion-testnet-2".to_string(),
     /// #     oauth_client_id: "client-id".to_string(),
-    /// #     treasury_code_id: Some(1260),
-    /// #     treasury_config: Some("xion1...".to_string()),
+    /// #     treasury_code_id: 1260,
+    /// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// #     callback_port: 54321,
     /// # };
     /// let oauth_client = OAuthClient::new(config.clone())?;
@@ -93,7 +93,8 @@ impl TreasuryManager {
     /// # }
     /// ```
     pub fn new(oauth_client: OAuthClient, config: NetworkConfig) -> Self {
-        let api_client = TreasuryApiClient::new(config.oauth_api_url.clone());
+        let api_client =
+            TreasuryApiClient::new(config.oauth_api_url.clone(), config.indexer_url.clone());
         let cache = Some(Arc::new(RwLock::new(TreasuryCache::new())));
 
         Self {
@@ -109,7 +110,8 @@ impl TreasuryManager {
     /// Disables caching for all operations. Useful when you always need fresh data.
     #[allow(dead_code)]
     pub fn without_cache(oauth_client: OAuthClient, config: NetworkConfig) -> Self {
-        let api_client = TreasuryApiClient::new(config.oauth_api_url.clone());
+        let api_client =
+            TreasuryApiClient::new(config.oauth_api_url.clone(), config.indexer_url.clone());
 
         Self {
             oauth_client,
@@ -146,8 +148,8 @@ impl TreasuryManager {
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     /// #     chain_id: "xion-testnet-2".to_string(),
     /// #     oauth_client_id: "client-id".to_string(),
-    /// #     treasury_code_id: Some(1260),
-    /// #     treasury_config: Some("xion1...".to_string()),
+    /// #     treasury_code_id: 1260,
+    /// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// #     callback_port: 54321,
     /// # };
     /// # let oauth_client = OAuthClient::new(config.clone())?;
@@ -220,8 +222,8 @@ impl TreasuryManager {
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     /// #     chain_id: "xion-testnet-2".to_string(),
     /// #     oauth_client_id: "client-id".to_string(),
-    /// #     treasury_code_id: Some(1260),
-    /// #     treasury_config: Some("xion1...".to_string()),
+    /// #     treasury_code_id: 1260,
+    /// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// #     callback_port: 54321,
     /// # };
     /// # let oauth_client = OAuthClient::new(config.clone())?;
@@ -288,8 +290,8 @@ impl TreasuryManager {
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     /// #     chain_id: "xion-testnet-2".to_string(),
     /// #     oauth_client_id: "client-id".to_string(),
-    /// #     treasury_code_id: Some(1260),
-    /// #     treasury_config: Some("xion1...".to_string()),
+    /// #     treasury_code_id: 1260,
+    /// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// #     callback_port: 54321,
     /// # };
     /// # let oauth_client = OAuthClient::new(config.clone())?;
@@ -327,8 +329,8 @@ impl TreasuryManager {
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     /// #     chain_id: "xion-testnet-2".to_string(),
     /// #     oauth_client_id: "client-id".to_string(),
-    /// #     treasury_code_id: Some(1260),
-    /// #     treasury_config: Some("xion1...".to_string()),
+    /// #     treasury_code_id: 1260,
+    /// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// #     callback_port: 54321,
     /// # };
     /// # let oauth_client = OAuthClient::new(config.clone())?;
@@ -389,8 +391,8 @@ impl TreasuryManager {
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     /// #     chain_id: "xion-testnet-2".to_string(),
     /// #     oauth_client_id: "client-id".to_string(),
-    /// #     treasury_code_id: Some(1260),
-    /// #     treasury_config: Some("xion1...".to_string()),
+    /// #     treasury_code_id: 1260,
+    /// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// #     callback_port: 54321,
     /// # };
     /// # let oauth_client = OAuthClient::new(config.clone())?;
@@ -472,10 +474,7 @@ impl TreasuryManager {
         let access_token = self.oauth_client.get_valid_token().await?;
 
         // Step 6: Get treasury code ID from config
-        let code_id = self
-            .config
-            .treasury_code_id
-            .ok_or_else(|| anyhow::anyhow!("Treasury code ID not configured for this network"))?;
+        let code_id = self.config.treasury_code_id;
 
         // Step 7: Generate random salt for instantiate2
         let salt: [u8; 32] = {
@@ -1034,9 +1033,9 @@ mod tests {
             rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
             chain_id: "xion-testnet-2".to_string(),
             oauth_client_id: "test-client-id".to_string(),
-            treasury_code_id: Some(1260),
-            treasury_config: Some("xion1test".to_string()),
+            treasury_code_id: 1260,
             callback_port: 54321,
+            indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
         }
     }
 

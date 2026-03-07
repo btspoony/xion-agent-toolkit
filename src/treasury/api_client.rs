@@ -24,7 +24,7 @@ const POLL_INTERVAL_SECS: u64 = 2;
 /// Treasury API Client for Xion
 ///
 /// Handles communication with the Treasury API service for:
-/// - Listing user's treasury contracts
+/// - Listing user's treasury contracts (via DaoDao Indexer)
 /// - Querying treasury details
 /// - Creating new treasury contracts (future)
 /// - Funding treasury contracts (future)
@@ -32,6 +32,8 @@ const POLL_INTERVAL_SECS: u64 = 2;
 pub struct TreasuryApiClient {
     /// Base URL of the Treasury API service
     base_url: String,
+    /// DaoDao Indexer URL for treasury listing
+    indexer_url: String,
     /// HTTP client for making requests
     http_client: Client,
 }
@@ -52,19 +54,48 @@ struct TreasuryQueryResponse {
     treasury: TreasuryInfo,
 }
 
+/// DaoDao Indexer treasury list response
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct IndexerTreasuryListResponse {
+    /// List of treasuries from indexer
+    treasuries: Vec<IndexerTreasuryItem>,
+}
+
+/// Individual treasury item from DaoDao Indexer
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct IndexerTreasuryItem {
+    /// Treasury contract address
+    address: String,
+    /// Admin address
+    admin: String,
+    /// Balance (optional, may not be included in list)
+    #[serde(default)]
+    balance: Option<String>,
+    /// Display name (optional)
+    #[serde(default)]
+    name: Option<String>,
+    /// Creation timestamp (optional)
+    #[serde(default)]
+    created_at: Option<String>,
+}
+
 impl TreasuryApiClient {
     /// Create a new Treasury API client
     ///
     /// # Arguments
     /// * `base_url` - Base URL of the Treasury API service (e.g., "https://oauth2.testnet.burnt.com")
+    /// * `indexer_url` - DaoDao Indexer URL for listing treasuries (e.g., "https://daodaoindexer.burnt.com/xion-testnet-2")
     ///
     /// # Example
     /// ```no_run
     /// use xion_agent_toolkit::api::TreasuryApiClient;
     ///
-    /// let client = TreasuryApiClient::new("https://oauth2.testnet.burnt.com".to_string());
+    /// let client = TreasuryApiClient::new(
+    ///     "https://oauth2.testnet.burnt.com".to_string(),
+    ///     "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
+    /// );
     /// ```
-    pub fn new(base_url: String) -> Self {
+    pub fn new(base_url: String, indexer_url: String) -> Self {
         let http_client = Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
@@ -72,16 +103,18 @@ impl TreasuryApiClient {
 
         Self {
             base_url,
+            indexer_url,
             http_client,
         }
     }
 
     /// List all treasuries for authenticated user
     ///
-    /// Retrieves a list of all treasury contracts associated with the authenticated user.
+    /// Retrieves a list of all treasury contracts associated with the authenticated user
+    /// using the DaoDao Indexer.
     ///
     /// # Arguments
-    /// * `access_token` - Valid OAuth2 access token
+    /// * `access_token` - Valid OAuth2 access token (format: {userId}:{grantId}:{secret})
     ///
     /// # Returns
     /// List of treasury items with basic information
@@ -98,7 +131,10 @@ impl TreasuryApiClient {
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = TreasuryApiClient::new("https://oauth2.testnet.burnt.com".to_string());
+    /// let client = TreasuryApiClient::new(
+    ///     "https://oauth2.testnet.burnt.com".to_string(),
+    ///     "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
+    /// );
     /// let treasuries = client.list_treasuries("access_token_123").await?;
     /// println!("Found {} treasuries", treasuries.len());
     /// # Ok(())
@@ -106,16 +142,22 @@ impl TreasuryApiClient {
     /// ```
     #[instrument(skip(self, access_token))]
     pub async fn list_treasuries(&self, access_token: &str) -> Result<Vec<TreasuryListItem>> {
-        let url = format!("{}/mgr-api/treasuries", self.base_url);
-        debug!("Listing treasuries from: {}", url);
+        // Extract user address from access token (format: {userId}:{grantId}:{secret})
+        let user_address = extract_address_from_token(access_token)?;
+
+        // Use DaoDao Indexer to list treasuries
+        let url = format!(
+            "{}/contract/{}/xion/account/treasuries",
+            self.indexer_url, user_address
+        );
+        debug!("Listing treasuries from DaoDao Indexer: {}", url);
 
         let response = self
             .http_client
             .get(&url)
-            .bearer_auth(access_token)
             .send()
             .await
-            .context("Failed to send list treasuries request")?;
+            .context("Failed to send list treasuries request to indexer")?;
 
         let status = response.status();
         debug!("List treasuries response status: {}", status);
@@ -132,14 +174,24 @@ impl TreasuryApiClient {
             );
         }
 
-        let result: serde_json::Value = response
+        // Parse indexer response
+        let indexer_response: IndexerTreasuryListResponse = response
             .json()
             .await
-            .context("Failed to parse list treasuries response")?;
+            .context("Failed to parse indexer response")?;
 
-        let treasuries: Vec<TreasuryListItem> =
-            serde_json::from_value(result.get("treasuries").cloned().unwrap_or_default())
-                .context("Failed to parse treasuries list")?;
+        // Convert indexer items to TreasuryListItem
+        let treasuries: Vec<TreasuryListItem> = indexer_response
+            .treasuries
+            .into_iter()
+            .map(|item| TreasuryListItem {
+                address: item.address,
+                admin: Some(item.admin),
+                balance: item.balance.unwrap_or_else(|| "0".to_string()),
+                name: item.name,
+                created_at: item.created_at,
+            })
+            .collect();
 
         debug!("Successfully retrieved {} treasuries", treasuries.len());
         Ok(treasuries)
@@ -170,7 +222,10 @@ impl TreasuryApiClient {
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = TreasuryApiClient::new("https://oauth2.testnet.burnt.com".to_string());
+    /// let client = TreasuryApiClient::new(
+    ///     "https://oauth2.testnet.burnt.com".to_string(),
+    ///     "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
+    /// );
     /// let options = QueryOptions::default();
     /// let treasury = client.query_treasury(
     ///     "access_token_123",
@@ -269,7 +324,10 @@ impl TreasuryApiClient {
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = TreasuryApiClient::new("https://oauth2.testnet.burnt.com".to_string());
+    /// let client = TreasuryApiClient::new(
+    ///     "https://oauth2.testnet.burnt.com".to_string(),
+    ///     "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
+    /// );
     ///
     /// let request = BroadcastRequest {
     ///     messages: vec![TransactionMessage {
@@ -350,7 +408,10 @@ impl TreasuryApiClient {
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = TreasuryApiClient::new("https://oauth2.testnet.burnt.com".to_string());
+    /// let client = TreasuryApiClient::new(
+    ///     "https://oauth2.testnet.burnt.com".to_string(),
+    ///     "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
+    /// );
     /// let result = client.fund_treasury(
     ///     "access_token_123",
     ///     "xion1treasury...",
@@ -412,7 +473,10 @@ impl TreasuryApiClient {
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = TreasuryApiClient::new("https://oauth2.testnet.burnt.com".to_string());
+    /// let client = TreasuryApiClient::new(
+    ///     "https://oauth2.testnet.burnt.com".to_string(),
+    ///     "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
+    /// );
     /// let result = client.withdraw_treasury(
     ///     "access_token_123",
     ///     "xion1treasury...",
@@ -492,7 +556,10 @@ impl TreasuryApiClient {
     ///
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = TreasuryApiClient::new("https://oauth2.testnet.burnt.com".to_string());
+    /// let client = TreasuryApiClient::new(
+    ///     "https://oauth2.testnet.burnt.com".to_string(),
+    ///     "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
+    /// );
     ///
     /// let request = CreateTreasuryRequest {
     ///     admin: "xion1admin...".to_string(),
@@ -758,6 +825,26 @@ fn base64_encode(value: &serde_json::Value) -> Result<String> {
         &base64::engine::general_purpose::STANDARD,
         json_str.as_bytes(),
     ))
+}
+
+/// Extract user address from OAuth2 access token
+///
+/// Token format: {userId}:{grantId}:{secret}
+/// userId is the user's Xion address (starts with "xion1")
+fn extract_address_from_token(token: &str) -> Result<String> {
+    let parts: Vec<&str> = token.split(':').collect();
+    if parts.len() != 3 {
+        anyhow::bail!("Invalid access token format: expected 3 parts separated by ':'");
+    }
+
+    let address = parts[0].to_string();
+    if !address.starts_with("xion1") {
+        anyhow::bail!(
+            "Invalid access token: userId must be a valid Xion address (starts with 'xion1')"
+        );
+    }
+
+    Ok(address)
 }
 
 // ============================================================================
@@ -1069,7 +1156,10 @@ mod tests {
 
     #[test]
     fn test_client_creation() {
-        let client = TreasuryApiClient::new("https://test.com".to_string());
+        let client = TreasuryApiClient::new(
+            "https://test.com".to_string(),
+            "https://indexer.test.com/network".to_string(),
+        );
         assert_eq!(client.base_url, "https://test.com");
     }
 
@@ -1176,10 +1266,17 @@ mod tests {
         let admin_address = "xion1admin123";
         let treasury_address = "xion1treasury456";
 
-        // Mock the list treasuries endpoint - return treasury with matching admin
+        // Create a token with admin address as userId
+        let token = format!("{}:grant123:secret456", admin_address);
+
+        // Mock the DaoDao indexer endpoint - return treasury with matching admin
         let mock = server
-            .mock("GET", "/mgr-api/treasuries")
-            .match_header("authorization", "Bearer test_token")
+            .mock(
+                "GET",
+                mockito::Matcher::Regex(
+                    r"/contract/xion1admin123/xion/account/treasuries".to_string(),
+                ),
+            )
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_body(
@@ -1196,11 +1293,11 @@ mod tests {
             )
             .create();
 
-        let client = TreasuryApiClient::new(server.url());
+        let client = TreasuryApiClient::new(server.url(), server.url());
 
         // Call the wait_for_treasury_creation method
         let result = client
-            .wait_for_treasury_creation("test_token", admin_address, "tx123")
+            .wait_for_treasury_creation(&token, admin_address, "tx123")
             .await;
 
         assert!(result.is_ok());
@@ -1217,9 +1314,17 @@ mod tests {
         let admin_address = "xion1admin999";
         let treasury_address = "xion1treasury999";
 
+        // Create a token with admin address as userId
+        let token = format!("{}:grant123:secret456", admin_address);
+
         // Mock returning multiple treasuries, one with matching admin
         let mock = server
-            .mock("GET", "/mgr-api/treasuries")
+            .mock(
+                "GET",
+                mockito::Matcher::Regex(
+                    r"/contract/xion1admin999/xion/account/treasuries".to_string(),
+                ),
+            )
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_body(
@@ -1246,15 +1351,30 @@ mod tests {
             )
             .create();
 
-        let client = TreasuryApiClient::new(server.url());
+        let client = TreasuryApiClient::new(server.url(), server.url());
 
         let result = client
-            .wait_for_treasury_creation("test_token", admin_address, "tx456")
+            .wait_for_treasury_creation(&token, admin_address, "tx456")
             .await;
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), treasury_address);
 
         mock.assert();
+    }
+
+    #[test]
+    fn test_extract_address_from_token() {
+        // Valid token format
+        let token = "xion1abc123:grant123:secret456";
+        let address = extract_address_from_token(token).unwrap();
+        assert_eq!(address, "xion1abc123");
+
+        // Invalid token - missing parts
+        assert!(extract_address_from_token("invalid").is_err());
+        assert!(extract_address_from_token("xion1abc:onlytwoparts").is_err());
+
+        // Invalid token - wrong format
+        assert!(extract_address_from_token("notxion:grant:secret").is_err());
     }
 }

@@ -30,9 +30,9 @@ use crate::oauth::{CallbackServer, PKCEChallenge, TokenManager};
 ///     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
 ///     chain_id: "xion-testnet-2".to_string(),
 ///     oauth_client_id: "your-client-id".to_string(),
-///     treasury_code_id: Some(1260),
-///     treasury_config: Some("xion1...".to_string()),
+///     treasury_code_id: 1260,
 ///     callback_port: 54321,
+///     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
 /// };
 ///
 /// let client = OAuthClient::new(config)?;
@@ -83,9 +83,9 @@ impl OAuthClient {
     ///     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     ///     chain_id: "xion-testnet-2".to_string(),
     ///     oauth_client_id: "client-id".to_string(),
-    ///     treasury_code_id: Some(1260),
-    ///     treasury_config: Some("xion1...".to_string()),
+    ///     treasury_code_id: 1260,
     ///     callback_port: 54321,
+    ///     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// };
     ///
     /// let client = OAuthClient::new(config)?;
@@ -154,9 +154,9 @@ impl OAuthClient {
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     /// #     chain_id: "xion-testnet-2".to_string(),
     /// #     oauth_client_id: "client-id".to_string(),
-    /// #     treasury_code_id: Some(1260),
-    /// #     treasury_config: Some("xion1...".to_string()),
+    /// #     treasury_code_id: 1260,
     /// #     callback_port: 54321,
+    /// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// # };
     /// let client = OAuthClient::new(config)?;
     /// let credentials = client.login().await?;
@@ -299,9 +299,9 @@ impl OAuthClient {
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     /// #     chain_id: "xion-testnet-2".to_string(),
     /// #     oauth_client_id: "client-id".to_string(),
-    /// #     treasury_code_id: Some(1260),
-    /// #     treasury_config: Some("xion1...".to_string()),
+    /// #     treasury_code_id: 1260,
     /// #     callback_port: 54321,
+    /// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// # };
     /// let client = OAuthClient::new(config)?;
     /// client.logout()?;
@@ -340,9 +340,9 @@ impl OAuthClient {
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     /// #     chain_id: "xion-testnet-2".to_string(),
     /// #     oauth_client_id: "client-id".to_string(),
-    /// #     treasury_code_id: Some(1260),
-    /// #     treasury_config: Some("xion1...".to_string()),
+    /// #     treasury_code_id: 1260,
     /// #     callback_port: 54321,
+    /// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// # };
     /// let client = OAuthClient::new(config)?;
     /// if client.is_authenticated()? {
@@ -382,9 +382,9 @@ impl OAuthClient {
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     /// #     chain_id: "xion-testnet-2".to_string(),
     /// #     oauth_client_id: "client-id".to_string(),
-    /// #     treasury_code_id: Some(1260),
-    /// #     treasury_config: Some("xion1...".to_string()),
+    /// #     treasury_code_id: 1260,
     /// #     callback_port: 54321,
+    /// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// # };
     /// let client = OAuthClient::new(config)?;
     /// if let Some(creds) = client.get_credentials()? {
@@ -427,9 +427,9 @@ impl OAuthClient {
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     /// #     chain_id: "xion-testnet-2".to_string(),
     /// #     oauth_client_id: "client-id".to_string(),
-    /// #     treasury_code_id: Some(1260),
-    /// #     treasury_config: Some("xion1...".to_string()),
+    /// #     treasury_code_id: 1260,
     /// #     callback_port: 54321,
+    /// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// # };
     /// let client = OAuthClient::new(config)?;
     /// let token = client.get_valid_token().await?;
@@ -471,9 +471,9 @@ impl OAuthClient {
     /// #     rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
     /// #     chain_id: "xion-testnet-2".to_string(),
     /// #     oauth_client_id: "client-id".to_string(),
-    /// #     treasury_code_id: Some(1260),
-    /// #     treasury_config: Some("xion1...".to_string()),
+    /// #     treasury_code_id: 1260,
     /// #     callback_port: 54321,
+    /// #     indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     /// # };
     /// let client = OAuthClient::new(config)?;
     /// let new_creds = client.refresh_token().await?;
@@ -550,9 +550,9 @@ mod tests {
             rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
             chain_id: "xion-testnet-2".to_string(),
             oauth_client_id: "test-client-id".to_string(),
-            treasury_code_id: Some(1260),
-            treasury_config: Some("xion1test".to_string()),
+            treasury_code_id: 1260,
             callback_port: 54321,
+            indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
         }
     }
 

@@ -10,7 +10,10 @@ use xion_agent_toolkit::treasury::{TreasuryApiClient, TreasuryManager};
 
 /// TestTreasuryApiClient creates a TreasuryApiClient for testing
 fn create_test_api_client(base_url: &str) -> TreasuryApiClient {
-    TreasuryApiClient::new(base_url.to_string())
+    TreasuryApiClient::new(
+        base_url.to_string(),
+        "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
+    )
 }
 
 /// Create a mock OAuth client for testing (mocked token retrieval)
@@ -26,9 +29,9 @@ fn create_test_config(server_url: &str) -> NetworkConfig {
         rpc_url: "http://localhost:26657".to_string(),
         chain_id: "xion-local".to_string(),
         oauth_client_id: "test-client-id".to_string(),
-        treasury_code_id: Some(1),
-        treasury_config: Some("testTreasuryConfig".to_string()),
+        treasury_code_id: 1,
         callback_port: 54321,
+        indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     }
 }
 
@@ -538,7 +541,10 @@ async fn test_withdraw_result_json_format() {
 #[tokio::test]
 async fn test_network_timeout() {
     // Use a non-routable IP to simulate network timeout
-    let client = TreasuryApiClient::new("http://10.255.255.1:1".to_string());
+    let client = TreasuryApiClient::new(
+        "http://10.255.255.1:1".to_string(),
+        "http://10.255.255.1:1".to_string(),
+    );
 
     let result = client
         .fund_treasury(

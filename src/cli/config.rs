@@ -52,8 +52,8 @@ fn handle_show() -> Result<()> {
             "rpc_url": network_config.rpc_url,
             "oauth_client_id": network_config.oauth_client_id,
             "treasury_code_id": network_config.treasury_code_id,
-            "treasury_config": network_config.treasury_config,
             "callback_port": network_config.callback_port,
+            "indexer_url": network_config.indexer_url,
         }
     });
 

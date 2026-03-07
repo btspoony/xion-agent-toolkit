@@ -103,6 +103,15 @@ impl TokenManager {
             .load_credentials()
             .context("Failed to load credentials")?;
 
+        // Debug: show token prefix
+        let token_prefix: String = credentials.access_token.chars().take(20).collect();
+        debug!("Loaded token prefix: {}...", token_prefix);
+        debug!(
+            "Loaded token length: {} chars",
+            credentials.access_token.len()
+        );
+        debug!("Token expires at: {}", credentials.expires_at);
+
         // Check if token will expire soon (within buffer)
         if self.will_expire_soon(EXPIRY_BUFFER_SECS)? {
             info!(
@@ -115,6 +124,9 @@ impl TokenManager {
                 .refresh_access_token()
                 .await
                 .context("Failed to refresh token")?;
+
+            let new_prefix: String = new_credentials.access_token.chars().take(20).collect();
+            debug!("Refreshed token prefix: {}...", new_prefix);
 
             return Ok(new_credentials.access_token);
         }

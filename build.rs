@@ -30,9 +30,9 @@ pub struct NetworkConfig {{
     pub rpc_url: String,
     pub chain_id: String,
     pub oauth_client_id: String,
-    pub treasury_code_id: Option<u64>,
-    pub treasury_config: Option<String>,
+    pub treasury_code_id: u64,
     pub callback_port: u16,
+    pub indexer_url: String,
 }}
 
 pub fn get_testnet_config() -> NetworkConfig {{
@@ -42,9 +42,9 @@ pub fn get_testnet_config() -> NetworkConfig {{
         rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
         chain_id: "xion-testnet-2".to_string(),
         oauth_client_id: "{}".to_string(),
-        treasury_code_id: Some(1260),
-        treasury_config: Some("xion175qd54keur7gkuwtctfupgtucvlvkrxhv0pgq753sfh5xueputvsms6nll".to_string()),
+        treasury_code_id: 1260,
         callback_port: 54321,
+        indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     }}
 }}
 
@@ -55,9 +55,9 @@ pub fn get_mainnet_config() -> NetworkConfig {{
         rpc_url: "https://rpc.xion-mainnet-1.burnt.com:443".to_string(),
         chain_id: "xion-mainnet-1".to_string(),
         oauth_client_id: "{}".to_string(),
-        treasury_code_id: Some(63),
-        treasury_config: Some("xion1dlsvvgey26ernlj0sq2afjluh3qd4ap0k9eerekfkw5algqrwqkshmn3uq".to_string()),
+        treasury_code_id: 63,
         callback_port: 54321,
+        indexer_url: "https://daodaoindexer.burnt.com/xion-mainnet-1".to_string(),
     }}
 }}
 "#,

@@ -32,9 +32,9 @@ fn create_test_config(server_url: &str) -> NetworkConfig {
         rpc_url: "http://localhost:26657".to_string(),
         chain_id: "xion-local".to_string(),
         oauth_client_id: "test-client-id".to_string(),
-        treasury_code_id: Some(1260),
-        treasury_config: Some("testTreasuryConfig".to_string()),
+        treasury_code_id: 1260,
         callback_port: 54321,
+        indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
     }
 }
 
@@ -435,6 +435,9 @@ async fn test_create_treasury_api_success() {
     let treasury_address = "xion1newtreasury123456789";
     let admin_address = "xion1admin123456789";
 
+    // Create a token with admin address as userId
+    let token = format!("{}:grant123:secret456", admin_address);
+
     // Mock the broadcast endpoint
     let _mock_broadcast = server
         .mock("POST", "/api/v1/transaction")
@@ -456,12 +459,14 @@ async fn test_create_treasury_api_success() {
         )
         .create();
 
-    // Mock the list treasuries endpoint (for waiting for indexing)
+    // Mock the DaoDao indexer endpoint (for waiting for indexing)
     let _mock_list = server
-        .mock("GET", "/mgr-api/treasuries")
-        .match_header(
-            "authorization",
-            mockito::Matcher::Regex(r"Bearer .+".to_string()),
+        .mock(
+            "GET",
+            mockito::Matcher::Regex(format!(
+                r"/contract/{}/xion/account/treasuries",
+                admin_address
+            )),
         )
         .with_status(200)
         .with_header("content-type", "application/json")
@@ -478,7 +483,10 @@ async fn test_create_treasury_api_success() {
         )
         .create();
 
-    let client = TreasuryApiClient::new(server.url());
+    let client = TreasuryApiClient::new(
+        server.url(),
+        server.url(), // Use mock server as indexer URL
+    );
 
     let request = CreateTreasuryRequest {
         admin: "xion1admin123456789".to_string(),
@@ -510,9 +518,7 @@ async fn test_create_treasury_api_success() {
     };
 
     let salt: [u8; 32] = [0u8; 32];
-    let result = client
-        .create_treasury("mock_token", 1260, request, &salt)
-        .await;
+    let result = client.create_treasury(&token, 1260, request, &salt).await;
 
     assert!(
         result.is_ok(),
@@ -543,7 +549,10 @@ async fn test_create_treasury_api_unauthorized() {
         )
         .create();
 
-    let client = TreasuryApiClient::new(server.url());
+    let client = TreasuryApiClient::new(
+        server.url(),
+        "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
+    );
 
     let request = CreateTreasuryRequest {
         admin: "xion1admin123456789".to_string(),
@@ -703,6 +712,9 @@ async fn test_full_create_flow_with_mocks() {
     let admin_address = "xion1admin123456789";
     let treasury_address = "xion1treasury_fullflow";
 
+    // Create a token with admin address as userId
+    let token = format!("{}:grant123:secret456", admin_address);
+
     // Mock broadcast transaction
     let _mock_broadcast = server
         .mock("POST", "/api/v1/transaction")
@@ -724,12 +736,14 @@ async fn test_full_create_flow_with_mocks() {
         )
         .create();
 
-    // Mock list treasuries for wait_for_treasury_creation
+    // Mock DaoDao indexer for wait_for_treasury_creation
     let _mock_list = server
-        .mock("GET", "/mgr-api/treasuries")
-        .match_header(
-            "authorization",
-            mockito::Matcher::Regex(r"Bearer .+".to_string()),
+        .mock(
+            "GET",
+            mockito::Matcher::Regex(format!(
+                r"/contract/{}/xion/account/treasuries",
+                admin_address
+            )),
         )
         .with_status(200)
         .with_header("content-type", "application/json")
@@ -746,7 +760,10 @@ async fn test_full_create_flow_with_mocks() {
         )
         .create();
 
-    let client = TreasuryApiClient::new(server.url());
+    let client = TreasuryApiClient::new(
+        server.url(),
+        server.url(), // Use mock server as indexer URL
+    );
 
     // Test that we can build and encode a treasury create request
     let coins = vec![Coin {
@@ -793,9 +810,7 @@ async fn test_full_create_flow_with_mocks() {
     };
 
     let salt: [u8; 32] = [1u8; 32];
-    let result = client
-        .create_treasury("test_token_123", 1260, request, &salt)
-        .await;
+    let result = client.create_treasury(&token, 1260, request, &salt).await;
 
     assert!(
         result.is_ok(),
