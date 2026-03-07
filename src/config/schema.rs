@@ -18,6 +18,9 @@ impl Default for Config {
     }
 }
 
+/// Default refresh token lifetime in seconds (30 days)
+pub const DEFAULT_REFRESH_TOKEN_LIFETIME_SECS: i64 = 30 * 24 * 60 * 60; // 30 days
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserCredentials {
     /// User's access token
@@ -26,8 +29,13 @@ pub struct UserCredentials {
     /// User's refresh token
     pub refresh_token: String,
 
-    /// Token expiration time (ISO 8601 format)
+    /// Access token expiration time (ISO 8601 format)
     pub expires_at: String,
+
+    /// Refresh token expiration time (ISO 8601 format)
+    /// Defaults to 30 days from creation if not provided by the OAuth2 server
+    #[serde(default)]
+    pub refresh_token_expires_at: Option<String>,
 
     /// Optional: User's Xion address
     pub xion_address: Option<String>,

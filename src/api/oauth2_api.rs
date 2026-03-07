@@ -52,11 +52,17 @@ pub struct TokenResponse {
     pub access_token: String,
     /// Refresh token for obtaining new access tokens
     pub refresh_token: String,
-    /// Token expiration time in seconds
+    /// Access token expiration time in seconds
     pub expires_in: i64,
-    /// Absolute expiration timestamp (ISO 8601 format)
+    /// Absolute expiration timestamp for access token (ISO 8601 format)
     #[serde(default)]
     pub expires_at: Option<String>,
+    /// Refresh token expiration time in seconds (optional, defaults to 30 days if not provided)
+    #[serde(default)]
+    pub refresh_token_expires_in: Option<i64>,
+    /// Absolute expiration timestamp for refresh token (ISO 8601 format)
+    #[serde(default)]
+    pub refresh_token_expires_at: Option<String>,
     /// Token type (usually "Bearer")
     pub token_type: String,
     /// Xion blockchain address associated with the account
@@ -65,7 +71,7 @@ pub struct TokenResponse {
 }
 
 impl TokenResponse {
-    /// Calculate the absolute expiration time
+    /// Calculate the absolute expiration time for access token
     ///
     /// Returns the expiration timestamp as an ISO 8601 string
     pub fn calculate_expires_at(&self) -> String {
@@ -73,7 +79,17 @@ impl TokenResponse {
         expires_at.to_rfc3339()
     }
 
-    /// Check if the token is expired
+    /// Calculate the absolute expiration time for refresh token
+    ///
+    /// Returns the expiration timestamp as an ISO 8601 string
+    /// Uses refresh_token_expires_in if provided, otherwise defaults to 30 days
+    pub fn calculate_refresh_token_expires_at(&self) -> String {
+        let expires_in = self.refresh_token_expires_in.unwrap_or(30 * 24 * 60 * 60); // Default 30 days
+        let expires_at = Utc::now() + chrono::Duration::seconds(expires_in);
+        expires_at.to_rfc3339()
+    }
+
+    /// Check if the access token is expired
     ///
     /// Returns true if the token has expired or will expire within the next 60 seconds
     #[allow(dead_code)]
@@ -82,6 +98,19 @@ impl TokenResponse {
             if let Ok(expires_at) = DateTime::parse_from_rfc3339(expires_at_str) {
                 let now = Utc::now() + chrono::Duration::seconds(60);
                 return expires_at < now;
+            }
+        }
+        false
+    }
+
+    /// Check if the refresh token is expired
+    ///
+    /// Returns true if the refresh token has expired
+    #[allow(dead_code)]
+    pub fn is_refresh_token_expired(&self) -> bool {
+        if let Some(ref expires_at_str) = self.refresh_token_expires_at {
+            if let Ok(expires_at) = DateTime::parse_from_rfc3339(expires_at_str) {
+                return expires_at < Utc::now();
             }
         }
         false
@@ -535,6 +564,8 @@ mod tests {
             refresh_token: "test_refresh".to_string(),
             expires_in: 3600,
             expires_at: None,
+            refresh_token_expires_in: None,
+            refresh_token_expires_at: None,
             token_type: "Bearer".to_string(),
             xion_address: Some("xion1test".to_string()),
         };
@@ -551,6 +582,8 @@ mod tests {
             refresh_token: "test_refresh".to_string(),
             expires_in: 3600,
             expires_at: None,
+            refresh_token_expires_in: None,
+            refresh_token_expires_at: None,
             token_type: "Bearer".to_string(),
             xion_address: Some("xion1test".to_string()),
         };

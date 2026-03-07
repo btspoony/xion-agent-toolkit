@@ -8,7 +8,7 @@ use chrono::{DateTime, Duration, Utc};
 use tracing::{debug, info, instrument};
 
 use crate::api::oauth2_api::OAuth2ApiClient;
-use crate::config::{CredentialsManager, UserCredentials};
+use crate::config::{CredentialsManager, UserCredentials, DEFAULT_REFRESH_TOKEN_LIFETIME_SECS};
 
 /// Token expiry buffer in seconds (5 minutes)
 const EXPIRY_BUFFER_SECS: i64 = 300;
@@ -246,6 +246,18 @@ impl TokenManager {
             .load_credentials()
             .context("Failed to load current credentials")?;
 
+        // Check if refresh token is expired
+        if let Some(ref refresh_token_expires_at) = credentials.refresh_token_expires_at {
+            let expires_at = parse_expiry_time(refresh_token_expires_at)
+                .context("Failed to parse refresh token expiry time")?;
+            if expires_at <= Utc::now() {
+                anyhow::bail!(
+                    "Refresh token has expired at {}. Please login again.",
+                    refresh_token_expires_at
+                );
+            }
+        }
+
         // Call OAuth2 API to refresh token
         let token_response = self
             .oauth2_api
@@ -259,10 +271,24 @@ impl TokenManager {
             .clone()
             .unwrap_or_else(|| calculate_expiry_time(token_response.expires_in));
 
+        // Calculate refresh token expiration
+        // Use new value from response if provided, otherwise keep the old one or calculate new
+        let refresh_token_expires_at = token_response
+            .refresh_token_expires_at
+            .clone()
+            .or_else(|| {
+                token_response
+                    .refresh_token_expires_in
+                    .map(calculate_expiry_time)
+            })
+            .or(credentials.refresh_token_expires_at)
+            .or_else(|| Some(calculate_expiry_time(DEFAULT_REFRESH_TOKEN_LIFETIME_SECS)));
+
         let new_credentials = UserCredentials {
             access_token: token_response.access_token,
             refresh_token: token_response.refresh_token,
             expires_at,
+            refresh_token_expires_at,
             xion_address: token_response.xion_address.or(credentials.xion_address),
         };
 

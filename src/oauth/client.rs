@@ -251,15 +251,22 @@ impl OAuthClient {
         info!("Retrieved MetaAccount address: {}", user_info.id);
 
         // Step 9: Save credentials with xion_address
-        let expires_at = match token_response.expires_at {
-            Some(expires_at) => expires_at,
+        let expires_at = match &token_response.expires_at {
+            Some(expires_at) => expires_at.clone(),
             None => token_response.calculate_expires_at(),
+        };
+
+        // Calculate refresh token expiration (default 30 days if not provided by server)
+        let refresh_token_expires_at = match &token_response.refresh_token_expires_at {
+            Some(expires_at) => Some(expires_at.clone()),
+            None => Some(token_response.calculate_refresh_token_expires_at()),
         };
 
         let credentials = UserCredentials {
             access_token: token_response.access_token,
             refresh_token: token_response.refresh_token,
             expires_at,
+            refresh_token_expires_at,
             xion_address: Some(user_info.id),
         };
 

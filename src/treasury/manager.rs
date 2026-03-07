@@ -506,7 +506,7 @@ impl TreasuryManager {
                     .map(|f| f.description.clone())
                     .unwrap_or_default(),
             },
-grant_configs: instantiate_msg
+            grant_configs: instantiate_msg
                 .type_urls
                 .iter()
                 .zip(instantiate_msg.grant_configs.iter())

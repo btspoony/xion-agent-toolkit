@@ -248,6 +248,7 @@ mod tests {
             access_token: "test_access_token".to_string(),
             refresh_token: "test_refresh_token".to_string(),
             expires_at: "2024-12-31T23:59:59Z".to_string(),
+            refresh_token_expires_at: Some("2025-01-31T23:59:59Z".to_string()),
             xion_address: Some("xion1test".to_string()),
         };
 
@@ -285,6 +286,7 @@ mod tests {
             access_token: "token".to_string(),
             refresh_token: "refresh".to_string(),
             expires_at: "2024-12-31T23:59:59Z".to_string(),
+            refresh_token_expires_at: None,
             xion_address: None,
         };
         manager
@@ -312,6 +314,7 @@ mod tests {
             access_token: "token".to_string(),
             refresh_token: "refresh".to_string(),
             expires_at: "2024-12-31T23:59:59Z".to_string(),
+            refresh_token_expires_at: None,
             xion_address: None,
         };
         manager
@@ -341,6 +344,7 @@ mod tests {
             access_token: "old_token".to_string(),
             refresh_token: "refresh".to_string(),
             expires_at: "2024-01-01T00:00:00Z".to_string(),
+            refresh_token_expires_at: Some("2025-01-01T00:00:00Z".to_string()),
             xion_address: Some("xion1test".to_string()),
         };
         manager
@@ -380,6 +384,7 @@ mod tests {
             access_token: "testnet_token".to_string(),
             refresh_token: "testnet_refresh".to_string(),
             expires_at: "2024-01-01T00:00:00Z".to_string(),
+            refresh_token_expires_at: Some("2025-01-01T00:00:00Z".to_string()),
             xion_address: Some("xion1testnet".to_string()),
         };
 
@@ -387,6 +392,7 @@ mod tests {
             access_token: "mainnet_token".to_string(),
             refresh_token: "mainnet_refresh".to_string(),
             expires_at: "2024-01-01T00:00:00Z".to_string(),
+            refresh_token_expires_at: Some("2025-01-01T00:00:00Z".to_string()),
             xion_address: Some("xion1mainnet".to_string()),
         };
 
@@ -445,6 +451,7 @@ mod tests {
             access_token: "secret_token_12345".to_string(),
             refresh_token: "secret_refresh_67890".to_string(),
             expires_at: "2024-12-31T23:59:59Z".to_string(),
+            refresh_token_expires_at: Some("2025-01-31T23:59:59Z".to_string()),
             xion_address: Some("xion1secret".to_string()),
         };
 

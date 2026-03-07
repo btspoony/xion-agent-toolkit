@@ -508,6 +508,7 @@ impl TreasuryApiClient {
     ///     },
     ///     grant_configs: vec![
     ///         GrantConfigMessage {
+    ///             type_url: "/cosmos.bank.v1beta1.MsgSend".to_string(),
     ///             authorization: TypeUrlValue {
     ///                 type_url: "/cosmos.bank.v1beta1.MsgSend".to_string(),
     ///                 value: base64::Engine::encode(

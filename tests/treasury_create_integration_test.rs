@@ -491,6 +491,7 @@ async fn test_create_treasury_api_success() {
             description: "Basic fee allowance".to_string(),
         },
         grant_configs: vec![GrantConfigMessage {
+            type_url: "/cosmos.bank.v1beta1.MsgSend".to_string(),
             authorization: TypeUrlValue {
                 type_url: "/cosmos.bank.v1beta1.SendAuthorization".to_string(),
                 value: base64::engine::general_purpose::STANDARD
@@ -774,6 +775,7 @@ async fn test_full_create_flow_with_mocks() {
             description: "Basic fee allowance".to_string(),
         },
         grant_configs: vec![GrantConfigMessage {
+            type_url: "/cosmos.bank.v1beta1.MsgSend".to_string(),
             authorization: TypeUrlValue {
                 type_url: "/cosmos.bank.v1beta1.SendAuthorization".to_string(),
                 value: send_auth_encoded,

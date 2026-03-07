@@ -9,4 +9,4 @@ pub use constants::NetworkConfig;
 pub use credentials::CredentialsManager;
 pub use manager::ConfigManager;
 pub use oauth_discovery::get_oauth2_endpoints;
-pub use schema::UserCredentials;
+pub use schema::{UserCredentials, DEFAULT_REFRESH_TOKEN_LIFETIME_SECS};
