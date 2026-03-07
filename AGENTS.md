@@ -198,7 +198,6 @@ All configuration files are stored in a unified location for easy access across 
 ~/.xion-toolkit/
 ├── config.json              # Main configuration (network preference)
 └── credentials/             # Per-network credential metadata
-    ├── local.json           # Local network credentials metadata
     ├── testnet.json         # Testnet credentials metadata
     └── mainnet.json         # Mainnet credentials metadata
 ```
@@ -224,7 +223,6 @@ Network configurations are embedded at compile time via environment variables:
 
 | Network | OAuth API | RPC | Chain ID | Treasury Code ID |
 |---------|-----------|-----|----------|------------------|
-| local | <http://localhost:8787> | <http://localhost:26657> | xion-local | - |
 | testnet | <https://oauth2.testnet.burnt.com> | <https://rpc.xion-testnet-2.burnt.com:443> | xion-testnet-2 | 1260 |
 | mainnet | <https://oauth2.burnt.com> | <https://rpc.xion-mainnet-1.burnt.com:443> | xion-mainnet-1 | 63 |
 
@@ -241,14 +239,7 @@ Network configurations are embedded at compile time via environment variables:
 
 ## Network Configuration
 
-The toolkit supports three network environments:
-
-### Local Development
-
-- **OAuth API**: <http://localhost:8787>
-- **RPC**: <http://localhost:26657>
-- **Chain ID**: xion-local
-- **Usage**: For local development and testing
+The toolkit supports two network environments:
 
 ### Testnet
 

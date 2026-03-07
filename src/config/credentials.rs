@@ -47,7 +47,7 @@ impl CredentialsManager {
     ///
     /// # Arguments
     ///
-    /// * `network` - Network name (e.g., "testnet", "mainnet", "local")
+    /// * `network` - Network name (e.g., "testnet", "mainnet")
     ///
     /// # Returns
     ///

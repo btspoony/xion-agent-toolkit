@@ -7,9 +7,6 @@ fn main() {
     dotenvy::dotenv().ok();
 
     // Read OAuth2 client IDs from environment variables
-    let local_client_id = env::var("XION_LOCAL_OAUTH_CLIENT_ID")
-        .unwrap_or_else(|_| "PLACEHOLDER_LOCAL_CLIENT_ID".to_string());
-
     let testnet_client_id = env::var("XION_TESTNET_OAUTH_CLIENT_ID")
         .unwrap_or_else(|_| "PLACEHOLDER_TESTNET_CLIENT_ID".to_string());
 
@@ -38,19 +35,6 @@ pub struct NetworkConfig {{
     pub callback_port: u16,
 }}
 
-pub fn get_local_config() -> NetworkConfig {{
-    NetworkConfig {{
-        network_name: "local".to_string(),
-        oauth_api_url: "http://localhost:8787".to_string(),
-        rpc_url: "http://localhost:26657".to_string(),
-        chain_id: "xion-local".to_string(),
-        oauth_client_id: "{}".to_string(),
-        treasury_code_id: None,
-        treasury_config: None,
-        callback_port: 54321,
-    }}
-}}
-
 pub fn get_testnet_config() -> NetworkConfig {{
     NetworkConfig {{
         network_name: "testnet".to_string(),
@@ -77,12 +61,11 @@ pub fn get_mainnet_config() -> NetworkConfig {{
     }}
 }}
 "#,
-        local_client_id, testnet_client_id, mainnet_client_id
+        testnet_client_id, mainnet_client_id
     );
 
     fs::write(&dest_path, config_content).unwrap();
 
-    println!("cargo:rerun-if-env-changed=XION_LOCAL_OAUTH_CLIENT_ID");
     println!("cargo:rerun-if-env-changed=XION_TESTNET_OAUTH_CLIENT_ID");
     println!("cargo:rerun-if-env-changed=XION_MAINNET_OAUTH_CLIENT_ID");
     println!("cargo:rerun-if-changed=.env");

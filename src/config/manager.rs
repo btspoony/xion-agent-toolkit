@@ -74,22 +74,18 @@ impl ConfigManager {
     }
 
     pub fn set_network(&mut self, network: &str) -> Result<()> {
-        if !["local", "testnet", "mainnet"].contains(&network) {
-            anyhow::bail!(
-                "Invalid network: {}. Must be local, testnet, or mainnet",
-                network
-            );
+        if !["testnet", "mainnet"].contains(&network) {
+            anyhow::bail!("Invalid network: {}. Must be testnet or mainnet", network);
         }
         self.config.network = network.to_string();
         self.save_config()
     }
 
     pub fn get_status(&self) -> Result<serde_json::Value> {
-        use super::constants::{get_local_config, get_mainnet_config, get_testnet_config};
+        use super::constants::{get_mainnet_config, get_testnet_config};
 
         let current_network = self.get_current_network();
         let network_config = match current_network {
-            "local" => get_local_config(),
             "testnet" => get_testnet_config(),
             "mainnet" => get_mainnet_config(),
             _ => anyhow::bail!("Unknown network: {}", current_network),
@@ -109,11 +105,10 @@ impl ConfigManager {
     }
 
     pub fn get_network_config(&self) -> Result<super::constants::NetworkConfig> {
-        use super::constants::{get_local_config, get_mainnet_config, get_testnet_config};
+        use super::constants::{get_mainnet_config, get_testnet_config};
 
         let current_network = self.get_current_network();
         match current_network {
-            "local" => Ok(get_local_config()),
             "testnet" => Ok(get_testnet_config()),
             "mainnet" => Ok(get_mainnet_config()),
             _ => anyhow::bail!("Unknown network: {}", current_network),

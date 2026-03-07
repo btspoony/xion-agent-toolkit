@@ -10,7 +10,7 @@ use clap::{Parser, Subcommand};
 #[command(about = "CLI-driven, Agent-oriented toolkit for Xion blockchain", long_about = None)]
 #[command(version)]
 pub struct Cli {
-    /// Network to use (local, testnet, mainnet)
+    /// Network to use (testnet, mainnet)
     #[arg(short, long, global = true, default_value = "testnet")]
     pub network: String,
 

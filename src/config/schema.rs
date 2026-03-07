@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    /// Current active network (local, testnet, mainnet)
+    /// Current active network (testnet, mainnet)
     pub network: String,
 
     /// Version of the config schema

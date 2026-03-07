@@ -120,16 +120,15 @@ xion-toolkit status                       # Show status
 ### Global Options
 
 ```bash
-xion-toolkit --network <local|testnet|mainnet>  # Network override
-xion-toolkit --help                             # Show help
-xion-toolkit --version                          # Show version
+xion-toolkit --network <testnet|mainnet>  # Network override
+xion-toolkit --help                        # Show help
+xion-toolkit --version                     # Show version
 ```
 
 ## Networks
 
 | Network | OAuth API | Chain ID | Status |
 |---------|-----------|----------|--------|
-| local | http://localhost:8787 | xion-local | Development |
 | testnet | https://oauth2.testnet.burnt.com | xion-testnet-2 | Default |
 | mainnet | https://oauth2.burnt.com | xion-mainnet-1 | Production |
 
