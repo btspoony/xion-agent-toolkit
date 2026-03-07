@@ -460,6 +460,35 @@ cargo test -- --nocapture
 
 Current status: **330 tests passing**
 
+### Test Serialization Rules
+
+**IMPORTANT**: Tests that modify environment variables (especially `XION_CI_ENCRYPTION_KEY`) 
+MUST use `#[serial(encryption_key)]` to prevent race conditions in CI.
+
+```rust
+// CORRECT - Uses consistent serial group
+#[test]
+#[serial(encryption_key)]
+fn test_something() {
+    let original = env::var(ENV_KEY_NAME).ok();
+    env::set_var(ENV_KEY_NAME, "test_key");
+    // ... test code ...
+    restore_key(original);
+}
+
+// WRONG - Bare #[serial] is a DIFFERENT group, allows parallel execution
+#[test]
+#[serial]  // This is NOT the same as #[serial(encryption_key)]!
+fn test_something_bad() { ... }
+
+// WRONG - No serialization at all
+#[test]
+fn test_something_worse() { ... }
+```
+
+**Rule**: All tests in `src/config/encryption.rs` and `src/config/credentials.rs` that 
+touch `XION_CI_ENCRYPTION_KEY` must use `#[serial(encryption_key)]`.
+
 ### Pre-commit Checklist
 
 **MUST run before every commit to ensure CI passes:**
