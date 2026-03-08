@@ -5,7 +5,6 @@
 
 use anyhow::{Context, Result};
 use chrono::DateTime;
-use cosmwasm_std::Binary;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -675,18 +674,20 @@ impl TreasuryApiClient {
     ///     fee_config: FeeConfigMessage {
     ///         allowance: TypeUrlValue {
     ///             type_url: "/cosmos.feegrant.v1beta1.BasicAllowance".to_string(),
-    ///             value: cosmwasm_std::Binary::from(vec![]),
+    ///             value: "Cg==".to_string(), // Base64-encoded empty BasicAllowance
     ///         },
     ///         description: "Fee grant for users".to_string(),
+    ///         expiration: None,
     ///     },
     ///     grant_configs: vec![
     ///         GrantConfigMessage {
     ///             type_url: "/cosmos.bank.v1beta1.MsgSend".to_string(),
     ///             authorization: TypeUrlValue {
     ///                 type_url: "/cosmos.bank.v1beta1.MsgSend".to_string(),
-    ///                 value: cosmwasm_std::Binary::from(vec![]),
+    ///                 value: "Cg==".to_string(), // Base64-encoded empty authorization
     ///             },
     ///             description: Some("Allow sending tokens".to_string()),
+    ///             optional: false,
     ///         },
     ///     ],
     ///     params: TreasuryParamsMessage {
@@ -718,27 +719,33 @@ impl TreasuryApiClient {
         // Build the instantiation message
         let instantiate_msg = build_treasury_instantiate_msg(&request)?;
 
-        // Convert salt to base64
-        let salt_base64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, salt);
-
-        // Encode instantiate_msg as base64 (Proto format)
+        // Convert msg to base64 (OAuth2 API expects base64-encoded JSON string)
+        let msg_json = serde_json::to_string(&instantiate_msg)?;
         let msg_base64 = base64::Engine::encode(
             &base64::engine::general_purpose::STANDARD,
-            &serde_json::to_vec(&instantiate_msg)?,
+            msg_json.as_bytes(),
         );
 
-        // Build the MsgInstantiateContract2 message (Proto format)
+        // Convert salt to base64 (OAuth2 API expects raw base64, no prefix)
+        let salt_base64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, salt);
+
+        // Build the MsgInstantiateContract2 message
+        // Note: codeId is number, msg is base64-encoded JSON string, salt is base64-encoded bytes
         let msg_value = serde_json::json!({
             "sender": request.admin,
-            "codeId": treasury_code_id,  // camelCase, number
+            "codeId": treasury_code_id,  // number, not string
             "label": format!("Treasury-{}", chrono::Utc::now().format("%Y%m%d-%H%M%S")),
-            "msg": msg_base64, // base64-encoded JSON
-            "salt": salt_base64,
+            "msg": msg_base64,           // base64-encoded JSON string
+            "salt": salt_base64,         // base64-encoded salt bytes
             "funds": [],
-            "admin": request.admin, // Treasury is its own admin
+            "admin": request.admin,
+            "fixMsg": false,
         });
 
-        eprintln!("[DEBUG] MsgInstantiateContract2 message:\n{}", serde_json::to_string_pretty(&msg_value)?);
+        eprintln!(
+            "[DEBUG] MsgInstantiateContract2 message:\n{}",
+            serde_json::to_string_pretty(&msg_value)?
+        );
 
         let broadcast_request = BroadcastRequest {
             messages: vec![super::types::TransactionMessage {
@@ -748,7 +755,10 @@ impl TreasuryApiClient {
             memo: Some("Create Treasury via Xion Agent Toolkit".to_string()),
         };
 
-        eprintln!("[DEBUG] Full broadcast request:\n{}", serde_json::to_string_pretty(&broadcast_request)?);
+        eprintln!(
+            "[DEBUG] Full broadcast request:\n{}",
+            serde_json::to_string_pretty(&broadcast_request)?
+        );
 
         // Broadcast the transaction
         let response = self
@@ -858,6 +868,11 @@ impl TreasuryApiClient {
 // ============================================================================
 
 /// Build the treasury instantiation message
+///
+/// Creates the instantiate message in the format expected by the treasury contract:
+/// - `grant_configs`: Array of JSON objects with authorization, description, and optional fields
+/// - `fee_config`: JSON object with allowance, description, and optional expiration
+/// - All fields use snake_case naming (matching the CosmWasm contract)
 fn build_treasury_instantiate_msg(
     request: &super::types::CreateTreasuryRequest,
 ) -> Result<serde_json::Value> {
@@ -876,29 +891,63 @@ fn build_treasury_instantiate_msg(
         .collect();
 
     // Build the grant configs array (without type_url, that's in type_urls)
+    // Each grant_config is a JSON object with: authorization, description, optional
     let grant_configs: Vec<serde_json::Value> = request
         .grant_configs
         .iter()
         .map(|gc| {
-            serde_json::json!({
-                "authorization": gc.authorization,
-                "description": gc.description,
-            })
+            // Build the authorization object
+            let auth = serde_json::json!({
+                "type_url": gc.authorization.type_url,
+                "value": gc.authorization.value,
+            });
+
+            // Build the grant config object, omitting description if None
+            let mut grant_config = serde_json::json!({
+                "authorization": auth,
+                "optional": gc.optional,
+            });
+
+            if let Some(ref desc) = gc.description {
+                grant_config["description"] = serde_json::json!(desc);
+            }
+
+            grant_config
         })
         .collect();
+
+    // Build fee_config as a JSON object
+    // Fields: allowance (JSON object), description (string), expiration (optional string)
+    let mut fee_config = serde_json::json!({
+        "allowance": {
+            "type_url": request.fee_config.allowance.type_url,
+            "value": request.fee_config.allowance.value,
+        },
+        "description": request.fee_config.description,
+    });
+
+    // Add expiration if present (omit if None)
+    if let Some(ref expiration) = request.fee_config.expiration {
+        fee_config["expiration"] = serde_json::json!(expiration);
+    }
+
+    // Build params object, omitting display_url if None
+    let mut params = serde_json::json!({
+        "redirect_url": request.params.redirect_url,
+        "icon_url": request.params.icon_url,
+        "metadata": metadata.to_string(),
+    });
+    if let Some(ref display_url) = request.params.display_url {
+        params["display_url"] = serde_json::json!(display_url);
+    }
 
     // Build the complete instantiation message
     Ok(serde_json::json!({
         "type_urls": type_urls,
         "grant_configs": grant_configs,
-        "fee_config": request.fee_config,
+        "fee_config": fee_config,
         "admin": request.admin,
-        "params": {
-            "redirect_url": request.params.redirect_url,
-            "icon_url": request.params.icon_url,
-            "display_url": request.params.display_url,
-            "metadata": metadata.to_string(),
-        },
+        "params": params,
     }))
 }
 
@@ -983,8 +1032,7 @@ impl TreasuryApiClient {
             description: grant_config.description.clone(),
             authorization: super::types::ProtobufAny {
                 type_url: auth_type_url,
-                value: Binary::from_base64(&auth_value)
-                    .map_err(|e| anyhow::anyhow!("Invalid base64: {}", e))?,
+                value: auth_value, // Already base64 encoded string
             },
             optional: grant_config.optional,
         };
@@ -1142,8 +1190,7 @@ impl TreasuryApiClient {
             },
             allowance: Some(super::types::ProtobufAny {
                 type_url: allowance_type_url,
-                value: Binary::from_base64(&allowance_value)
-                    .map_err(|e| anyhow::anyhow!("Invalid base64: {}", e))?,
+                value: allowance_value, // Already base64 encoded string
             }),
             expiration: None, // TODO: Add expiration support in FeeConfigInput
         };

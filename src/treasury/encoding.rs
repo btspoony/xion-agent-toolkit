@@ -313,7 +313,7 @@ pub fn encode_periodic_allowance(
 pub fn encode_allowed_msg_allowance(
     allowed_messages: Vec<String>,
     nested_allowance_type_url: &str,
-    nested_allowance_value: &cosmwasm_std::Binary,
+    nested_allowance_value_base64: &str,
 ) -> Result<String, EncodingError> {
     if allowed_messages.is_empty() {
         return Err(EncodingError::InvalidInput(
@@ -321,12 +321,9 @@ pub fn encode_allowed_msg_allowance(
         ));
     }
 
-    // Get the base64-encoded string from Binary
-    let nested_base64 = nested_allowance_value.to_base64();
-
     // Decode nested allowance from base64
     let nested_bytes = base64::engine::general_purpose::STANDARD
-        .decode(&nested_base64)
+        .decode(nested_allowance_value_base64)
         .map_err(|e| EncodingError::Base64Error(e.to_string()))?;
 
     let mut bytes = Vec::new();
@@ -751,13 +748,10 @@ pub fn encode_fee_config_input(
         } => {
             // Recursively encode nested allowance
             let (nested_type_url, nested_value) = encode_fee_config_input(nested_allowance)?;
-            // Convert base64 string to Binary
-            let nested_binary = cosmwasm_std::Binary::from_base64(&nested_value)
-                .map_err(|e| EncodingError::Base64Error(e.to_string()))?;
             let encoded = encode_allowed_msg_allowance(
                 allowed_messages.clone(),
                 &nested_type_url,
-                &nested_binary,
+                &nested_value, // Pass base64 string directly
             )?;
             Ok((
                 "/cosmos.feegrant.v1beta1.AllowedMsgAllowance".to_string(),
@@ -913,12 +907,10 @@ mod tests {
         }])
         .unwrap();
 
-        let basic_binary = cosmwasm_std::Binary::from_base64(&basic_encoded).unwrap();
-
         let encoded = encode_allowed_msg_allowance(
             vec!["/cosmos.bank.v1beta1.MsgSend".to_string()],
             "/cosmos.feegrant.v1beta1.BasicAllowance",
-            &basic_binary,
+            &basic_encoded, // Pass base64 string directly
         )
         .unwrap();
 
@@ -934,7 +926,7 @@ mod tests {
         assert!(encode_allowed_msg_allowance(
             vec![],
             "/cosmos.feegrant.v1beta1.BasicAllowance",
-            &cosmwasm_std::Binary::from(vec![0u8]) // Dummy binary value
+            "dummy" // Dummy base64 string
         )
         .is_err());
     }

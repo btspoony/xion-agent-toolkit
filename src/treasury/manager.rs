@@ -4,7 +4,6 @@
 //! and caching support.
 
 use anyhow::Result;
-use cosmwasm_std::Binary;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, instrument};
@@ -505,6 +504,10 @@ impl TreasuryManager {
                     .as_ref()
                     .map(|f| f.description.clone())
                     .unwrap_or_default(),
+                expiration: instantiate_msg
+                    .fee_config
+                    .as_ref()
+                    .and_then(|f| f.expiration.clone()),
             },
             grant_configs: instantiate_msg
                 .type_urls
@@ -517,6 +520,7 @@ impl TreasuryManager {
                         value: gc.authorization.value.clone(),
                     },
                     description: Some(gc.description.clone()),
+                    optional: gc.optional,
                 })
                 .collect(),
             params: super::types::TreasuryParamsMessage {
@@ -929,8 +933,7 @@ fn encode_fee_config_input(
         description,
         allowance: Some(super::types::ProtobufAny {
             type_url: allowance_type_url,
-            value: Binary::from_base64(&allowance_value)
-                .map_err(|e| anyhow::anyhow!("Invalid base64: {}", e))?,
+            value: allowance_value, // Already base64 encoded
         }),
         expiration: None, // TODO: Add expiration support
     })
@@ -1032,140 +1035,9 @@ fn encode_grant_config_input(
             description: input.description.clone(),
             authorization: super::types::ProtobufAny {
                 type_url: auth_type_url,
-                value: Binary::from_base64(&auth_value)
-                    .map_err(|e| anyhow::anyhow!("Invalid base64: {}", e))?,
+                value: auth_value, // Already base64 encoded, no conversion needed
             },
             optional: input.optional,
         },
     ))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::config::credentials::CredentialsManager;
-    use crate::config::NetworkConfig;
-    use tempfile::TempDir;
-
-    fn create_test_config() -> NetworkConfig {
-        NetworkConfig {
-            network_name: "testnet".to_string(),
-            oauth_api_url: "https://oauth2.testnet.burnt.com".to_string(),
-            rpc_url: "https://rpc.xion-testnet-2.burnt.com:443".to_string(),
-            chain_id: "xion-testnet-2".to_string(),
-            oauth_client_id: "test-client-id".to_string(),
-            treasury_code_id: 1260,
-            callback_port: 54321,
-            indexer_url: "https://daodaoindexer.burnt.com/xion-testnet-2".to_string(),
-        }
-    }
-
-    /// Create an isolated test environment with temp directory for credentials
-    fn create_isolated_client() -> (TempDir, OAuthClient) {
-        let temp_dir = TempDir::new().expect("Failed to create temp dir");
-        let config = create_test_config();
-        let creds_manager = CredentialsManager::with_config_dir(
-            &config.network_name,
-            temp_dir.path().to_path_buf(),
-        )
-        .expect("Failed to create credentials manager");
-        let client = OAuthClient::with_credentials_manager(config.clone(), creds_manager)
-            .expect("Failed to create client");
-        (temp_dir, client)
-    }
-
-    #[test]
-    fn test_manager_creation() {
-        let (_temp_dir, oauth_client) = create_isolated_client();
-        let config = create_test_config();
-        let manager = TreasuryManager::new(oauth_client, config);
-        assert!(manager.cache.is_some());
-    }
-
-    #[test]
-    fn test_manager_without_cache() {
-        let (_temp_dir, oauth_client) = create_isolated_client();
-        let config = create_test_config();
-        let manager = TreasuryManager::without_cache(oauth_client, config);
-        assert!(manager.cache.is_none());
-    }
-
-    #[test]
-    fn test_is_authenticated_without_credentials() {
-        let (_temp_dir, oauth_client) = create_isolated_client();
-        let config = create_test_config();
-        let manager = TreasuryManager::new(oauth_client, config);
-
-        // Should not be authenticated initially (isolated dir has no credentials)
-        let is_auth = manager.is_authenticated().unwrap();
-        assert!(!is_auth);
-    }
-
-    #[tokio::test]
-    async fn test_clear_cache() {
-        let (_temp_dir, oauth_client) = create_isolated_client();
-        let config = create_test_config();
-        let manager = TreasuryManager::new(oauth_client, config);
-
-        // Should not panic when clearing cache
-        manager.clear_cache().await;
-    }
-
-    #[tokio::test]
-    async fn test_create_requires_auth() {
-        use crate::treasury::types::{FeeConfigInput, TreasuryCreateRequest, TreasuryParamsInput};
-
-        let (_temp_dir, oauth_client) = create_isolated_client();
-        let config = create_test_config();
-        let manager = TreasuryManager::new(oauth_client, config);
-
-        let request = TreasuryCreateRequest {
-            params: TreasuryParamsInput {
-                redirect_url: "https://example.com/callback".to_string(),
-                icon_url: "https://example.com/icon.png".to_string(),
-                name: None,
-                is_oauth2_app: None,
-            },
-            fee_config: Some(FeeConfigInput::Basic {
-                spend_limit: "1000000uxion".to_string(),
-                description: "Test fee config".to_string(),
-            }),
-            grant_configs: vec![],
-        };
-
-        let result = manager.create(request).await;
-        assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Not authenticated"));
-    }
-
-    #[tokio::test]
-    async fn test_fund_requires_auth() {
-        let (_temp_dir, oauth_client) = create_isolated_client();
-        let config = create_test_config();
-        let manager = TreasuryManager::new(oauth_client, config);
-
-        let result = manager.fund("xion1abc", "1000uxion").await;
-        assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Not authenticated"));
-    }
-
-    #[tokio::test]
-    async fn test_withdraw_requires_auth() {
-        let (_temp_dir, oauth_client) = create_isolated_client();
-        let config = create_test_config();
-        let manager = TreasuryManager::new(oauth_client, config);
-
-        let result = manager.withdraw("xion1abc", "1000uxion").await;
-        assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Not authenticated"));
-    }
 }

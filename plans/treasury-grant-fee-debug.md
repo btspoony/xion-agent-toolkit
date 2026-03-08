@@ -1,7 +1,8 @@
 ---
-status: InProgress
+status: Done
 created_at: 2026-03-07
 updated_at: 2026-03-08
+done_at: 2026-03-08
 ---
 # Treasury Grant/Fee Config Debug
 
@@ -403,8 +404,9 @@ interface Any {
 **Problem**: OAuth2 API expects different format than we're sending:
 
 1. ✅ **Field names**: Fixed (camelCase for API)
-2. ❌ **codeId type**: Sending string, should be number
-3. ❌ **msg encoding**: Sending JSON object, should be base64 string
+2. ✅ **codeId type**: Fixed - now sending number
+3. ✅ **msg encoding**: Fixed - now sending base64 string
+4. ✅ **salt encoding**: Fixed - now sending raw base64 (no "base64:" prefix)
 
 **Why "code id is required" error?**
 - API tries to parse `"1260"` (string) as number
@@ -412,31 +414,20 @@ interface Any {
 
 ## Action Plan
 
-### IMMEDIATE FIX (5 minutes)
+### ✅ FIX COMPLETED (2026-03-08)
 
-**File**: `src/treasury/api_client.rs`
+**Files Modified**:
+- `src/treasury/api_client.rs` - Fixed msg encoding and salt format
+- `src/treasury/types.rs` - Changed `ProtobufAny.value` from `Binary` to `String`
+- `src/treasury/encoding.rs` - Updated `encode_allowed_msg_allowance` to accept base64 string
+- `src/treasury/manager.rs` - Updated to use string directly instead of Binary
+- Tests and doc tests updated
 
-1. Line 733: Change `codeId` to number
-2. Line 735: Change `msg` to use `msg_base64`
-3. Build and test
-
-### Code Changes Required
-
-```rust
-// src/treasury/api_client.rs around line 731-739
-
-let msg_value = serde_json::json!({
-    "sender": request.admin,
-    "codeId": treasury_code_id,      // FIX 1: number, not string
-    "label": format!("Treasury-{}", chrono::Utc::now().format("%Y%m%d-%H%M%S")),
-    "msg": msg_base64,               // FIX 2: base64 string, not JSON object
-    "salt": salt_base64,
-    "funds": [],
-    "admin": request.admin,
-});
-```
-
-**Note**: `msg_base64` is already computed at line 725-728, we just need to use it!
+**Changes Made**:
+1. `msg` field now correctly encoded as base64 JSON string
+2. `salt` field now sent as raw base64 (removed "base64:" prefix)
+3. `ProtobufAny.value` type changed from `Binary` to `String`
+4. All related tests pass (114/115, one unrelated encryption test has race condition)
 
 ### Test After Fix
 

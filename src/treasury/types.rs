@@ -12,7 +12,6 @@
 //! our own chain-ready types (`TreasuryExecuteMsg`, `GrantConfigChain`, `FeeConfigChain`)
 //! that match the contract's structure.
 
-use cosmwasm_std::Binary;
 use serde::{Deserialize, Serialize};
 
 /// Treasury list item (simplified view)
@@ -145,10 +144,14 @@ pub struct CreateTreasuryRequest {
 /// Fee config for treasury instantiation message
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeeConfigMessage {
-    /// Fee allowance type URL
+    /// Fee allowance type URL and encoded value
     pub allowance: TypeUrlValue,
     /// Description of the fee grant
     pub description: String,
+    /// Expiration timestamp as ISO 8601 string (RFC 3339 format)
+    /// Optional field that will be omitted if None
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expiration: Option<String>,
 }
 
 /// Grant config for treasury instantiation message
@@ -161,15 +164,18 @@ pub struct GrantConfigMessage {
     /// Description of the grant (optional)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// Whether the grant is optional
+    #[serde(default)]
+    pub optional: bool,
 }
 
-/// Type URL with base64-encoded value
+/// Type URL with base64-encoded value (JSON format for OAuth2 API)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TypeUrlValue {
     /// Protobuf type URL
     pub type_url: String,
-    /// Base64-encoded protobuf value (Binary for proper serialization)
-    pub value: Binary,
+    /// Base64-encoded protobuf value (JSON format for OAuth2 API expects base64 string)
+    pub value: String,
 }
 
 /// Treasury parameters for instantiation
@@ -330,7 +336,10 @@ pub struct TreasuryParamsChain {
 pub struct FeeConfigChain {
     pub description: String,
     pub allowance: Option<ProtobufAny>,
-    pub expiration: Option<u32>,
+    /// Expiration timestamp as ISO 8601 string (RFC 3339 format)
+    /// The OAuth2 API expects this as a string, not a number
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expiration: Option<String>,
 }
 
 /// Grant configuration (chain format)
@@ -341,11 +350,11 @@ pub struct GrantConfigChain {
     pub optional: bool,
 }
 
-/// Protobuf Any type for blockchain messages
+/// Protobuf Any type for blockchain messages (JSON format for OAuth2 API)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProtobufAny {
     pub type_url: String,
-    pub value: Binary, // Binary type for base64 encoding/decoding
+    pub value: String, // Base64-encoded protobuf value (JSON format)
 }
 
 /// Create treasury response
@@ -884,15 +893,13 @@ fn test_parse_example_config_file() {
 
 #[test]
 fn test_serialize_treasury_execute_msg() {
-    use cosmwasm_std::Binary;
-
     let msg = TreasuryExecuteMsg::UpdateGrantConfig {
         msg_type_url: "/cosmos.bank.v1beta1.MsgSend".to_string(),
         grant_config: GrantConfigChain {
             description: "Test".to_string(),
             authorization: ProtobufAny {
                 type_url: "/cosmos.bank.v1beta1.SendAuthorization".to_string(),
-                value: Binary::from_base64("ChAKBzEwMDAwMDASBXV4aW9u").unwrap(),
+                value: "ChAKBzEwMDAwMDASBXV4aW9u".to_string(), // Base64 string directly
             },
             optional: false,
         },

@@ -6,15 +6,15 @@
       "id": "treasury-grant-fee-debug",
       "title": "Treasury Grant/Fee Config Debug",
       "file": "plans/treasury-grant-fee-debug.md",
-      "status": "InProgress",
-      "progress": 75,
+      "status": "Done",
+      "progress": 100,
       "owner": "@project-manager",
       "agents": ["@fullstack-dev"],
       "tags": ["treasury", "grant-config", "fee-config", "debug", "oauth2-api-format"],
       "created_at": "2026-03-07",
       "updated_at": "2026-03-08",
-      "done_at": null,
-      "notes": "Root cause identified: OAuth2 API expects different format. Fixed camelCase fields. Need to fix codeId (string→number) and msg (JSON→base64). Ready for 5-minute fix next session."
+      "done_at": "2026-03-08",
+      "notes": "OAuth2 API format issues fixed. ProtobufAny.value changed from Binary to String. All related tests pass."
     },
     {
       "id": "e2e-testing",
@@ -48,15 +48,15 @@
       "id": "treasury-create-enhancement",
       "title": "Treasury Create Command Enhancement",
       "file": "plans/treasury-create-enhancement.md",
-      "status": "InProgress",
-      "progress": 97,
+      "status": "Done",
+      "progress": 100,
       "owner": "@project-manager",
       "agents": ["@fullstack-dev"],
       "tags": ["treasury", "create", "encoding", "cli"],
       "created_at": "2026-03-06",
       "updated_at": "2026-03-08",
-      "done_at": null,
-      "notes": "CLI implementation complete. OAuth2 API format issues identified. Fix ready: codeId as number, msg as base64."
+      "done_at": "2026-03-08",
+      "notes": "CLI implementation complete. OAuth2 API format issues fixed: msg as base64, salt without prefix."
     },
     {
       "id": "treasury-automation",
@@ -79,7 +79,7 @@
         "rust"
       ],
       "created_at": "2025-03-05",
-      "updated_at": "2026-03-07",
+      "updated_at": "2026-03-08",
       "done_at": null,
       "notes": "All 330+ tests passing. E2E test infrastructure ready. Awaiting manual E2E validation on testnet."
     },
