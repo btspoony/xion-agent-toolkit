@@ -511,38 +511,7 @@ cargo test
    - Never run `auth logout` during automated testing
    - Never delete `~/.xion-toolkit/credentials/*.enc` files
    - If access token expires, system auto-refreshes using stored refresh token
-   - Only clear credentials when explicitly requested by user
-
-## Documentation Standards
-
-1. **Token Storage**
-   - Credentials are encrypted with AES-256-GCM and stored in `~/.xion-toolkit/credentials/*.enc`
-   - Encryption key derived from machine ID (or `XION_CI_ENCRYPTION_KEY` for CI/CD)
-   - Never store tokens in plain text
-   - Separate storage for different networks
-   - **CRITICAL**: Never delete `.enc` files during testing - refresh tokens have 30-day expiration
-
-2. **PKCE Implementation**
-   - Use cryptographically secure random number generator
-   - Verifier length at least 43 characters
-   - Use SHA-256 for challenge generation
-
-3. **API Communication**
-   - Enforce HTTPS for all external communications
-   - Validate server certificates
-   - Implement request timeout
-
-4. **Callback Server**
-   - Only bind to localhost
-   - Validate state parameter
-   - Implement timeout mechanism
-   - Use random port if default is occupied
-
-5. **Testing with Credentials**
-   - Never run `auth logout` during automated testing
-   - Never delete `~/.xion-toolkit/credentials/*.enc` files
-   - If access token expires, system auto-refreshes using stored refresh token
-   - Only clear credentials when explicitly requested by user
+    - Only clear credentials when explicitly requested by user
 
 ## Documentation Standards
 
@@ -564,11 +533,64 @@ cargo test
 
 ## Related Resources
 
+### Official Documentation
 - [Xion Documentation](https://docs.burnt.com/xion)
 - [OAuth2 API Service](https://github.com/burnt-labs/xion/tree/main/oauth2-api-service)
-- [Developer Portal](https://dev.testnet2.burnt.com)
 - [Agent Skills Format](https://agentskills.io/)
+
+### Key Reference Implementations
+
+#### 1. Xion-Types (On-chain Message Types)
+- **Repository**: https://github.com/burnt-labs/xion-types
+- **Local Path**: `~/workspace/xion/xion-types`
+- **Purpose**: Contains TypeScript type definitions for Xion blockchain messages
+- **Usage**: Reference for correct protobuf message structures and encoding examples
+- **Key Files**:
+  - `ts/types/` - Generated protobuf types
+  - `ts/` - TypeScript type definitions
+
+#### 2. OAuth2 App Demo
+- **Repository**: https://github.com/burnt-labs/xion-oauth2-app-demo
+- **Local Path**: `~/workspace/xion/xion-oauth2-app-demo`
+- **Purpose**: Working example of OAuth2 authentication flow with Xion
+- **Usage**: Reference for OAuth2 API integration patterns
+- **Key Features**:
+  - Login flow implementation
+  - Token management
+  - Transaction signing
+
+#### 3. Developer Portal
+- **Repository**: `~/workspace/xion/xion-developer-portal`
+- **Live**: https://dev.testnet2.burnt.com
+- **Purpose**: Primary reference for CLI API usage patterns
+- **Critical Rule**: **CLI must use APIs exactly as Developer Portal does**
+  - Message formats must match Developer Portal's implementation
+  - Field naming conventions (camelCase vs snake_case)
+  - Base64 encoding patterns for CosmWasm messages
+- **Key Files**:
+  - `src/components/Treasury/` - Treasury operations
+  - `src/lib/` - Core utilities and types
+
+#### 4. CosmJS (Communication Protocol)
+- **Repository**: https://github.com/cosmos/cosmjs
+- **Purpose**: Official Cosmos SDK JavaScript library
+- **Usage**: Reference for:
+  - Transaction construction
+  - Protobuf encoding
+  - Message signing
+  - Broadcasting transactions
+
+### Additional Resources
 - [Xion Skills](https://github.com/burnt-labs/xion-skills)
+
+### API Compatibility Note
+
+When implementing CLI features, always reference the Developer Portal implementation first. The CLI is designed to be a command-line equivalent of the Developer Portal, so:
+
+1. **Message formats** must match Developer Portal's JSON structures
+2. **API calls** must use the same endpoints and parameters
+3. **Encoding patterns** (base64, protobuf) must be identical
+4. **Field naming** must follow the same conventions (typically camelCase for outer API, snake_case for contract messages)
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
