@@ -139,11 +139,11 @@ Run the E2E test script after logging in:
 - [x] Authentication status shows correct info
 - [x] Configuration display works
 - [x] Treasury list returns valid JSON
-- [x] Treasury create works (requires testnet tokens)
+- [ ] Treasury create works (skipped - requires testnet tokens)
 - [x] Treasury query returns details
-- [ ] Grant config with presets works
+- [x] Grant config with presets works (first add succeeded)
 - [x] Fee config works (Basic + Periodic verified on chain)
-- [ ] Token refresh works
+- [x] Token refresh works
 - [x] DaoDao Indexer returns correct format
 
 ## Test Results (2026-03-08)
@@ -154,9 +154,21 @@ Run the E2E test script after logging in:
 - **Coin Encoding**: Verified correct protobuf field order (denom=1, amount=2)
 - **Chain Verification**: Direct query from chain confirms data integrity
 
+### Token Refresh ✅
+- Successfully refreshed token
+- New expiration: 2026-03-09T10:20:31Z
+
+### Grant Config Add ✅ (Partial)
+- **Send Authorization**: First transaction succeeded
+- Chain verification shows grant config exists
+- Admin verification: correct user has admin rights
+- **Issue**: Subsequent grant config operations fail with "payload msg: invalid"
+- Root cause TBD - possibly OAuth2 API state or rate limiting
+
 ### Transaction Hashes
-- Basic: `A866A6D2394A0DC1923BCD497D1E0EC1F665F8EA19A6B13C73C7B8FEF26A2D2C`
-- Periodic: `DBB96A64AAD75B21A9FCB0F609815E0FAAF1C333572D90AA6C87B875C22F98D3`
+- Basic Fee Config: `A866A6D2394A0DC1923BCD497D1E0EC1F665F8EA19A6B13C73C7B8FEF26A2D2C`
+- Periodic Fee Config: `DBB96A64AAD75B21A9FCB0F609815E0FAAF1C333572D90AA6C87B875C22F98D3`
+- Send Grant Config: `FEE48BF3744A6DAA60852EE435496120483469B5797AEBE146120CE64C690DBE`
 
 ## Known Limitations
 

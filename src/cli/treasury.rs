@@ -942,11 +942,14 @@ fn build_grant_config_from_flags(
                     None
                 };
 
+                // Convert kebab-case to snake_case for encoding layer
+                let normalized_filter_type = filter_type.replace('-', "_");
+
                 grants.push(ContractGrantInput {
                     address: contract.clone(),
                     max_calls: max_call,
                     max_funds: max_fund,
-                    filter_type: filter_type.to_string(),
+                    filter_type: normalized_filter_type,
                     keys: filter,
                 });
             }
