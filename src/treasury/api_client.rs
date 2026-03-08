@@ -4,6 +4,7 @@
 //! Supports listing, querying, and managing treasury contracts.
 
 use anyhow::{Context, Result};
+use base64::Engine;
 use chrono::DateTime;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -160,13 +161,13 @@ impl TreasuryApiClient {
 
     /// Helper function to build and broadcast a CosmWasm execute contract message
     ///
-    /// This follows the same format as withdraw_treasury, ensuring consistency across all APIs.
+    /// This follows the same format as create_treasury, ensuring consistency across all APIs.
     ///
     /// # Arguments
     /// * `access_token` - Valid OAuth2 access token
     /// * `sender` - Sender address
     /// * `contract` - Treasury contract address
-    /// * `execute_msg` - Execute message to send (passed as raw JSON object)
+    /// * `execute_msg` - Execute message to send (will be JSON-encoded then base64-encoded)
     /// * `memo` - Transaction memo
     ///
     /// # Returns
@@ -179,12 +180,17 @@ impl TreasuryApiClient {
         execute_msg: &T,
         memo: &str,
     ) -> Result<String> {
-        // OAuth2 API expects raw JSON object for MsgExecuteContract.msg field
-        // (unlike MsgInstantiateContract2 which expects base64-encoded JSON string)
+        // Serialize execute message to JSON then to base64
+        // (OAuth2 API expects base64-encoded JSON string for MsgExecuteContract.msg field)
+        let msg_json = serde_json::to_string(execute_msg)?;
+        let msg_base64 = base64::engine::general_purpose::STANDARD.encode(msg_json.as_bytes());
+
+        debug!("Execute message JSON:\n{}", msg_json);
+
         let msg_value = serde_json::json!({
             "sender": sender,
             "contract": contract,
-            "msg": execute_msg,  // Raw JSON object directly, not base64
+            "msg": msg_base64,  // Base64-encoded JSON string
             "funds": []
         });
 
@@ -666,13 +672,20 @@ impl TreasuryApiClient {
             }
         });
 
+        // Serialize message to JSON then to base64
+        // (OAuth2 API expects base64-encoded JSON string for MsgExecuteContract.msg field)
+        let msg_json = serde_json::to_string(&withdraw_msg)?;
+        let msg_base64 = base64::engine::general_purpose::STANDARD.encode(msg_json.as_bytes());
+
+        debug!("Withdraw message JSON:\n{}", msg_json);
+
         let request = BroadcastRequest {
             messages: vec![super::types::TransactionMessage {
                 type_url: "/cosmwasm.wasm.v1.MsgExecuteContract".to_string(),
                 value: serde_json::json!({
                     "sender": from_address,
                     "contract": treasury_address,
-                    "msg": withdraw_msg, // JSON object directly, not base64
+                    "msg": msg_base64,  // Base64-encoded JSON string
                     "funds": []
                 }),
             }],
@@ -764,15 +777,15 @@ impl TreasuryApiClient {
         // Build the instantiation message
         let instantiate_msg = build_treasury_instantiate_msg(&request)?;
 
-        // Convert msg to base64 (OAuth2 API expects base64-encoded JSON string)
+        // Serialize instantiate message to JSON then to base64
+        // (OAuth2 API expects base64-encoded JSON string for MsgInstantiateContract2.msg field)
         let msg_json = serde_json::to_string(&instantiate_msg)?;
-        let msg_base64 = base64::Engine::encode(
-            &base64::engine::general_purpose::STANDARD,
-            msg_json.as_bytes(),
-        );
+        let msg_base64 = base64::engine::general_purpose::STANDARD.encode(msg_json.as_bytes());
 
-        // Convert salt to base64 (OAuth2 API expects raw base64, no prefix)
-        let salt_base64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, salt);
+        debug!("Instantiate message JSON:\n{}", msg_json);
+
+        // Convert salt to base64 (for JSON serialization)
+        let salt_base64 = base64::engine::general_purpose::STANDARD.encode(salt);
 
         // Build the MsgInstantiateContract2 message
         // Note: codeId is number, msg is base64-encoded JSON string, salt is base64-encoded bytes
@@ -780,17 +793,12 @@ impl TreasuryApiClient {
             "sender": request.admin,
             "codeId": treasury_code_id,  // number, not string
             "label": format!("Treasury-{}", chrono::Utc::now().format("%Y%m%d-%H%M%S")),
-            "msg": msg_base64,           // base64-encoded JSON string
-            "salt": salt_base64,         // base64-encoded salt bytes
+            "msg": msg_base64,           // Base64-encoded JSON string
+            "salt": salt_base64,          // Raw salt bytes (base64 for JSON serialization)
             "funds": [],
             "admin": request.admin,
             "fixMsg": false,
         });
-
-        eprintln!(
-            "[DEBUG] MsgInstantiateContract2 message:\n{}",
-            serde_json::to_string_pretty(&msg_value)?
-        );
 
         let broadcast_request = BroadcastRequest {
             messages: vec![super::types::TransactionMessage {
@@ -799,11 +807,6 @@ impl TreasuryApiClient {
             }],
             memo: Some("Create Treasury via Xion Agent Toolkit".to_string()),
         };
-
-        eprintln!(
-            "[DEBUG] Full broadcast request:\n{}",
-            serde_json::to_string_pretty(&broadcast_request)?
-        );
 
         // Broadcast the transaction
         let response = self

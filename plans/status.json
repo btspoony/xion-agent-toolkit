@@ -9,8 +9,15 @@
       "status": "Done",
       "progress": 100,
       "owner": "@project-manager",
-      "agents": ["@fullstack-dev"],
-      "tags": ["treasury", "encoding", "protobuf", "bugfix"],
+      "agents": [
+        "@fullstack-dev"
+      ],
+      "tags": [
+        "treasury",
+        "encoding",
+        "protobuf",
+        "bugfix"
+      ],
       "created_at": "2026-03-08",
       "updated_at": "2026-03-08",
       "done_at": "2026-03-08",
@@ -23,8 +30,16 @@
       "status": "Done",
       "progress": 100,
       "owner": "@project-manager",
-      "agents": ["@fullstack-dev"],
-      "tags": ["treasury", "grant-config", "fee-config", "debug", "oauth2-api-format"],
+      "agents": [
+        "@fullstack-dev"
+      ],
+      "tags": [
+        "treasury",
+        "grant-config",
+        "fee-config",
+        "debug",
+        "oauth2-api-format"
+      ],
       "created_at": "2026-03-07",
       "updated_at": "2026-03-08",
       "done_at": "2026-03-08",
@@ -37,8 +52,15 @@
       "status": "InProgress",
       "progress": 75,
       "owner": "@project-manager",
-      "agents": ["@qa-engineer"],
-      "tags": ["testing", "e2e", "treasury", "oauth2"],
+      "agents": [
+        "@qa-engineer"
+      ],
+      "tags": [
+        "testing",
+        "e2e",
+        "treasury",
+        "oauth2"
+      ],
       "created_at": "2026-03-07",
       "updated_at": "2026-03-08",
       "done_at": null,
@@ -51,8 +73,16 @@
       "status": "Done",
       "progress": 100,
       "owner": "@project-manager",
-      "agents": ["@fullstack-dev", "@qa-engineer"],
-      "tags": ["treasury", "grant-config", "fee-config", "cli"],
+      "agents": [
+        "@fullstack-dev",
+        "@qa-engineer"
+      ],
+      "tags": [
+        "treasury",
+        "grant-config",
+        "fee-config",
+        "cli"
+      ],
       "created_at": "2026-03-06",
       "updated_at": "2026-03-07",
       "done_at": "2026-03-07",
@@ -65,8 +95,15 @@
       "status": "Done",
       "progress": 100,
       "owner": "@project-manager",
-      "agents": ["@fullstack-dev"],
-      "tags": ["treasury", "create", "encoding", "cli"],
+      "agents": [
+        "@fullstack-dev"
+      ],
+      "tags": [
+        "treasury",
+        "create",
+        "encoding",
+        "cli"
+      ],
       "created_at": "2026-03-06",
       "updated_at": "2026-03-08",
       "done_at": "2026-03-08",
@@ -99,7 +136,7 @@
     },
     {
       "id": "transaction-format-fix",
-      "title": "Transaction Format Fix & Common Method Extraction",
+      "title": "Transaction Format Fix - Base64 Encoding",
       "file": "plans/transaction-format-fix.md",
       "status": "InProgress",
       "progress": 60,
@@ -112,12 +149,13 @@
         "treasury",
         "transaction",
         "format",
-        "bugfix"
+        "bugfix",
+        "encoding"
       ],
       "created_at": "2026-03-08",
       "updated_at": "2026-03-08",
-      "done_at": null,
-      "notes": "Fixed: broadcast_execute_contract now passes raw JSON object for MsgExecuteContract.msg field (not base64-encoded). Removed unused base64 import. E2E testing in progress."
+      "done_at": "2026-03-08",
+      "notes": "Fixed: Both MsgInstantiateContract2 and MsgExecuteContract now use base64-encoded JSON strings for 'msg' field. Analyzed successful on-chain transaction for correct format. All unit tests passing."
     },
     {
       "id": "oauth2-client-architecture",
