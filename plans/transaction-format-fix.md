@@ -1,5 +1,5 @@
 ---
-status: Done
+status: InProgress
 created_at: 2026-03-08
 updated_at: 2026-03-08
 ---
@@ -69,7 +69,7 @@ OAuth2 API handles message fields differently:
 - [x] Test treasury create with detailed logging
 - [x] Analyze successful transaction format
 - [x] Fix `broadcast_execute_contract` to use raw JSON for `msg` field
-- [ ] Verify fix with E2E testing
+- [ ] Verify fix with E2E testing (IN PROGRESS)
 - [ ] Update documentation
 
 ## Reference

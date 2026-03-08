@@ -273,6 +273,67 @@ The toolkit supports two network environments:
 - **Chain ID**: xion-mainnet-1
 - **Treasury Code ID**: 63
 
+## OAuth2 API Service Message Formats
+
+### Supported Transaction Message Formats
+
+The OAuth2 API Service (`/api/v1/transaction` endpoint) accepts **three different formats** for the `value` field in transaction messages:
+
+#### 1. Byte Array Format (Protobuf)
+```json
+{
+  "typeUrl": "/cosmwasm.wasm.v1.MsgExecuteContract",
+  "value": [1, 2, 3, ...]  // Array of uint8 numbers (protobuf encoded)
+}
+```
+
+#### 2. Base64 String Format (Protobuf with prefix)
+```json
+{
+  "typeUrl": "/cosmwasm.wasm.v1.MsgExecuteContract",
+  "value": "base64:ABC123..."  // MUST have "base64:" prefix
+}
+```
+
+#### 3. Raw JSON Object Format (Amino-style)
+```json
+{
+  "typeUrl": "/cosmwasm.wasm.v1.MsgExecuteContract",
+  "value": {
+    "sender": "xion1...",
+    "contract": "xion1...",
+    "msg": { "update_grant_config": { ... } },  // Raw JSON object, NOT base64
+    "funds": []
+  }
+}
+```
+
+### Important: msg Field Encoding Rules
+
+For `MsgExecuteContract` and `MsgInstantiateContract` messages:
+
+| Format | `msg` Field Type | Encoding |
+|--------|------------------|----------|
+| Protobuf (byte array / base64) | `Uint8Array` | Base64-encoded JSON string |
+| Amino (raw JSON object) | `any` | **Raw JSON object** (NOT base64) |
+
+**CRITICAL**: When using raw JSON object format, the `msg` field must be a **raw JSON object**, NOT a base64-encoded string!
+
+### Reference Implementation
+
+See OAuth2 API Service source:
+- `~/workspace/xion/oauth2-api-service/src/routes/api/transaction/broadcast.ts`
+- `~/workspace/xion/oauth2-api-service/src/utils/transactions.ts`
+
+See xion-types for message definitions:
+- `~/workspace/xion/xion-types/ts/types/cosmwasm/wasm/v1/tx.ts`
+
+### Our Implementation Choice
+
+The CLI uses **raw JSON object format** for simplicity and consistency with Developer Portal patterns. This means:
+- `MsgExecuteContract.msg` = raw JSON object (e.g., `{ "update_grant_config": {...} }`)
+- `MsgInstantiateContract2.msg` = raw JSON object
+
 ## OAuth2 Authentication Flow
 
 ### Pre-configured OAuth Clients
