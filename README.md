@@ -38,25 +38,13 @@ cargo install --path .
 
 ## Quick Start
 
-### 1. Configure OAuth Client IDs
-
-```bash
-cp .env.example .env
-# Edit .env and add your OAuth Client IDs
-```
-
-Required variables:
-- `XION_LOCAL_OAUTH_CLIENT_ID`
-- `XION_TESTNET_OAUTH_CLIENT_ID`
-- `XION_MAINNET_OAUTH_CLIENT_ID`
-
-### 2. Check Status
+### 1. Check Status
 
 ```bash
 xion-toolkit status
 ```
 
-### 3. Login
+### 2. Login
 
 ```bash
 xion-toolkit auth login

@@ -8,6 +8,7 @@ Thank you for your interest in contributing! This guide will help you get starte
 - [Code Standards](#code-standards)
 - [Pull Request Process](#pull-request-process)
 - [Testing Guidelines](#testing-guidelines)
+- [Release Process](#release-process)
 
 ## Development Setup
 
@@ -32,7 +33,7 @@ cargo test
 
 # Configure OAuth (required for integration testing)
 cp .env.example .env
-# Edit .env with your OAuth Client IDs
+# Edit .env with your OAuth Client IDs (XION_TESTNET_OAUTH_CLIENT_ID, XION_MAINNET_OAUTH_CLIENT_ID)
 ```
 
 ## Code Standards
@@ -236,11 +237,31 @@ pub fn generate_pkce_challenge(verifier: &str) -> Result<String> {
 - Validate all external inputs
 - Use HTTPS for all external communications
 
+## Release Process
+
+We use [cargo-dist](https://axodotdev.github.io/cargo-dist/) to automate releases. See the full [Release Process Documentation](docs/release.md) for detailed instructions.
+
+### Quick Summary
+
+1. **Prepare**: Update version in `Cargo.toml` and `CHANGELOG.md`
+2. **Commit**: `git commit -m "chore(release): prepare for v0.X.X"`
+3. **Tag**: `git tag -a v0.X.X -m "Release v0.X.X"`
+4. **Push**: `git push origin v0.X.X`
+
+The CI will automatically build binaries for all platforms and create a GitHub release.
+
+### Requirements
+
+- Only maintainers can push version tags
+- Tags must follow semver with `v` prefix (e.g., `v0.2.0`)
+- All tests must pass before tagging
+
 ## Getting Help
 
 - **GitHub Issues**: Bug reports and feature requests
 - **Code Review**: All PRs reviewed by maintainers
 - **Documentation**: See `plans/` for architecture details
+- **Release Process**: See `docs/release.md`
 
 ## License
 
