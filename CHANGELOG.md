@@ -8,7 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Treasury E2E lifecycle testing (planned)
+- `tests/e2e_treasury_lifecycle.sh` - Comprehensive treasury lifecycle E2E test
+  - Tests: pre-flight → create → fund → grant-config → fee-config → params → chain-query → withdraw
+  - Clean pass/fail/skip result tracking with detailed output
+  - Protected treasury handling (xion17vg5l9za4768g0hnxezltgnu4h7eleqdcmwark2uuz2s4z5q4dfsr80vvm)
+- `tests/e2e_treasury_grant_fee.sh` - Dedicated grant/fee configuration E2E test
+  - Tests: grant-config list/add (generic & send) → fee-config query/set (basic & periodic)
+  - Error handling validation (invalid preset, missing fields, missing files)
+  - Chain query tests for grants and allowances
+
+### Changed
+- Reorganized test directory structure
+  - All E2E test scripts now in `tests/` with `e2e_*.sh` naming convention
+  - Archived legacy test scripts to `tests/archived/` (test-auth.sh, test_create_debug.rs, e2e-test.sh)
+  - Clarified `scripts/` for build/utility scripts only (not tests)
+- Updated AGENTS.md with clear directory structure documentation
+- Temporarily disabled treasury creation in E2E tests to avoid creating too many test treasuries
 
 ## [0.2.0] - 2026-03-09
 
@@ -261,9 +276,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Next Milestones
 
 - **0.3.0** - Phase 5: Advanced Features
-  - Treasury E2E lifecycle testing
   - Batch CLI commands
   - Performance optimizations
+  - Additional treasury features as needed
   
 - **1.0.0** - Production release
   - Complete feature set
