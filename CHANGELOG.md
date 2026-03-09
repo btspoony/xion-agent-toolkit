@@ -5,6 +5,16 @@ All notable changes to the Xion Agent Toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3](https://github.com/btspoony/xion-agent-toolkit/compare/0.4.2...0.4.3) (2026-03-09)
+
+
+### Bug Fixes
+
+* **release:** avoid draft recursion and repo-less dispatch ([0993528](https://github.com/btspoony/xion-agent-toolkit/commit/0993528d7542a59fc9123e85c9bfdaf46219a681))
+* **release:** avoid recursive release PR creation ([5505d0a](https://github.com/btspoony/xion-agent-toolkit/commit/5505d0a56751739dc47f97269f41503e0965ae57))
+* **release:** remove Linux musl target ([bca29c0](https://github.com/btspoony/xion-agent-toolkit/commit/bca29c06db4535c5cb6d09bc60189c72d5bff19c))
+* **release:** remove Linux musl target from documentation ([25b77fa](https://github.com/btspoony/xion-agent-toolkit/commit/25b77fa055720a8eb3b35534984e91ec97f4f055))
+
 ## [0.4.2](https://github.com/btspoony/xion-agent-toolkit/compare/0.4.1...0.4.2) (2026-03-09)
 
 
