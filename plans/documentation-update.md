@@ -1,5 +1,5 @@
 ---
-status: Todo
+status: Done
 created_at: 2026-03-09
 updated_at: 2026-03-09
 ---
@@ -45,25 +45,25 @@ Create `docs/cli-reference.md` with:
 ## Tasks
 
 ### README Update
-- [ ] Add admin management commands to README
-- [ ] Add params update command to README
-- [ ] Add chain-query commands to README
-- [ ] Add instantiate commands to README
-- [ ] Update feature list and quick start examples
+- [x] Add admin management commands to README
+- [x] Add params update command to README
+- [x] Add chain-query commands to README
+- [x] Add instantiate commands to README
+- [x] Update feature list and quick start examples
 
 ### Skills Scripts
-- [ ] Update `skills/xion-treasury/scripts/update-params.sh` to use new CLI
-- [ ] Create `skills/xion-treasury/scripts/admin.sh` for admin operations
-- [ ] Create `skills/xion-treasury/scripts/chain-query.sh` for queries
-- [ ] Update `skills/xion-treasury/SKILL.md` documentation
+- [x] Update `skills/xion-treasury/scripts/update-params.sh` to use new CLI
+- [x] Create `skills/xion-treasury/scripts/admin.sh` for admin operations
+- [x] Create `skills/xion-treasury/scripts/chain-query.sh` for queries
+- [x] Update `skills/xion-treasury/SKILL.md` documentation
 
 ### CLI Reference
-- [ ] Create `docs/` directory if needed
-- [ ] Create `docs/cli-reference.md`
-- [ ] Document all auth commands
-- [ ] Document all treasury commands (including new ones)
-- [ ] Document all config commands
-- [ ] Add output format examples
+- [x] Create `docs/` directory if needed
+- [x] Create `docs/cli-reference.md`
+- [x] Document all auth commands
+- [x] Document all treasury commands (including new ones)
+- [x] Document all config commands
+- [x] Add output format examples
 
 ## Acceptance Criteria
 
@@ -78,3 +78,4 @@ Create `docs/cli-reference.md` with:
 
 | Date | Signer | Content | Status |
 |------|--------|---------|--------|
+| 2026-03-09 | @frontend-dev | README, skills scripts, CLI reference | Done |

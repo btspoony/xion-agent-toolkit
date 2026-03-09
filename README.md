@@ -14,6 +14,10 @@ Xion Agent Toolkit provides a command-line interface for interacting with Xion's
 - 🔐 OAuth2 authentication with PKCE security
 - 💰 Treasury management (list, query, fund, withdraw)
 - ⚙️ Grant & fee configuration
+- 👤 Admin management (propose, accept, cancel)
+- 🔧 Treasury parameter updates
+- 🔍 On-chain queries (grants, allowances)
+- 🚀 Generic contract instantiation
 - 🤖 Agent-friendly JSON output
 - 🔒 Encrypted credential storage
 
@@ -85,6 +89,27 @@ xion-toolkit treasury grant-config xion1abc123... \
 xion-toolkit treasury fee-config xion1abc123... \
   --fee-allowance-type basic \
   --fee-spend-limit "5000000uxion"
+
+# Propose new admin
+xion-toolkit treasury admin propose xion1abc123... \
+  --new-admin xion1newadmin...
+
+# Accept admin role
+xion-toolkit treasury admin accept xion1abc123...
+
+# Update treasury parameters
+xion-toolkit treasury params update xion1abc123... \
+  --redirect-url "https://example.com/callback" \
+  --metadata '{"name":"Updated Treasury"}'
+
+# Query on-chain grants
+xion-toolkit treasury chain-query grants xion1abc123...
+
+# Instantiate a contract
+xion-toolkit treasury instantiate \
+  --code-id 1260 \
+  --label "my-contract" \
+  --msg instantiate-msg.json
 ```
 
 ## CLI Reference
@@ -101,12 +126,37 @@ xion-toolkit auth refresh                 # Refresh token
 ### Treasury
 
 ```bash
+# Basic operations
 xion-toolkit treasury list                       # List treasuries
 xion-toolkit treasury query <address>            # Query details
 xion-toolkit treasury fund <address> --amount N  # Fund treasury
 xion-toolkit treasury withdraw <address> --amount N  # Withdraw
-xion-toolkit treasury grant-config <address> [options]  # Config grants
-xion-toolkit treasury fee-config <address> [options]    # Config fees
+
+# Grant configuration
+xion-toolkit treasury grant-config add <address> [options]     # Add grant
+xion-toolkit treasury grant-config remove <address> --type-url <url>  # Remove grant
+xion-toolkit treasury grant-config list <address>              # List grants
+
+# Fee configuration
+xion-toolkit treasury fee-config set <address> --fee-config <file>    # Set fee config
+xion-toolkit treasury fee-config remove <address> --grantee <address> # Remove fee allowance
+xion-toolkit treasury fee-config query <address>               # Query fee config
+
+# Admin management
+xion-toolkit treasury admin propose <address> --new-admin <address>   # Propose new admin
+xion-toolkit treasury admin accept <address>                   # Accept admin role
+xion-toolkit treasury admin cancel <address>                   # Cancel proposed admin
+
+# Parameters
+xion-toolkit treasury params update <address> [options]        # Update treasury params
+
+# On-chain queries
+xion-toolkit treasury chain-query grants <address>             # Query authz grants
+xion-toolkit treasury chain-query allowances <address>         # Query fee allowances
+
+# Contract instantiation
+xion-toolkit treasury instantiate --code-id <id> --label <label> --msg <file> [options]
+xion-toolkit treasury instantiate2 --code-id <id> --label <label> --msg <file> [options]
 ```
 
 ### Configuration

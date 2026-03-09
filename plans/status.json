@@ -6,8 +6,8 @@
       "id": "documentation-update",
       "title": "Documentation Update",
       "file": "plans/documentation-update.md",
-      "status": "Todo",
-      "progress": 0,
+      "status": "Done",
+      "progress": 100,
       "owner": "@project-manager",
       "agents": [
         "@frontend-dev"
@@ -20,8 +20,8 @@
       ],
       "created_at": "2026-03-09",
       "updated_at": "2026-03-09",
-      "done_at": null,
-      "notes": "Update README, skills scripts, and create CLI reference documentation"
+      "done_at": "2026-03-09",
+      "notes": "Complete: README updated with new commands, skills scripts created/updated (admin.sh, chain-query.sh, update-params.sh), SKILL.md updated, CLI reference created."
     },
 {
       "id": "treasury-e2e-testing",

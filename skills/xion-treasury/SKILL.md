@@ -11,9 +11,11 @@ This skill wraps the `xion-toolkit` CLI tool to provide Agent-friendly Treasury 
 - **create.sh** - Create a new Treasury contract with fee grant and authz grant configuration
 - **fund.sh** - Fund a Treasury contract
 - **withdraw.sh** - Withdraw funds from a Treasury
-- **grant-config.sh** - Configure Authz Grants
-- **fee-config.sh** - Configure Fee Grants
-- **update-params.sh** - Update Treasury parameters (coming soon)
+- **grant-config.sh** - Configure Authz Grants (add, remove, list)
+- **fee-config.sh** - Configure Fee Grants (set, remove, query)
+- **admin.sh** - Admin management operations (propose, accept, cancel)
+- **update-params.sh** - Update Treasury parameters
+- **chain-query.sh** - On-chain queries (grants, allowances)
 
 ## Prerequisites
 
@@ -564,22 +566,183 @@ Manages Fee Grants for a Treasury contract.
 }
 ```
 
-### update-params.sh (Coming Soon)
+### admin.sh
 
-Updates Treasury parameters.
+Manages Treasury admin operations: propose a new admin, accept admin role, or cancel a proposed admin.
 
 **Usage:**
 ```bash
-./scripts/update-params.sh <ADDRESS> --params <PARAMS_FILE> [--network NETWORK]
+# Propose a new admin
+./scripts/admin.sh <ADDRESS> propose --new-admin <NEW_ADMIN_ADDRESS> [--network NETWORK]
+
+# Accept admin role (called by pending admin)
+./scripts/admin.sh <ADDRESS> accept [--network NETWORK]
+
+# Cancel proposed admin
+./scripts/admin.sh <ADDRESS> cancel [--network NETWORK]
 ```
 
-**Status:**
+**Arguments:**
+- `ADDRESS` - Treasury contract address (required)
+- `ACTION` - Action to perform: propose, accept, cancel (required)
+
+**Options:**
+- `--new-admin <ADDRESS>` - New admin address (required for propose)
+- `--network NETWORK` - Network to use (default: testnet)
+
+**Output (stdout):**
+
+*Propose:*
 ```json
 {
-  "success": false,
-  "error": "Parameter update is not yet implemented",
-  "error_code": "FEATURE_NOT_AVAILABLE"
+  "success": true,
+  "treasury_address": "xion1abc123...",
+  "operation": "propose_admin",
+  "new_admin": "xion1newadmin...",
+  "tx_hash": "ABC123..."
 }
+```
+
+*Accept:*
+```json
+{
+  "success": true,
+  "treasury_address": "xion1abc123...",
+  "operation": "accept_admin",
+  "tx_hash": "ABC123..."
+}
+```
+
+*Cancel:*
+```json
+{
+  "success": true,
+  "treasury_address": "xion1abc123...",
+  "operation": "cancel_proposed_admin",
+  "tx_hash": "ABC123..."
+}
+```
+
+**Examples:**
+```bash
+# Propose a new admin
+./scripts/admin.sh xion1abc123... propose --new-admin xion1newadmin...
+
+# Accept admin role (must be called by the pending admin)
+./scripts/admin.sh xion1abc123... accept
+
+# Cancel proposed admin
+./scripts/admin.sh xion1abc123... cancel
+```
+
+### update-params.sh
+
+Updates Treasury contract parameters (redirect URL, icon URL, metadata).
+
+**Usage:**
+```bash
+./scripts/update-params.sh <ADDRESS> [options] [--network NETWORK]
+```
+
+**Arguments:**
+- `ADDRESS` - Treasury contract address (required)
+
+**Options:**
+- `--redirect-url <URL>` - OAuth redirect URL
+- `--icon-url <URL>` - Treasury icon URL
+- `--metadata <JSON>` - Metadata as JSON string
+- `--network NETWORK` - Network to use (default: testnet)
+
+**Output (stdout):**
+```json
+{
+  "success": true,
+  "treasury_address": "xion1abc123...",
+  "tx_hash": "ABC123..."
+}
+```
+
+**Examples:**
+```bash
+# Update redirect URL
+./scripts/update-params.sh xion1abc123... --redirect-url "https://example.com/callback"
+
+# Update metadata
+./scripts/update-params.sh xion1abc123... --metadata '{"name":"Updated Treasury"}'
+
+# Update multiple params
+./scripts/update-params.sh xion1abc123... \
+  --redirect-url "https://app.com/callback" \
+  --icon-url "https://app.com/icon.png" \
+  --metadata '{"name":"My App","archived":false}'
+```
+
+### chain-query.sh
+
+Queries on-chain data for Treasury contracts: authz grants and fee allowances.
+
+**Usage:**
+```bash
+# Query authz grants
+./scripts/chain-query.sh <ADDRESS> grants [--network NETWORK]
+
+# Query fee allowances
+./scripts/chain-query.sh <ADDRESS> allowances [--network NETWORK]
+```
+
+**Arguments:**
+- `ADDRESS` - Treasury contract address (required)
+- `QUERY` - Query type: grants, allowances (required)
+
+**Options:**
+- `--network NETWORK` - Network to use (default: testnet)
+
+**Output (stdout):**
+
+*Grants:*
+```json
+{
+  "success": true,
+  "treasury_address": "xion1abc123...",
+  "grants": [
+    {
+      "grantee": "xion1grantee...",
+      "authorization": {
+        "type": "cosmos.bank.v1beta1.SendAuthorization",
+        "value": { "spend_limit": [{"denom": "uxion", "amount": "1000000"}] }
+      },
+      "expiration": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "count": 1
+}
+```
+
+*Allowances:*
+```json
+{
+  "success": true,
+  "treasury_address": "xion1abc123...",
+  "allowances": [
+    {
+      "grantee": "xion1grantee...",
+      "allowance": {
+        "type": "cosmos.feegrant.v1beta1.BasicAllowance",
+        "value": { "spend_limit": [{"denom": "uxion", "amount": "5000000"}] }
+      }
+    }
+  ],
+  "count": 1
+}
+```
+
+**Examples:**
+```bash
+# Query authz grants
+./scripts/chain-query.sh xion1abc123... grants
+
+# Query fee allowances on mainnet
+./scripts/chain-query.sh xion1abc123... allowances --network mainnet
 ```
 
 ## Error Handling
@@ -812,11 +975,10 @@ If you see stale data:
 ## Related Skills
 
 - **xion-oauth2** - Authentication (required before using this skill)
-- **xion-deploy** - Smart contract deployment (future)
 
 ## Version
 
-- Skill Version: 1.0.0
+- Skill Version: 1.1.0
 - Compatible CLI Version: >=0.1.0
 
 ## License
