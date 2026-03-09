@@ -24,6 +24,27 @@
       "notes": "Complete: README updated with new commands, skills scripts created/updated (admin.sh, chain-query.sh, update-params.sh), SKILL.md updated, CLI reference created."
     },
 {
+      "id": "contract-instantiate-refactor",
+      "title": "Contract Instantiate Refactor",
+      "file": "plans/contract-instantiate-refactor.md",
+      "status": "Todo",
+      "progress": 0,
+      "owner": "@project-manager",
+      "agents": [
+        "@fullstack-dev"
+      ],
+      "tags": [
+        "contract",
+        "instantiate",
+        "refactor",
+        "cli"
+      ],
+      "created_at": "2026-03-09",
+      "updated_at": "2026-03-09",
+      "done_at": null,
+      "notes": "Move instantiate/instantiate2 from treasury to contract subcommand for proper command structure"
+    },
+{
       "id": "treasury-e2e-testing",
       "title": "Treasury E2E Testing",
       "file": "plans/treasury-e2e-testing.md",
