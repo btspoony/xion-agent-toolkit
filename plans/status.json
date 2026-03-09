@@ -3,6 +3,48 @@
   "updated_at": "2026-03-09",
   "plans": [
     {
+      "id": "generic-contract-instantiation-api",
+      "title": "Generic Contract Instantiation Public API",
+      "file": "plans/generic-contract-instantiation-api.md",
+      "status": "Todo",
+      "progress": 0,
+      "owner": "@project-manager",
+      "agents": [
+        "@fullstack-dev"
+      ],
+      "tags": [
+        "contract",
+        "instantiate",
+        "cli",
+        "api"
+      ],
+      "created_at": "2026-03-09",
+      "updated_at": "2026-03-09",
+      "done_at": null,
+      "notes": "Expose generic contract instantiation as public API and CLI commands"
+    },
+    {
+      "id": "treasury-enhancements",
+      "title": "Treasury Enhancements",
+      "file": "plans/treasury-enhancements.md",
+      "status": "Todo",
+      "progress": 0,
+      "owner": "@project-manager",
+      "agents": [
+        "@fullstack-dev"
+      ],
+      "tags": [
+        "treasury",
+        "batch",
+        "query",
+        "enhancement"
+      ],
+      "created_at": "2026-03-09",
+      "updated_at": "2026-03-09",
+      "done_at": null,
+      "notes": "Add batch operations and enhanced query capabilities for Treasury"
+    },
+    {
       "id": "generic-contract-instantiation",
       "title": "Generic Contract Instantiation",
       "file": "plans/generic-contract-instantiation.md",
