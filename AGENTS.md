@@ -2,440 +2,234 @@
 
 ## Project Overview
 
-Xion Agent Toolkit is a CLI-driven, Agent-oriented toolkit designed to facilitate development on the Xion blockchain. Built on Xion's MetaAccount system, it leverages OAuth2 API to provide a gasless development experience.
+Xion Agent Toolkit is a CLI-first, agent-oriented toolkit for Xion. It uses Xion MetaAccount + OAuth2 APIs to provide a gasless development experience.
 
 ## Core Principles
 
 ### 1. Agent-First Design
-- All features prioritize Agent invocation scenarios
-- CLI output formatted as JSON for easy Agent parsing
-- Structured error messages with error codes and remediation suggestions
+
+- Optimize all features for agent invocation.
+- Output JSON for machine parsing.
+- Return structured errors with codes and remediation hints.
 
 ### 2. MetaAccount-Centric
-- Based on OAuth2 authentication flow, not traditional mnemonic
-- Uses Session Key for transaction signing
-- Supports Fee Grant and Authz Grant
+
+- Use OAuth2, not mnemonic-based auth.
+- Sign with Session Keys.
+- Support Fee Grant and Authz Grant.
 
 ### 3. Modular Architecture
-- CLI tool as the core component
-- Skills as Agent extensions
-- Independent and transparent configuration management
+
+- CLI is the core.
+- Skills extend agent capabilities.
+- Configuration remains independent and transparent.
 
 ## Technology Stack
 
 ### Main Tool: Rust
-- **CLI Framework**: clap (v4.x) - Powerful command-line argument parsing
-- **HTTP Client**: reqwest + tokio - Asynchronous HTTP requests
-- **Serialization**: serde + serde_json - JSON processing
-- **Configuration Management**: directories - Cross-platform configuration directories
-- **Error Handling**: thiserror + anyhow - Structured errors
-- **Logging**: tracing + tracing-subscriber - Structured logging
-- **Credential Storage**: keyring - OS-native credential storage
+
+- `clap`, `reqwest`, `tokio`, `serde`, `serde_json`, `directories`, `thiserror`, `anyhow`, `tracing`, `tracing-subscriber`, `keyring`
 
 ### Skills: Bash + Node.js
-- Follows [Agent Skills](https://agentskills.io/) format
-- Outputs JSON to stdout, status messages to stderr
-- Scripts use `set -e` for fail-fast behavior
+
+- Follow [Agent Skills](https://agentskills.io/).
+- Write JSON to stdout and status messages to stderr.
+- Use `set -e`.
 
 ## Project Structure
 
-```
+```text
 xion-agent-toolkit/
-├── AGENTS.md                    # This file - Development Guidelines
-├── CONTRIBUTING.md              # Contributing guide for human contributors
-├── README.md                    # Product documentation for users
-├── Cargo.toml                   # Rust project configuration
-├── src/
-│   ├── main.rs                  # CLI entry point
-│   ├── lib.rs                   # Library exports
-│   ├── cli/                     # CLI command definitions
-│   │   ├── mod.rs
-│   │   ├── auth.rs              # OAuth2 authentication commands
-│   │   ├── treasury.rs          # Treasury management commands
-│   │   └── config.rs            # Configuration management commands
-│   ├── oauth/                   # OAuth2 client implementation
-│   │   ├── mod.rs
-│   │   ├── client.rs            # OAuth2 client
-│   │   ├── token_manager.rs     # Token management
-│   │   ├── callback_server.rs   # Localhost callback server
-│   │   └── pkce.rs              # PKCE implementation
-│   ├── api/                     # API clients
-│   │   ├── mod.rs
-│   │   ├── oauth2_api.rs        # OAuth2 API Service client
-│   │   ├── treasury.rs          # Treasury API
-│   │   └── xiond.rs             # xiond query client
-│   ├── treasury/                # Treasury management
-│   │   ├── mod.rs
-│   │   ├── types.rs             # Data structures
-│   │   ├── manager.rs           # High-level manager
-│   │   ├── api_client.rs        # Treasury API client
-│   │   ├── encoding.rs          # Protobuf encoding (fee & authz)
-│   │   └── cache.rs             # Caching system
-│   ├── config/                  # Configuration management
-│   │   ├── mod.rs
-│   │   ├── manager.rs           # Configuration manager
-│   │   ├── credentials.rs       # Credential management
-│   │   └── constants.rs         # Network config (auto-generated)
-│   └── utils/                   # Utility functions
-│       ├── mod.rs
-│       ├── output.rs            # Output formatting
-│       └── error.rs             # Error definitions
-├── skills/                      # Agent Skills
-│   ├── xion-oauth2/             # OAuth2 setup
-│   │   ├── SKILL.md
-│   │   └── scripts/
-│   └── xion-treasury/           # Treasury management
-│       ├── SKILL.md
-│       └── scripts/
-└── plans/                       # Development plans (SSOT for progress)
-    ├── status.json              # Plan status tracking
-    └── *.md                     # Individual plan documents
+├── AGENTS.md
+├── README.md / CONTRIBUTING.md
+├── Cargo.toml
+├── src/{cli,oauth,api,treasury,config,utils}
+├── skills/
+├── tests/                 # integration tests and local debug helpers
+├── plans/
+│   ├── status.json
+│   ├── *.md               # actual plans
+│   └── knowledge/         # reasoning, comparisons, dev logs
+└── logs/                  # dev-time logs (git-ignored)
 ```
 
-**Note**: Development progress and roadmap are tracked in `plans/`. Check `plans/status.json` for current status.
+Development progress and roadmap live in `plans/`; use `plans/status.json` as the SSOT.
+
+## Repository Hygiene
+
+- Put ad-hoc test scripts and debug artifacts in `tests/`, not repo root.
+- Put non-plan “process / reasoning” documents in `plans/knowledge/`.
+- Put development-time logs in `logs/`; keep only `logs/.gitkeep` tracked.
 
 ## Code Standards
 
 ### Rust Code Standards
 
-```rust
-// 1. Use thiserror for error definitions
-#[derive(Debug, thiserror::Error)]
-pub enum OAuthError {
-    #[error("Failed to exchange code: {0}")]
-    CodeExchange(String),
-    
-    #[error("Token expired")]
-    TokenExpired,
-}
-
-// 2. Use serde for serialization
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TreasuryInfo {
-    pub address: String,
-    pub admin: String,
-    pub balance: String,
-}
-
-// 3. CLI output must be JSON
-pub fn output_json<T: Serialize>(data: &T) -> Result<()> {
-    let json = serde_json::to_string_pretty(data)?;
-    println!("{}", json);
-    Ok(())
-}
-
-// 4. Errors to stderr
-pub fn output_error(error: &Error) {
-    eprintln!("{}", error);
-    process::exit(1);
-}
-```
+- Use `thiserror` for error definitions.
+- Use `serde` / `serde_json` for serialization.
+- CLI success output goes to stdout as JSON.
+- Human-readable errors go to stderr.
 
 ### CLI Command Design Principles
 
-```bash
-# 1. All commands support JSON output
-xion-toolkit auth login --output json
-xion-toolkit treasury list --output json
-
-# 2. Errors include error codes
-xion-toolkit treasury create --fee 1000
-# Error: INSUFFICIENT_BALANCE
-# Message: Treasury requires at least 1000000 uxion
-# Suggestion: Fund your account with 'xion-toolkit treasury fund'
-
-# 3. Support config file and command-line arguments
-xion-toolkit --network testnet treasury list
-xion-toolkit --config ~/.xion-toolkit/config.json treasury list
-```
+- All commands should support JSON output, e.g. `xion-toolkit auth login --output json`.
+- Errors should include codes, messages, and actionable suggestions.
+- Support both config-driven and flag-driven usage, e.g. `--network` and `--config`.
 
 ### Skills Script Standards
 
-```bash
-#!/bin/bash
-set -e  # Fail fast
-
-# 1. Output JSON to stdout
-output_json() {
-    echo "$1"
-}
-
-# 2. Status messages to stderr
-log_info() {
-    echo "[INFO] $1" >&2
-}
-
-# 3. Error handling
-handle_error() {
-    output_json "{\"success\": false, \"error\": \"$1\", \"code\": \"$2\"}"
-    exit 1
-}
-
-# Main logic
-main() {
-    log_info "Starting treasury creation..."
-    
-    # Call CLI tool
-    result=$(xion-toolkit treasury create --output json 2>&1)
-    
-    if [ $? -eq 0 ]; then
-        output_json "$result"
-    else
-        handle_error "$result" "TREASURY_CREATE_FAILED"
-    fi
-}
-
-main
-```
+- Use `#!/bin/bash` + `set -e`.
+- Write machine-readable JSON to stdout.
+- Write status / progress logs to stderr.
+- On failure, return structured JSON such as `{"success": false, "error": "...", "code": "..."}`.
 
 ## Configuration Management
 
 ### Configuration File Location
 
-All configuration files are stored in a unified location for easy access across all platforms:
+Use a unified directory on all platforms:
 
-```
+```text
 ~/.xion-toolkit/
-├── config.json              # Main configuration (network preference)
-├── oauth_endpoints.json     # OAuth2 endpoint cache (24h TTL)
-└── credentials/             # Encrypted credentials (AES-256-GCM)
-    ├── testnet.enc          # Testnet credentials (encrypted)
-    └── mainnet.enc          # Mainnet credentials (encrypted)
+├── config.json
+├── oauth_endpoints.json
+└── credentials/
+    ├── testnet.enc
+    └── mainnet.enc
 ```
 
-**Note**: Sensitive tokens (access_token, refresh_token) are stored in encrypted `.enc` files using AES-256-GCM encryption. The encryption key is derived from the machine ID. **Never delete these `.enc` files during testing** - they contain long-lived refresh tokens (30-day expiration).
-
-**Platform Support**: The toolkit uses the unified `~/.xion-toolkit/` directory on all platforms (macOS, Linux, Windows) for consistency and ease of access.
+Credentials are encrypted with AES-256-GCM. Do not delete `~/.xion-toolkit/credentials/*.enc` during testing; they contain long-lived refresh tokens.
 
 ### ⚠️ IMPORTANT: Do Not Delete Credentials
 
-During testing and development:
-- **NEVER delete `~/.xion-toolkit/credentials/*.enc` files** unless explicitly requested by the user
-- **NEVER run `auth logout`** unless explicitly requested by the user
-- Refresh tokens have 30-day expiration - losing them requires re-login via browser
-- If access token expires, the system will automatically refresh it using the stored refresh token
+- NEVER delete `~/.xion-toolkit/credentials/*.enc` unless explicitly requested.
+- NEVER run `auth logout` unless explicitly requested.
+- Refresh tokens last 30 days; deleting them forces browser re-login.
+- Expired access tokens should refresh automatically.
 
 ### Configuration Schema
 
 #### User Config (`~/.xion-toolkit/config.json`)
 
 ```json
-{
-  "version": "1.0",
-  "network": "testnet"
-}
+{"version":"1.0","network":"testnet"}
 ```
-
-#### Network Configuration (Compiled into Binary)
-
-Network configurations are embedded at compile time via environment variables:
-
-| Network | OAuth API | RPC | Chain ID | Treasury Code ID |
-|---------|-----------|-----|----------|------------------|
-| testnet | <https://oauth2.testnet.burnt.com> | <https://rpc.xion-testnet-2.burnt.com:443> | xion-testnet-2 | 1260 |
-| mainnet | <https://oauth2.burnt.com> | <https://rpc.xion-mainnet-1.burnt.com:443> | xion-mainnet-1 | 63 |
 
 #### Credentials Metadata (`~/.xion-toolkit/credentials/{network}.enc`)
 
-Credentials are stored in encrypted files with the following structure:
-
 ```json
-{
-  "access_token": "xion1...:grantId:secret",
-  "refresh_token": "xion1...:grantId:refreshSecret",
-  "expires_at": "2024-01-01T00:00:00Z",
-  "refresh_token_expires_at": "2024-02-01T00:00:00Z",
-  "xion_address": "xion1..."
-}
+{"access_token":"xion1...:grantId:secret","refresh_token":"xion1...:grantId:refreshSecret","expires_at":"2024-01-01T00:00:00Z","refresh_token_expires_at":"2024-02-01T00:00:00Z","xion_address":"xion1..."}
 ```
 
-**Encryption**: Credentials are encrypted with AES-256-GCM. The encryption key is derived from:
-1. `XION_CI_ENCRYPTION_KEY` environment variable (for CI/CD only)
-2. Machine ID via `machine-uid` crate (for local development, default)
+Encryption key source:
 
-**Security**: Never delete `.enc` files or run `auth logout` during testing unless explicitly requested.
+1. `XION_CI_ENCRYPTION_KEY` in CI/CD
+2. Machine ID via `machine-uid` locally
 
 ## Network Configuration
 
-The toolkit supports two network environments:
+Compiled-in network settings:
 
-### Testnet
-
-- **OAuth API**: <https://oauth2.testnet.burnt.com>
-- **RPC**: <https://rpc.xion-testnet-2.burnt.com:443>
-- **Chain ID**: xion-testnet-2
-- **Treasury Code ID**: 1260
-
-### Mainnet
-
-- **OAuth API**: <https://oauth2.burnt.com>
-- **RPC**: <https://rpc.xion-mainnet-1.burnt.com:443>
-- **Chain ID**: xion-mainnet-1
-- **Treasury Code ID**: 63
+| Network | OAuth API | RPC | Chain ID | Treasury Code ID |
+| ------- | --------- | --- | -------- | ---------------- |
+| testnet | <https://oauth2.testnet.burnt.com> | <https://rpc.xion-testnet-2.burnt.com:443> | `xion-testnet-2` | `1260` |
+| mainnet | <https://oauth2.burnt.com> | <https://rpc.xion-mainnet-1.burnt.com:443> | `xion-mainnet-1` | `63` |
 
 ## OAuth2 API Service Message Formats
 
 ### Supported Transaction Message Formats
 
-The OAuth2 API Service (`/api/v1/transaction` endpoint) accepts **three different formats** for the `value` field in transaction messages:
+`/api/v1/transaction` accepts three `value` formats:
 
-#### 1. Byte Array Format (Protobuf)
-```json
-{
-  "typeUrl": "/cosmwasm.wasm.v1.MsgExecuteContract",
-  "value": [1, 2, 3, ...]  // Array of uint8 numbers (protobuf encoded)
-}
-```
-
-#### 2. Base64 String Format (Protobuf with prefix)
-```json
-{
-  "typeUrl": "/cosmwasm.wasm.v1.MsgExecuteContract",
-  "value": "base64:ABC123..."  // MUST have "base64:" prefix
-}
-```
-
-#### 3. Raw JSON Object Format (Amino-style)
-```json
-{
-  "typeUrl": "/cosmwasm.wasm.v1.MsgExecuteContract",
-  "value": {
-    "sender": "xion1...",
-    "contract": "xion1...",
-    "msg": { "update_grant_config": { ... } },  // Raw JSON object, NOT base64
-    "funds": []
-  }
-}
-```
+| Format | `value` shape | `msg` encoding |
+| ------ | ------------- | -------------- |
+| Byte array protobuf | `[1,2,3,...]` | base64-encoded JSON string |
+| Base64 protobuf | `"base64:..."` | base64-encoded JSON string |
+| Raw JSON object | `{ sender, contract, msg, funds }` | raw JSON object |
 
 ### Important: msg Field Encoding Rules
 
-For `MsgExecuteContract` and `MsgInstantiateContract` messages:
+For `MsgExecuteContract` and `MsgInstantiateContract`:
 
-| Format | `msg` Field Type | Encoding |
-|--------|------------------|----------|
-| Protobuf (byte array / base64) | `Uint8Array` | Base64-encoded JSON string |
-| Amino (raw JSON object) | `any` | **Raw JSON object** (NOT base64) |
+- Protobuf formats: `msg` must be a base64-encoded JSON string.
+- Raw JSON format: `msg` must be a raw JSON object, never base64.
 
-**CRITICAL**: When using raw JSON object format, the `msg` field must be a **raw JSON object**, NOT a base64-encoded string!
+**CRITICAL**: When using raw JSON object format, `msg` must remain raw JSON.
 
 ### Reference Implementation
 
-See OAuth2 API Service source:
-- `~/workspace/xion/oauth2-api-service/src/routes/api/transaction/broadcast.ts`
-- `~/workspace/xion/oauth2-api-service/src/utils/transactions.ts`
-
-See xion-types for message definitions:
-- `~/workspace/xion/xion-types/ts/types/cosmwasm/wasm/v1/tx.ts`
+- OAuth2 API Service:
+  - `~/workspace/xion/oauth2-api-service/src/routes/api/transaction/broadcast.ts`
+  - `~/workspace/xion/oauth2-api-service/src/utils/transactions.ts`
+- xion-types:
+  - `~/workspace/xion/xion-types/ts/types/cosmwasm/wasm/v1/tx.ts`
 
 ### Our Implementation Choice
 
-The CLI uses **raw JSON object format** for simplicity and consistency with Developer Portal patterns. This means:
-- `MsgExecuteContract.msg` = raw JSON object (e.g., `{ "update_grant_config": {...} }`)
+The CLI uses raw JSON object format for simplicity and parity with Developer Portal patterns:
+
+- `MsgExecuteContract.msg` = raw JSON object
 - `MsgInstantiateContract2.msg` = raw JSON object
 
 ## OAuth2 Authentication Flow
 
 ### Pre-configured OAuth Clients
 
-The toolkit uses pre-configured OAuth clients for each network. These clients are already set up with the necessary permissions to manage Treasury contracts, providing the same capabilities as the Developer Portal.
+Each network uses a pre-configured OAuth client with the permissions needed for Treasury management, matching the Developer Portal capability set.
 
 ### Login Flow
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant CLI
-    participant Callback Server
-    participant Browser
-    participant OAuth2 API
-
-    CLI->>CLI: Generate PKCE verifier & challenge
-    CLI->>Callback Server: Start localhost callback server
-    CLI->>User: Display authorization URL
-    User->>Browser: Open authorization URL
-    Browser->>OAuth2 API: Authorization request (with PKCE)
-    OAuth2 API->>Browser: Display authorization page
-    User->>Browser: Approve authorization
-    OAuth2 API->>Callback Server: Callback with auth code
-    Callback Server->>OAuth2 API: Exchange code for tokens
-    OAuth2 API->>Callback Server: Return access & refresh tokens
-    Callback Server->>CLI: Store tokens
-    CLI->>User: Output JSON (token info)
-```
+1. Generate PKCE verifier and challenge.
+2. Start localhost callback server.
+3. Open or display authorization URL.
+4. Exchange callback code for access and refresh tokens.
+5. Store tokens and return JSON output.
 
 ### Callback Server
 
-The CLI implements a localhost callback server to handle OAuth2 redirects:
-
-- **Default Port**: 54321 (configurable)
-- **Callback Path**: /callback
-- **Timeout**: 5 minutes
-- **Security**: Only accepts localhost connections
+- Default port: `54321` (configurable)
+- Callback path: `/callback`
+- Timeout: 5 minutes
+- Bind only to localhost
 
 ## Treasury Commands
 
 ### Available Commands
 
 ```bash
-# List all treasuries for authenticated user
 xion-toolkit treasury list
-
-# Query specific treasury details
 xion-toolkit treasury query <address>
-
-# Fund a treasury
 xion-toolkit treasury fund <address> --amount <amount>
-
-# Withdraw from a treasury
 xion-toolkit treasury withdraw <address> --amount <amount> --to <recipient>
-
-# Configure authz grants
 xion-toolkit treasury grant-config <address> [options]
-
-# Configure fee grants
 xion-toolkit treasury fee-config <address> [options]
 ```
 
 ### Grant Configuration Options
 
-```bash
-# Generic authorization
-xion-toolkit treasury grant-config <address> \
-  --grant-type-url "/cosmos.bank.v1beta1.MsgSend" \
-  --grant-auth-type generic \
-  --grant-description "Generic permission"
+Typical patterns:
 
-# Send authorization with spend limit
-xion-toolkit treasury grant-config <address> \
-  --grant-type-url "/cosmos.bank.v1beta1.MsgSend" \
-  --grant-auth-type send \
-  --grant-spend-limit "1000000uxion" \
-  --grant-description "Allow sending funds"
+```bash
+xion-toolkit treasury grant-config <address> --grant-type-url "/cosmos.bank.v1beta1.MsgSend" --grant-auth-type generic --grant-description "Generic permission"
+xion-toolkit treasury grant-config <address> --grant-type-url "/cosmos.bank.v1beta1.MsgSend" --grant-auth-type send --grant-spend-limit "1000000uxion" --grant-description "Allow sending funds"
 ```
 
 ### Fee Configuration Options
 
-```bash
-# Basic fee allowance
-xion-toolkit treasury fee-config <address> \
-  --fee-allowance-type basic \
-  --fee-spend-limit "1000000uxion" \
-  --fee-description "Basic fee allowance"
+Typical patterns:
 
-# Periodic fee allowance
-xion-toolkit treasury fee-config <address> \
-  --fee-allowance-type periodic \
-  --fee-period-seconds 86400 \
-  --fee-period-spend-limit "100000uxion" \
-  --fee-description "Daily fee allowance"
+```bash
+xion-toolkit treasury fee-config <address> --fee-allowance-type basic --fee-spend-limit "1000000uxion" --fee-description "Basic fee allowance"
+xion-toolkit treasury fee-config <address> --fee-allowance-type periodic --fee-period-seconds 86400 --fee-period-spend-limit "100000uxion" --fee-description "Daily fee allowance"
 ```
 
 ## Git Standards
 
 ### Commit Messages
 
-```
+Use conventional, scoped messages such as:
+
+```text
 feat(cli): add OAuth2 login command
 fix(treasury): handle insufficient balance error
 docs(skill): update xion-treasury skill documentation
@@ -444,50 +238,27 @@ chore(config): migrate to new config schema
 
 ### Branch Strategy
 
-- `main` - Stable release
-- `develop` - Development version
-- `feature/*` - Feature branches
-- `fix/*` - Bug fix branches
+- `main`: stable release
+- `develop`: development version
+- `feature/*`: new features
+- `fix/*`: bug fixes
 
 ## Testing Standards
 
 ### Unit Tests
 
-```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[test]
-    fn test_pkce_challenge() {
-        let verifier = generate_pkce_verifier();
-        let challenge = generate_pkce_challenge(&verifier);
-        assert!(verify_pkce(&verifier, &challenge));
-    }
-}
-```
+- Use standard Rust `#[test]`.
+- Keep units focused and deterministic.
 
 ### Integration Tests
 
-```rust
-#[tokio::test]
-async fn test_oauth_login() {
-    let client = OAuthClient::new("http://localhost:8787");
-    let result = client.login().await;
-    assert!(result.is_ok());
-}
-```
+- Use `#[tokio::test]` for async integration tests when needed.
 
 ### Running Tests
 
 ```bash
-# Run all tests
 cargo test
-
-# Run specific test
 cargo test test_pkce_challenge
-
-# Run with output
 cargo test -- --nocapture
 ```
 
@@ -495,106 +266,70 @@ Current status: **330 tests passing**
 
 ### Test Serialization Rules
 
-**IMPORTANT**: Tests that modify environment variables (especially `XION_CI_ENCRYPTION_KEY`) 
-MUST use `#[serial(encryption_key)]` to prevent race conditions in CI.
+Tests that modify environment variables, especially `XION_CI_ENCRYPTION_KEY`, MUST use `#[serial(encryption_key)]`.
 
-```rust
-// CORRECT - Uses consistent serial group
-#[test]
-#[serial(encryption_key)]
-fn test_something() {
-    let original = env::var(ENV_KEY_NAME).ok();
-    env::set_var(ENV_KEY_NAME, "test_key");
-    // ... test code ...
-    restore_key(original);
-}
+Rules:
 
-// WRONG - Bare #[serial] is a DIFFERENT group, allows parallel execution
-#[test]
-#[serial]  // This is NOT the same as #[serial(encryption_key)]!
-fn test_something_bad() { ... }
-
-// WRONG - No serialization at all
-#[test]
-fn test_something_worse() { ... }
-```
-
-**Rule**: All tests in `src/config/encryption.rs` and `src/config/credentials.rs` that 
-touch `XION_CI_ENCRYPTION_KEY` must use `#[serial(encryption_key)]`.
+- `#[serial(encryption_key)]` is the correct shared group.
+- Bare `#[serial]` is a different group and is not sufficient.
+- Any test in `src/config/encryption.rs` or `src/config/credentials.rs` touching `XION_CI_ENCRYPTION_KEY` must use `#[serial(encryption_key)]`.
 
 ### Pre-commit Checklist
 
-**MUST run before every commit to ensure CI passes:**
+Run before every commit:
 
 ```bash
-# 1. Format code (REQUIRED - CI will fail if not formatted)
 cargo fmt
-
-# 2. Run clippy with warnings as errors (REQUIRED - CI will fail on warnings)
 cargo clippy --all-targets --all-features -- -D warnings
-
-# 3. Run tests
 cargo test
 ```
 
-**CI Requirements:**
-- `cargo fmt --check` must pass (no formatting differences)
-- `cargo clippy --all-targets --all-features -- -D warnings` must pass (no warnings)
-- `cargo test` must pass (all tests green)
-- Code must compile without errors
+CI must pass:
+
+- `cargo fmt --check`
+- `cargo clippy --all-targets --all-features -- -D warnings`
+- `cargo test`
+- successful compilation
 
 ## Security Standards
 
-1. **Token Storage**
-   - Credentials are encrypted with AES-256-GCM and stored in `~/.xion-toolkit/credentials/*.enc`
-   - Encryption key derived from machine ID (or `XION_CI_ENCRYPTION_KEY` for CI/CD)
-   - Never store tokens in plain text
-   - Separate storage for different networks
-   - **CRITICAL**: Never delete `.enc` files during testing - refresh tokens have 30-day expiration
-
-2. **PKCE Implementation**
-   - Use cryptographically secure random number generator
-   - Verifier length at least 43 characters
-   - Use SHA-256 for challenge generation
-
-3. **API Communication**
-   - Enforce HTTPS for all external communications
-   - Validate server certificates
-   - Implement request timeout
-
-4. **Callback Server**
-   - Only bind to localhost
-   - Validate state parameter
-   - Implement timeout mechanism
-   - Use random port if default is occupied
-
-5. **Testing with Credentials**
-   - Never run `auth logout` during automated testing
-   - Never delete `~/.xion-toolkit/credentials/*.enc` files
-   - If access token expires, system auto-refreshes using stored refresh token
-    - Only clear credentials when explicitly requested by user
+1. Token storage
+   - Store credentials as AES-256-GCM encrypted `~/.xion-toolkit/credentials/*.enc`.
+   - Derive the key from machine ID, or `XION_CI_ENCRYPTION_KEY` in CI.
+   - Never store tokens in plain text.
+   - Never delete `.enc` files during testing unless explicitly requested.
+2. PKCE
+   - Use a cryptographically secure RNG.
+   - Verifier length must be at least 43 chars.
+   - Use SHA-256 for challenge generation.
+3. API communication
+   - Enforce HTTPS, validate certificates, and apply timeouts.
+4. Callback server
+   - Bind only to localhost, validate state, use a timeout, and choose a random port if needed.
+5. Testing with credentials
+   - Never run `auth logout` automatically.
+   - Never delete `~/.xion-toolkit/credentials/*.enc`.
+   - Let access tokens auto-refresh.
+   - Clear credentials only when explicitly requested.
 
 ## Documentation Standards
 
-1. **README.md** - Project overview and quick start
-2. **docs/** - Detailed documentation
-   - `cli-reference.md` - CLI command reference
-   - `oauth-flow.md` - OAuth2 flow explanation
-   - `treasury-guide.md` - Treasury usage guide
-3. **examples/** - Example code and scripts
+- `README.md`: overview and quick start
+- `docs/`: detailed docs such as `cli-reference.md`, `oauth-flow.md`, `treasury-guide.md`
+- `examples/`: example code and scripts
 
 ## Language Standards
 
-1. **Conversation Language**
-   - Interactive conversations with developers should use the same language as the incoming question (for example, Chinese questions are answered in Chinese, English questions are answered in English).
-
-2. **Documentation & Code Language**
-   - All persistent documentation (including `README.md`, files in `docs/`, `plans/`, skill `SKILL.md` files, and `AGENTS.md`) MUST be written in English.
-   - All comments written in code MUST be written in English.
+1. Conversation language
+   - Match the user's language.
+2. Documentation and code language
+   - Persistent docs (`README.md`, `docs/`, `plans/`, skill `SKILL.md`, `AGENTS.md`) must be in English.
+   - All code comments must be in English.
 
 ## Related Resources
 
 ### Official Documentation
+
 - [Xion Documentation](https://docs.burnt.com/xion)
 - [OAuth2 API Service](https://github.com/burnt-labs/xion/tree/main/oauth2-api-service)
 - [Agent Skills Format](https://agentskills.io/)
@@ -602,96 +337,82 @@ cargo test
 ### Key Reference Implementations
 
 #### 1. Xion-Types (On-chain Message Types)
-- **Repository**: https://github.com/burnt-labs/xion-types
-- **Local Path**: `~/workspace/xion/xion-types`
-- **Purpose**: Contains TypeScript type definitions for Xion blockchain messages
-- **Usage**: Reference for correct protobuf message structures and encoding examples
-- **Key Files**:
-  - `ts/types/` - Generated protobuf types
-  - `ts/` - TypeScript type definitions
+
+- Repo: <https://github.com/burnt-labs/xion-types>
+- Local path: `~/workspace/xion/xion-types`
+- Use for protobuf message structures and encoding examples.
 
 #### 2. OAuth2 App Demo
-- **Repository**: https://github.com/burnt-labs/xion-oauth2-app-demo
-- **Local Path**: `~/workspace/xion/xion-oauth2-app-demo`
-- **Purpose**: Working example of OAuth2 authentication flow with Xion
-- **Usage**: Reference for OAuth2 API integration patterns
-- **Key Features**:
-  - Login flow implementation
-  - Token management
-  - Transaction signing
+
+- Repo: <https://github.com/burnt-labs/xion-oauth2-app-demo>
+- Local path: `~/workspace/xion/xion-oauth2-app-demo`
+- Use for OAuth2 login, token management, and transaction signing patterns.
 
 #### 3. Developer Portal
-- **Repository**: `~/workspace/xion/xion-developer-portal`
-- **Live**: https://dev.testnet2.burnt.com
-- **Purpose**: Primary reference for CLI API usage patterns
-- **Critical Rule**: **CLI must use APIs exactly as Developer Portal does**
-  - Message formats must match Developer Portal's implementation
-  - Field naming conventions (camelCase vs snake_case)
-  - Base64 encoding patterns for CosmWasm messages
-- **Key Files**:
-  - `src/components/Treasury/` - Treasury operations
-  - `src/lib/` - Core utilities and types
+
+- Local path: `~/workspace/xion/xion-developer-portal`
+- Live: <https://dev.testnet2.burnt.com>
+- This is the primary reference for CLI API behavior.
+- CLI APIs, message formats, encoding patterns, and field naming must match the Developer Portal.
+- Key areas: `src/components/Treasury/`, `src/lib/`
 
 #### 4. CosmJS (Communication Protocol)
-- **Repository**: https://github.com/cosmos/cosmjs
-- **Purpose**: Official Cosmos SDK JavaScript library
-- **Usage**: Reference for:
-  - Transaction construction
-  - Protobuf encoding
-  - Message signing
-  - Broadcasting transactions
+
+- Repo: <https://github.com/cosmos/cosmjs>
+- Use for transaction construction, protobuf encoding, signing, and broadcasting.
 
 ### Additional Resources
+
 - [Xion Skills](https://github.com/burnt-labs/xion-skills)
 
 ### API Compatibility Note
 
-When implementing CLI features, always reference the Developer Portal implementation first. The CLI is designed to be a command-line equivalent of the Developer Portal, so:
+Treat the CLI as a command-line equivalent of the Developer Portal:
 
-1. **Message formats** must match Developer Portal's JSON structures
-2. **API calls** must use the same endpoints and parameters
-3. **Encoding patterns** (base64, protobuf) must be identical
-4. **Field naming** must follow the same conventions (typically camelCase for outer API, snake_case for contract messages)
+1. Match message formats exactly.
+2. Use the same endpoints and parameters.
+3. Match encoding patterns exactly.
+4. Follow the same field naming conventions.
 
 <!-- gitnexus:start -->
-# GitNexus — Code Intelligence
+## GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **xion-agent-toolkit** (598 symbols, 1498 relationships, 49 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **xion-agent-toolkit** (598 symbols, 1498 relationships, 49 execution flows). Use GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
 ## Always Do
 
-- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `gitnexus_impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
-- **MUST run `gitnexus_detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows.
-- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
-- When exploring unfamiliar code, use `gitnexus_query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
-- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `gitnexus_context({name: "symbolName"})`.
+- Before editing any function, class, or method, run `gitnexus_impact({target: "symbolName", direction: "upstream"})` and report direct callers, affected processes, and risk level.
+- Before committing, run `gitnexus_detect_changes()` to confirm the change scope.
+- Warn the user before proceeding on HIGH or CRITICAL impact.
+- For unfamiliar areas, prefer `gitnexus_query({query: "concept"})` over grep.
+- For full symbol context, use `gitnexus_context({name: "symbolName"})`.
 
 ## When Debugging
 
-1. `gitnexus_query({query: "<error or symptom>"})` — find execution flows related to the issue
-2. `gitnexus_context({name: "<suspect function>"})` — see all callers, callees, and process participation
-3. `READ gitnexus://repo/xion-agent-toolkit/process/{processName}` — trace the full execution flow step by step
-4. For regressions: `gitnexus_detect_changes({scope: "compare", base_ref: "main"})` — see what your branch changed
+1. `gitnexus_query({query: "<error or symptom>"})`
+2. `gitnexus_context({name: "<suspect function>"})`
+3. Read `gitnexus://repo/xion-agent-toolkit/process/{processName}`
+4. For regressions: `gitnexus_detect_changes({scope: "compare", base_ref: "main"})`
 
 ## When Refactoring
 
-- **Renaming**: MUST use `gitnexus_rename({symbol_name: "old", new_name: "new", dry_run: true})` first. Review the preview — graph edits are safe, text_search edits need manual review. Then run with `dry_run: false`.
-- **Extracting/Splitting**: MUST run `gitnexus_context({name: "target"})` to see all incoming/outgoing refs, then `gitnexus_impact({target: "target", direction: "upstream"})` to find all external callers before moving code.
-- After any refactor: run `gitnexus_detect_changes({scope: "all"})` to verify only expected files changed.
+- Renaming: use `gitnexus_rename({symbol_name: "old", new_name: "new", dry_run: true})` first; review text-search edits, then run with `dry_run: false`.
+- Extracting / splitting: run `gitnexus_context({name: "target"})` and `gitnexus_impact({target: "target", direction: "upstream"})` first.
+- After refactors, run `gitnexus_detect_changes({scope: "all"})`.
 
 ## Never Do
 
-- NEVER edit a function, class, or method without first running `gitnexus_impact` on it.
-- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
-- NEVER rename symbols with find-and-replace — use `gitnexus_rename` which understands the call graph.
-- NEVER commit changes without running `gitnexus_detect_changes()` to check affected scope.
+- Never edit a function, class, or method without `gitnexus_impact`.
+- Never ignore HIGH or CRITICAL impact warnings.
+- Never rename symbols with find-and-replace; use `gitnexus_rename`.
+- Never commit without `gitnexus_detect_changes()`.
 
 ## Tools Quick Reference
 
 | Tool | When to use | Command |
-|------|-------------|---------|
+| ---- | ----------- | ------- |
 | `query` | Find code by concept | `gitnexus_query({query: "auth validation"})` |
 | `context` | 360-degree view of one symbol | `gitnexus_context({name: "validateUser"})` |
 | `impact` | Blast radius before editing | `gitnexus_impact({target: "X", direction: "upstream"})` |
@@ -702,7 +423,7 @@ This project is indexed by GitNexus as **xion-agent-toolkit** (598 symbols, 1498
 ## Impact Risk Levels
 
 | Depth | Meaning | Action |
-|-------|---------|--------|
+| ----- | ------- | ------ |
 | d=1 | WILL BREAK — direct callers/importers | MUST update these |
 | d=2 | LIKELY AFFECTED — indirect deps | Should test |
 | d=3 | MAY NEED TESTING — transitive | Test if critical path |
@@ -710,19 +431,20 @@ This project is indexed by GitNexus as **xion-agent-toolkit** (598 symbols, 1498
 ## Resources
 
 | Resource | Use for |
-|----------|---------|
-| `gitnexus://repo/xion-agent-toolkit/context` | Codebase overview, check index freshness |
+| -------- | ------- |
+| `gitnexus://repo/xion-agent-toolkit/context` | Codebase overview and freshness |
 | `gitnexus://repo/xion-agent-toolkit/clusters` | All functional areas |
 | `gitnexus://repo/xion-agent-toolkit/processes` | All execution flows |
 | `gitnexus://repo/xion-agent-toolkit/process/{name}` | Step-by-step execution trace |
 
 ## Self-Check Before Finishing
 
-Before completing any code modification task, verify:
-1. `gitnexus_impact` was run for all modified symbols
-2. No HIGH/CRITICAL risk warnings were ignored
-3. `gitnexus_detect_changes()` confirms changes match expected scope
-4. All d=1 (WILL BREAK) dependents were updated
+Before completing code changes, verify:
+
+1. `gitnexus_impact` ran for all modified symbols
+2. No HIGH / CRITICAL warnings were ignored
+3. `gitnexus_detect_changes()` matches the expected scope
+4. All d=1 dependents were updated
 
 ## CLI
 
