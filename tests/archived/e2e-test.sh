@@ -146,33 +146,38 @@ fi
 # ===========================================
 section "Create Treasury"
 
-if [ "$SKIP_CREATE" = true ]; then
-    warn "Skipping treasury create (--skip-create)"
-else
-    log "Creating a new treasury..."
-    TREASURY_NAME="E2E Test Treasury $(date +%s)"
-    
-    CREATE_RESULT=$($TOOLKIT treasury create \
-        --network $NETWORK \
-        --name "$TREASURY_NAME" \
-        --redirect-url "https://example.com/callback" \
-        --icon-url "https://example.com/icon.png" \
-        --output json 2>&1 | sed -n '/^{/,/^}/p')
-    
-    echo "$CREATE_RESULT" | jq '.' 2>/dev/null || echo "$CREATE_RESULT"
-    echo "$CREATE_RESULT" >> "$LOG_FILE"
-    
-    if check_json "$CREATE_RESULT" && echo "$CREATE_RESULT" | jq -e '.address' > /dev/null 2>&1; then
-        NEW_TREASURY=$(echo "$CREATE_RESULT" | jq -r '.address')
-        pass "Treasury created: $NEW_TREASURY"
-    else
-        # Check if it's a funding issue
-        if echo "$CREATE_RESULT" | grep -qi "insufficient\|funding\|balance"; then
-            warn "Treasury creation may require funding. Get tokens from faucet."
-        fi
-        fail "Treasury creation failed"
-    fi
-fi
+# TEMPORARILY DISABLED: Too many test treasuries created
+# Uncomment the block below when needed for testing new treasury creation functionality
+#
+# if [ "$SKIP_CREATE" = true ]; then
+#     warn "Skipping treasury create (--skip-create)"
+# else
+#     log "Creating a new treasury..."
+#     TREASURY_NAME="E2E Test Treasury $(date +%s)"
+#     
+#     CREATE_RESULT=$($TOOLKIT treasury create \
+#         --network $NETWORK \
+#         --name "$TREASURY_NAME" \
+#         --redirect-url "https://example.com/callback" \
+#         --icon-url "https://example.com/icon.png" \
+#         --output json 2>&1 | sed -n '/^{/,/^}/p')
+#     
+#     echo "$CREATE_RESULT" | jq '.' 2>/dev/null || echo "$CREATE_RESULT"
+#     echo "$CREATE_RESULT" >> "$LOG_FILE"
+#     
+#     if check_json "$CREATE_RESULT" && echo "$CREATE_RESULT" | jq -e '.address' > /dev/null 2>&1; then
+#         NEW_TREASURY=$(echo "$CREATE_RESULT" | jq -r '.address')
+#         pass "Treasury created: $NEW_TREASURY"
+#     else
+#         # Check if it's a funding issue
+#         if echo "$CREATE_RESULT" | grep -qi "insufficient\|funding\|balance"; then
+#             warn "Treasury creation may require funding. Get tokens from faucet."
+#         fi
+#         fail "Treasury creation failed"
+#     fi
+# fi
+
+warn "Skipping treasury create (temporarily disabled to avoid creating too many treasuries)"
 
 # ===========================================
 # SECTION 5: Query Treasury

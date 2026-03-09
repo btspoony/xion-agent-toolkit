@@ -45,7 +45,11 @@ xion-agent-toolkit/
 ├── Cargo.toml
 ├── src/{cli,oauth,api,treasury,config,utils}
 ├── skills/
-├── tests/                 # integration tests and local debug helpers
+├── tests/                 # all test scripts and integration tests
+│   ├── e2e_treasury_lifecycle.sh      # full lifecycle E2E test
+│   ├── e2e_treasury_grant_fee.sh      # grant/fee config E2E test
+│   └── archived/                      # archived/legacy test scripts
+├── scripts/               # build and utility scripts (not tests)
 ├── plans/
 │   ├── status.json
 │   ├── *.md               # actual plans
@@ -53,13 +57,13 @@ xion-agent-toolkit/
 └── logs/                  # dev-time logs (git-ignored)
 ```
 
+### Directory Purposes
+
+- **tests/**: All test scripts (bash E2E tests, Rust integration tests). E2E test scripts should be named `e2e_*.sh`.
+- **scripts/**: Build scripts, deployment scripts, and utility scripts. NOT for test scripts.
+- **plans/**: Project planning documents and knowledge base.
+
 Development progress and roadmap live in `plans/`; use `plans/status.json` as the SSOT.
-
-## Repository Hygiene
-
-- Put ad-hoc test scripts and debug artifacts in `tests/`, not repo root.
-- Put non-plan “process / reasoning” documents in `plans/knowledge/`.
-- Put development-time logs in `logs/`; keep only `logs/.gitkeep` tracked.
 
 ## Code Standards
 

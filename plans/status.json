@@ -48,8 +48,8 @@
       "id": "treasury-e2e-testing",
       "title": "Treasury E2E Testing",
       "file": "plans/treasury-e2e-testing.md",
-      "status": "Todo",
-      "progress": 0,
+      "status": "Done",
+      "progress": 100,
       "owner": "@project-manager",
       "agents": [
         "@qa-engineer"
@@ -62,8 +62,8 @@
       ],
       "created_at": "2026-03-09",
       "updated_at": "2026-03-09",
-      "done_at": null,
-      "notes": "Full treasury lifecycle E2E tests: create → fund → configure → manage → query → withdraw"
+      "done_at": "2026-03-09",
+      "notes": "Complete: E2E test script created at tests/e2e_treasury_lifecycle.sh. Tests full lifecycle: create → fund → grant-config → fee-config → params → withdraw. 7 PASS, 3 SKIP (Admin - requires 2nd account, Chain Query - service unavailable). Old tests archived."
     },
 {
       "id": "generic-contract-instantiation-api",
