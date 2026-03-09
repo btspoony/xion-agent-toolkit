@@ -1,10 +1,58 @@
 # Release Process
 
-This document describes the release workflow for the Xion Agent Toolkit using [cargo-dist](https://axodotdev.github.io/cargo-dist/).
+This document describes the automated release workflow for the Xion Agent Toolkit.
 
 ## Overview
 
-We use `cargo-dist` to automate cross-platform binary builds and GitHub releases. The process is triggered by pushing a version tag to the repository.
+We use a fully automated release pipeline combining:
+
+| Tool | Purpose |
+|------|---------|
+| **[release-please](https://github.com/google-github-actions/release-please-action)** | Generates Release PRs with version bumps and CHANGELOG |
+| **[cargo-dist](https://axodotdev.github.io/cargo-dist/)** | Builds cross-platform binaries and publishes releases |
+
+## Release Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Developer commits with conventional commits (feat/fix/etc)     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  PR merged to main                                              │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  release-please-action runs                                     │
+│  • Analyzes commits since last release                          │
+│  • Creates/updates Release PR with:                             │
+│    - Version bump in Cargo.toml                                 │
+│    - Updated CHANGELOG.md                                       │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  Maintainer reviews Release PR                                  │
+│  • Check CHANGELOG accuracy                                     │
+│  • Verify version bump is correct                               │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  Merge Release PR                                               │
+│  • release-please creates tag (v0.X.X)                          │
+│  • release-please creates GitHub Release (draft)                │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  cargo-dist workflow triggered by tag                           │
+│  • Builds binaries for all platforms                            │
+│  • Generates installers and checksums                           │
+│  • Uploads artifacts to GitHub Release                          │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  ✅ Release Published                                           │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ## Supported Platforms
 
@@ -19,189 +67,173 @@ Each release includes pre-built binaries for:
 | macOS Apple Silicon | `aarch64-apple-darwin` | `.tar.xz` |
 | Windows x64 | `x86_64-pc-windows-msvc` | `.zip` |
 
-## How to Prepare a Release
+## Commit Requirements
 
-### 1. Update Version in `Cargo.toml`
+**All commits** must follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-```bash
-# Edit Cargo.toml and update the version
-[package]
-version = "0.X.X"  # Update this
+```
+<type>(<scope>): <description>
 ```
 
-### 2. Update `CHANGELOG.md`
+### Version Bump Rules
 
-Move items from the `[Unreleased]` section to a new version section following [Keep a Changelog](https://keepachangelog.com/) format:
+| Commit Type | Version Impact | Example |
+|-------------|----------------|---------|
+| `feat:` | Minor bump (0.2.0 → 0.3.0) | New features |
+| `fix:` | Patch bump (0.2.0 → 0.2.1) | Bug fixes |
+| `feat!:` or `BREAKING CHANGE:` | Major bump (0.2.0 → 1.0.0) | Breaking changes |
+| `docs:`, `chore:`, `test:`, etc. | No bump | Non-functional changes |
+
+### Examples
+
+```bash
+# Minor version bump (new feature)
+feat(treasury): add batch withdrawal support
+
+# Patch version bump (bug fix)
+fix(auth): handle token refresh edge case
+
+# Major version bump (breaking change)
+feat(api)!: redesign callback server interface
+
+BREAKING CHANGE: The callback server now requires explicit port.
+```
+
+## For Maintainers
+
+### Releasing a New Version
+
+1. **Wait for Release PR** - release-please automatically creates a Release PR when features/fixes are merged
+
+2. **Review the Release PR**:
+   - Check CHANGELOG entries are accurate
+   - Verify version bump is correct
+   - Edit the PR description if needed
+
+3. **Merge the Release PR**:
+   - This creates the version tag
+   - This triggers cargo-dist to build and publish
+
+4. **Done!** Monitor the [Actions tab](https://github.com/burnt-labs/xion-agent-toolkit/actions) for build status
+
+### Release PR Example
 
 ```markdown
-## [0.X.X] - YYYY-MM-DD
+## 0.3.0 (2026-03-10)
 
-### Added
-- New feature description
+### Features
 
-### Changed
-- Change description
+* **treasury:** add batch withdrawal support (#123)
+* **auth:** add token caching (#120)
 
-### Fixed
-- Bug fix description
+### Bug Fixes
+
+* **oauth:** handle PKCE edge case (#125)
+
+### Documentation
+
+* update installation instructions (#122)
 ```
-
-### 3. Commit Changes
-
-```bash
-git add Cargo.toml CHANGELOG.md
-git commit -m "chore(release): prepare for v0.X.X"
-git push origin main
-```
-
-## How to Trigger a Release
-
-Create and push a version tag:
-
-```bash
-# Create an annotated tag
-git tag -a v0.X.X -m "Release v0.X.X"
-
-# Push the tag to trigger the release workflow
-git push origin v0.X.X
-```
-
-**Tag Format**: Tags must follow semantic versioning with a `v` prefix:
-- `v0.2.0` - Valid
-- `v0.2.1-alpha.1` - Valid (prerelease)
-- `0.2.0` - Invalid (missing `v` prefix)
-
-## What Happens Automatically
-
-Once a tag is pushed:
-
-1. **CI Trigger**: The `.github/workflows/release.yml` workflow runs automatically
-2. **Test Phase**: Tests run on all platforms
-3. **Build Phase**: Binaries are built for all supported targets
-4. **Artifact Generation**: Archives, installers, and checksums are created
-5. **GitHub Release**: A release is created with:
-   - Pre-built binaries for all platforms
-   - Shell installer (`xion-agent-toolkit-installer.sh`)
-   - PowerShell installer (`xion-agent-toolkit-installer.ps1`)
-   - SHA256 checksums for all artifacts
-   - Release notes from `CHANGELOG.md`
-
-## Release Workflow Status
-
-Monitor the release progress in GitHub Actions:
-
-1. Go to **Actions** → **Release** workflow
-2. The workflow has these jobs:
-   - `plan` - Determines what needs to be built
-   - `build-local-artifacts` - Builds platform-specific binaries
-   - `build-global-artifacts` - Creates installers and checksums
-   - `host` - Uploads artifacts and creates the GitHub release
 
 ## Installing from a Release
 
 ### Using the Shell Installer (macOS/Linux)
 
 ```bash
+# Latest version
 curl --proto '=https' --tlsv1.2 -LsSf \
-  https://github.com/burnt-labs/xion-agent-toolkit/releases/download/v0.X.X/xion-agent-toolkit-installer.sh | sh
+  https://github.com/burnt-labs/xion-agent-toolkit/releases/latest/download/xion-agent-toolkit-installer.sh | sh
+
+# Specific version
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/burnt-labs/xion-agent-toolkit/releases/download/v0.3.0/xion-agent-toolkit-installer.sh | sh
 ```
 
 ### Using the PowerShell Installer (Windows)
 
 ```powershell
-powershell -c "irm https://github.com/burnt-labs/xion-agent-toolkit/releases/download/v0.X.X/xion-agent-toolkit-installer.ps1 | iex"
+# Latest version
+powershell -c "irm https://github.com/burnt-labs/xion-agent-toolkit/releases/latest/download/xion-agent-toolkit-installer.ps1 | iex"
+
+# Specific version
+powershell -c "irm https://github.com/burnt-labs/xion-agent-toolkit/releases/download/v0.3.0/xion-agent-toolkit-installer.ps1 | iex"
 ```
 
 ### Manual Installation
 
-Download the appropriate archive from the [releases page](https://github.com/burnt-labs/xion-agent-toolkit/releases) and extract it to a directory in your `PATH`.
+Download the appropriate archive from the [Releases page](https://github.com/burnt-labs/xion-agent-toolkit/releases) and extract to a directory in your `PATH`.
 
-## Post-Release Steps
+## Release Artifacts
 
-After a successful release:
+Each release includes:
 
-1. **Verify the Release**: Check that all artifacts are present on the GitHub release page
-2. **Test Installers**: Run the shell/PowerShell installers on different platforms
-3. **Update Documentation**: If the release includes significant changes, update relevant docs
-4. **Announce**: Share the release in appropriate channels (if applicable)
+| Artifact | Description |
+|----------|-------------|
+| `xion-agent-toolkit-*.tar.xz` / `.zip` | Platform-specific binaries |
+| `xion-agent-toolkit-installer.sh` | Shell installer (macOS/Linux) |
+| `xion-agent-toolkit-installer.ps1` | PowerShell installer (Windows) |
+| `*.sha256` | SHA256 checksums |
+| `source.tar.gz` | Source code archive |
 
 ## Troubleshooting
 
-### Build Failures
+### Release PR Not Created
 
-If a build fails:
+- Ensure commits follow conventional format
+- Check that commits have `feat:` or `fix:` type
+- Verify release-please workflow ran successfully
 
-1. Check the GitHub Actions logs for the specific error
+### Build Failed
+
+1. Check the GitHub Actions logs
 2. Common issues:
-   - Missing system dependencies for cross-compilation
-   - Network timeouts during dependency download
-   - Platform-specific code compilation errors
+   - Missing dependencies for cross-compilation
+   - Network timeouts
+   - Platform-specific code errors
 
-### Re-running a Release
+### Re-running a Failed Release
 
-If a release fails mid-way, you can re-trigger it by:
-
-1. Deleting the partially created GitHub release (if it exists)
-2. Deleting and re-pushing the tag:
+1. Delete the GitHub release (if created)
+2. Delete the tag:
    ```bash
    git tag -d v0.X.X
    git push --delete origin v0.X.X
-   git tag -a v0.X.X -m "Release v0.X.X"
-   git push origin v0.X.X
    ```
+3. Re-run the release-please workflow or create a new commit
 
-## Configuration
+## Manual Release (Emergency Only)
 
-Release configuration is stored in:
-
-- `Cargo.toml` - `[profile.dist]` section for build settings
-- `dist-workspace.toml` - cargo-dist specific configuration
-- `.github/workflows/release.yml` - CI workflow definition
-
-### Modifying Targets
-
-To add or remove target platforms, edit `dist-workspace.toml`:
-
-```toml
-[dist]
-targets = [
-  "x86_64-unknown-linux-gnu",
-  # Add or remove targets here
-]
-```
-
-Then regenerate the CI:
+If automation fails, you can release manually:
 
 ```bash
-dist generate
+# 1. Update version
+# Edit Cargo.toml version field
+
+# 2. Update CHANGELOG.md
+# Add new version section
+
+# 3. Update manifest
+# Edit .release-please-manifest.json
+
+# 4. Commit, tag, and push
+git add Cargo.toml CHANGELOG.md .release-please-manifest.json
+git commit -m "chore(release): v0.X.X"
+git tag -a v0.X.X -m "Release v0.X.X"
+git push origin main --tags
 ```
 
-## Local Testing
+## Configuration Files
 
-Test the release process locally before pushing a tag:
-
-```bash
-# Generate a release plan
-dist plan
-
-# Build for the current platform
-dist build
-
-# Build for a specific target
-dist build --target x86_64-apple-darwin
-
-# Build for all targets (requires cross-compilation setup)
-dist build --target=all
-```
-
-## Security
-
-- All releases are built in GitHub Actions with reproducible builds
-- SHA256 checksums are generated for all artifacts
-- Releases are signed by GitHub's GPG key
+| File | Purpose |
+|------|---------|
+| `release-please-config.json` | release-please configuration |
+| `.release-please-manifest.json` | Current version tracking |
+| `dist-workspace.toml` | cargo-dist configuration |
+| `.github/workflows/release-please.yml` | Release PR automation |
+| `.github/workflows/release.yml` | Binary build automation |
 
 ## See Also
 
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Commit conventions and PR process
 - [cargo-dist documentation](https://axodotdev.github.io/cargo-dist/)
-- [GitHub Releases](https://github.com/burnt-labs/xion-agent-toolkit/releases)
-- [CHANGELOG.md](../CHANGELOG.md)
+- [release-please documentation](https://github.com/google-github-actions/release-please-action)
