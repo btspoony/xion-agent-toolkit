@@ -573,6 +573,7 @@ impl OAuthClient {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
     use tempfile::TempDir;
 
     fn create_test_config() -> NetworkConfig {
@@ -597,6 +598,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(encryption_key)]
     fn test_is_authenticated_without_credentials() {
         let (temp_dir, test_key) = create_isolated_test_env();
         let original_key = std::env::var(crate::config::encryption::ENV_KEY_NAME).ok();
@@ -624,6 +626,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(encryption_key)]
     fn test_get_credentials_without_credentials() {
         let (temp_dir, test_key) = create_isolated_test_env();
         let original_key = std::env::var(crate::config::encryption::ENV_KEY_NAME).ok();
@@ -651,6 +654,7 @@ mod tests {
     }
 
     #[test]
+    #[serial(encryption_key)]
     fn test_logout_without_credentials() {
         let (temp_dir, test_key) = create_isolated_test_env();
         let original_key = std::env::var(crate::config::encryption::ENV_KEY_NAME).ok();
