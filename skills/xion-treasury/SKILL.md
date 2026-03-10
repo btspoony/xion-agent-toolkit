@@ -1,3 +1,15 @@
+---
+name: xion-treasury
+description: Treasury management skill for Xion blockchain. Use when user needs to create, query, fund, withdraw from Treasury contracts, configure Authz grants, set up fee allowances, or manage gasless transactions. Requires xion-oauth2 authentication.
+metadata:
+  author: burnt-labs
+  version: "1.1.0"
+  requires:
+    - xion-toolkit-init
+    - xion-oauth2
+compatibility: Requires xion-toolkit CLI and OAuth2 authentication
+---
+
 # xion-treasury
 
 Treasury management skill for Xion blockchain development. This skill enables AI agents to create, query, and manage Treasury contracts for gasless transactions.
@@ -22,6 +34,10 @@ This skill wraps the `xion-toolkit` CLI tool to provide Agent-friendly Treasury 
 - `xion-toolkit` CLI tool installed and in PATH
 - Authenticated with `xion-oauth2` skill (required for most operations)
 - Network connectivity to Xion OAuth2 API
+
+> **Note**: 
+> - If `xion-toolkit` is not installed, use the `xion-toolkit-init` skill first.
+> - Most operations require authentication. Use `xion-oauth2` to login before using this skill.
 
 ## Quick Start
 

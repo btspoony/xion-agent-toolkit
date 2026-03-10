@@ -1,3 +1,14 @@
+---
+name: xion-oauth2
+description: OAuth2 authentication skill for Xion blockchain. Use when user needs to authenticate with Xion's MetaAccount system, login via browser, logout, check authentication status, or refresh tokens. Provides gasless authentication for Treasury operations.
+metadata:
+  author: burnt-labs
+  version: "1.0.0"
+  requires:
+    - xion-toolkit-init
+compatibility: Requires xion-toolkit CLI and browser for OAuth2 flow
+---
+
 # xion-oauth2
 
 OAuth2 authentication skill for Xion blockchain development. This skill enables AI agents to authenticate with Xion's MetaAccount system using browser-based OAuth2 flow with PKCE security.
@@ -16,6 +27,8 @@ This skill wraps the `xion-toolkit` CLI tool to provide Agent-friendly OAuth2 au
 - `xion-toolkit` CLI tool installed and in PATH
 - Browser available for OAuth2 authorization
 - Network connectivity to Xion OAuth2 API
+
+> **Note**: If `xion-toolkit` is not installed, use the `xion-toolkit-init` skill first.
 
 ## Quick Start
 

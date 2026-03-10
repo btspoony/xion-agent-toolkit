@@ -70,12 +70,68 @@ cargo install --path .
 cargo install xion-agent-toolkit
 ```
 
+### For AI Agents
+
+If you're setting up an AI Agent, see [INSTALL-FOR-AGENTS.md](./INSTALL-FOR-AGENTS.md) for complete integration instructions.
+
+## Skills for AI Agents
+
+Xion Agent Toolkit includes pre-built skills that wrap CLI commands for easy AI Agent integration. These skills follow the [Agent Skills format](https://agentskills.io/).
+
+### Available Skills
+
+| Skill | Description |
+|-------|-------------|
+| `xion-toolkit-init` | Install xion-toolkit CLI automatically |
+| `xion-oauth2` | OAuth2 authentication (login, logout, status, refresh) |
+| `xion-treasury` | Treasury management (list, query, create, fund, withdraw, grants, fees) |
+
+### Installing via skills.sh (Recommended)
+
+Install all skills with a single command using [skills.sh](https://skills.sh):
+
+```bash
+# Install xion-agent-toolkit skills (includes xion-toolkit-init, xion-oauth2, xion-treasury)
+npx skills add burnt-labs/xion-agent-toolkit
+
+# Optionally, also install xion-skills for xiond CLI operations
+npx skills add burnt-labs/xion-skills
+```
+
+### Using Skills
+
+After installation via skills.sh, skills are automatically available:
+
+```bash
+# Authenticate with OAuth2
+xion-toolkit auth login
+
+# List all treasuries
+xion-toolkit treasury list
+
+# Query a treasury
+xion-toolkit treasury query xion1abc123...
+```
+
+For complete AI Agent setup instructions, see [INSTALL-FOR-AGENTS.md](./INSTALL-FOR-AGENTS.md).
+
 ## Quick Start
 
 ### 1. Check Status
 
 ```bash
 xion-toolkit status
+```
+
+Output:
+```json
+{
+  "success": true,
+  "network": "testnet",
+  "authenticated": true,
+  "xion_address": "xion1abc123...",
+  "config_path": "~/.xion-toolkit/config.json"
+}
 ```
 
 ### 2. Login
@@ -86,46 +142,94 @@ xion-toolkit auth login
 
 This opens your browser for OAuth2 authorization and saves tokens securely.
 
-### 4. Manage Treasuries
+Output:
+```json
+{
+  "success": true,
+  "network": "testnet",
+  "authenticated": true,
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "xion_address": "xion1abc123..."
+}
+```
+
+### 3. Manage Treasuries
 
 ```bash
 # List treasuries
 xion-toolkit treasury list
+```
 
+Output:
+```json
+{
+  "success": true,
+  "treasuries": [
+    {
+      "address": "xion1def456...",
+      "balance": "10000000",
+      "denom": "uxion",
+      "admin": "xion1abc123..."
+    }
+  ],
+  "count": 1
+}
+```
+
+```bash
 # Query treasury details
-xion-toolkit treasury query xion1abc123...
+xion-toolkit treasury query xion1def456...
 
-# Fund a treasury
-xion-toolkit treasury fund xion1abc123... --amount 1000000
+# Fund a treasury (1 XION = 1,000,000 uxion)
+xion-toolkit treasury fund xion1def456... --amount 1000000
 
 # Withdraw from a treasury
-xion-toolkit treasury withdraw xion1abc123... --amount 500000
+xion-toolkit treasury withdraw xion1def456... --amount 500000 --to xion1recipient...
+```
 
-# Configure grants
-xion-toolkit treasury grant-config xion1abc123... \
+### 4. Configure Grants and Fees
+
+```bash
+# Configure authz grant for sending funds
+xion-toolkit treasury grant-config add xion1def456... \
   --grant-type-url "/cosmos.bank.v1beta1.MsgSend" \
   --grant-auth-type send \
-  --grant-spend-limit "1000000uxion"
+  --grant-spend-limit "1000000uxion" \
+  --grant-description "Allow sending funds"
 
-# Configure fee allowance
-xion-toolkit treasury fee-config xion1abc123... \
+# Configure fee allowance for gasless transactions
+xion-toolkit treasury fee-config set xion1def456... \
   --fee-allowance-type basic \
-  --fee-spend-limit "5000000uxion"
+  --fee-spend-limit "5000000uxion" \
+  --fee-description "Basic fee allowance"
+```
 
+### 5. Admin Management
+
+```bash
 # Propose new admin
-xion-toolkit treasury admin propose xion1abc123... \
+xion-toolkit treasury admin propose xion1def456... \
   --new-admin xion1newadmin...
 
-# Accept admin role
-xion-toolkit treasury admin accept xion1abc123...
+# Accept admin role (called by pending admin)
+xion-toolkit treasury admin accept xion1def456...
 
-# Update treasury parameters
-xion-toolkit treasury params update xion1abc123... \
-  --redirect-url "https://example.com/callback" \
-  --metadata '{"name":"Updated Treasury"}'
+# Cancel proposed admin
+xion-toolkit treasury admin cancel xion1def456...
+```
 
-# Query on-chain grants
-xion-toolkit treasury chain-query grants xion1abc123...
+### Error Handling
+
+All errors return structured JSON with actionable hints:
+
+```json
+{
+  "success": false,
+  "error": "Not authenticated",
+  "error_code": "NOT_AUTHENTICATED",
+  "hint": "Run 'xion-toolkit auth login' to authenticate"
+}
 ```
 
 ## Contract Commands
@@ -158,6 +262,8 @@ xion-toolkit contract execute \
 
 ## CLI Reference
 
+For detailed documentation, see [docs/cli-reference.md](./docs/cli-reference.md).
+
 ### Authentication
 
 ```bash
@@ -174,7 +280,7 @@ xion-toolkit auth refresh                 # Refresh token
 xion-toolkit treasury list                       # List treasuries
 xion-toolkit treasury query <address>            # Query details
 xion-toolkit treasury fund <address> --amount N  # Fund treasury
-xion-toolkit treasury withdraw <address> --amount N  # Withdraw
+xion-toolkit treasury withdraw <address> --amount N --to <recipient>  # Withdraw
 
 # Grant configuration
 xion-toolkit treasury grant-config add <address> [options]     # Add grant
@@ -182,9 +288,9 @@ xion-toolkit treasury grant-config remove <address> --type-url <url>  # Remove g
 xion-toolkit treasury grant-config list <address>              # List grants
 
 # Fee configuration
-xion-toolkit treasury fee-config set <address> --fee-config <file>    # Set fee config
+xion-toolkit treasury fee-config set <address> [options]    # Set fee config
 xion-toolkit treasury fee-config remove <address> --grantee <address> # Remove fee allowance
-xion-toolkit treasury fee-config query <address>               # Query fee config
+xion-toolkit treasury fee-config query <address>            # Query fee config
 
 # Admin management
 xion-toolkit treasury admin propose <address> --new-admin <address>   # Propose new admin
@@ -251,6 +357,17 @@ All commands output JSON for easy Agent integration:
 }
 ```
 
+Errors include actionable hints:
+
+```json
+{
+  "success": false,
+  "error": "Treasury not found",
+  "error_code": "TREASURY_NOT_FOUND",
+  "hint": "Verify the address or run 'treasury list' to see available treasuries"
+}
+```
+
 ## Security
 
 - **PKCE (RFC 7636)** - Prevents authorization code interception
@@ -263,6 +380,7 @@ All commands output JSON for easy Agent integration:
 - [Xion Documentation](https://docs.burnt.com/xion)
 - [Developer Portal](https://dev.testnet2.burnt.com)
 - [Agent Skills Format](https://agentskills.io/)
+- [CLI Reference](./docs/cli-reference.md)
 - [Contributing Guide](CONTRIBUTING.md)
 
 ## License
