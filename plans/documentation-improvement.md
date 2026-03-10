@@ -103,3 +103,7 @@ Publish skills to skills.sh ecosystem:
 | 2026-03-10 | @project-manager | Fixed SKILL.md formats, updated README | ✅ |
 | 2026-03-10 | @project-manager | Added workflow examples to cli-reference.md | ✅ |
 | 2026-03-10 | @project-manager | Created docs/configuration.md | ✅ |
+| 2026-03-11 | @project-manager | Optimized skill descriptions for better triggering | ✅ |
+| 2026-03-11 | @project-manager | Refactored xion-treasury: 1002 lines → 220 lines + references/ | ✅ |
+| 2026-03-10 | @project-manager | Optimized skill descriptions (pushy triggers) | ✅ |
+| 2026-03-10 | @project-manager | Refactored xion-treasury to references/ pattern | ✅ |
