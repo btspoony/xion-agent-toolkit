@@ -5,6 +5,40 @@ All notable changes to the Xion Agent Toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0](https://github.com/btspoony/xion-agent-toolkit/compare/0.4.3...0.5.0) (2026-03-11)
+
+
+### Features
+
+* **cli:** add contract execute command ([017d44f](https://github.com/btspoony/xion-agent-toolkit/commit/017d44f0b2ae5dee83121db02270718aa1ffc159))
+* contract execute command and wiremock integration tests ([e01a2b6](https://github.com/btspoony/xion-agent-toolkit/commit/e01a2b6f5a9a6574d6d7949c153810c672c418e2))
+* **skills:** integrate with xion-skills and add xion-dev entry skill ([302bae7](https://github.com/btspoony/xion-agent-toolkit/commit/302bae71b27de1eeb5d4adf9f3156e8ce1b64e9c))
+* **skills:** integrate with xion-skills and comprehensive documentation improvement ([869e6c4](https://github.com/btspoony/xion-agent-toolkit/commit/869e6c468197032a5d32fc56665e5735694c96a9))
+
+
+### Bug Fixes
+
+* **deps:** update quinn-proto to version 0.11.14 ([4e5c496](https://github.com/btspoony/xion-agent-toolkit/commit/4e5c49621fbc5bd57785e2995161de07b6b37c19))
+
+
+### Refactoring
+
+* **skills:** optimize descriptions and structure for skills.sh ([0f6a71a](https://github.com/btspoony/xion-agent-toolkit/commit/0f6a71adcf5e8caea437fc5250ac44b90db1b72b))
+
+
+### Documentation
+
+* add AI Agent installation guide and skills.sh support ([50f2efa](https://github.com/btspoony/xion-agent-toolkit/commit/50f2efa4430cc6a3abe958124ffc545e39194dc4))
+* **cli-reference:** add contract execute command documentation ([5c5b9f5](https://github.com/btspoony/xion-agent-toolkit/commit/5c5b9f5cf594a8aa09aceb7d1565130879ea5cbf))
+* complete documentation improvement ([9653df6](https://github.com/btspoony/xion-agent-toolkit/commit/9653df6f785a97f8eaa16be6f7173b8789a5edd0))
+* enhance README with AI Agent integration instructions ([212c527](https://github.com/btspoony/xion-agent-toolkit/commit/212c52773486d6e21a9a4d89f7ccc11a95c0302d))
+* update plan with skill optimization details ([7418022](https://github.com/btspoony/xion-agent-toolkit/commit/74180224a8fd9e28831322e9812ce259b6706a6f))
+
+
+### Tests
+
+* replace mockito with wiremock for async integration tests ([96b517b](https://github.com/btspoony/xion-agent-toolkit/commit/96b517b0611918b42dd4627f44e973dab31e07a3))
+
 ## [0.4.3](https://github.com/btspoony/xion-agent-toolkit/compare/0.4.2...0.4.3) (2026-03-09)
 
 
