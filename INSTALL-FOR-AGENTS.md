@@ -16,7 +16,6 @@ Xion Agent Toolkit is a CLI-first, agent-oriented toolkit for developing on the 
 - **Fee Configuration**: Configure fee allowances for gasless transactions
 - **Admin Management**: Propose, accept, and cancel admin transfers
 - **Contract Operations**: Instantiate and execute CosmWasm contracts
-- **On-chain Queries**: Query grants, allowances, and transaction status
 
 ### Who Should Use It
 
@@ -281,25 +280,27 @@ npx skills add burnt-labs/xion-skills
 
 | Package | Skills | Purpose |
 |---------|--------|---------|
-| `burnt-labs/xion-agent-toolkit` | `xion-toolkit-init` | Install xion-toolkit CLI |
+| `burnt-labs/xion-agent-toolkit` | `xion-dev` | Unified entry point (routes to correct skill) |
+| | `xion-toolkit-init` | Install xion-toolkit CLI |
 | | `xion-oauth2` | OAuth2 authentication |
 | | `xion-treasury` | Treasury management |
 | `burnt-labs/xion-skills` (optional) | `xiond-init` | Install xiond CLI |
-| | `xiond-usage` | Account management |
+| | `xiond-usage` | Chain queries, account management |
 | | `xiond-wasm` | CosmWasm deployment |
 
 **Dependency Graph:**
 
 ```
 burnt-labs/xion-agent-toolkit
+├── xion-dev (entry point - routes to correct skill)
 ├── xion-toolkit-init (installs xion-toolkit CLI)
 ├── xion-oauth2 (requires xion-toolkit)
 └── xion-treasury (requires xion-oauth2)
 
-burnt-labs/xion-skills (optional, for xiond)
+burnt-labs/xion-skills (optional, for advanced operations)
 ├── xiond-init (installs xiond CLI)
-├── xiond-usage (requires xiond)
-└── xiond-wasm (requires xiond)
+├── xiond-usage (chain queries, requires xiond)
+└── xiond-wasm (contract deployment, requires xiond)
 ```
 
 #### Option B: Manual Installation (Alternative)
@@ -318,12 +319,22 @@ curl -fsSL https://raw.githubusercontent.com/burnt-labs/xion-agent-toolkit/main/
 | **Installation** | `npx skills add burnt-labs/xion-agent-toolkit` | `npx skills add burnt-labs/xion-skills` |
 | **Target CLI** | xion-toolkit | xiond |
 | **Auth Method** | OAuth2 (browser-based, gasless) | Mnemonic / Keyring |
-| **Use Case** | MetaAccount, Treasury management | Traditional Cosmos SDK |
-| **Skills** | xion-toolkit-init, xion-oauth2, xion-treasury | xiond-init, xiond-usage, xiond-wasm |
+| **Use Case** | MetaAccount, Treasury management | Chain queries, CosmWasm |
+| **Skills** | xion-dev, xion-toolkit-init, xion-oauth2, xion-treasury | xiond-init, xiond-usage, xiond-wasm |
 
 **Recommendation**: 
-- **Primary**: Install `burnt-labs/xion-agent-toolkit` for OAuth2 and Treasury operations
-- **Optional**: Install `burnt-labs/xion-skills` for xiond CLI and CosmWasm deployment
+- **Primary**: Install `burnt-labs/xion-agent-toolkit` for MetaAccount development
+- **Optional**: Install `burnt-labs/xion-skills` for chain queries and CosmWasm deployment
+
+#### When to Use Which Toolkit
+
+| Use xion-agent-toolkit when... | Use xion-skills when... |
+|-------------------------------|-------------------------|
+| Building Xion applications | Deploying CosmWasm contracts |
+| Managing Treasury contracts | Querying chain data (blocks, txs) |
+| Gasless transactions | Checking transaction status |
+| OAuth2 authentication | Mnemonic wallet management |
+| Authz/Fee grant configuration | Validator operations |
 
 #### Using Installed Skills
 
@@ -883,6 +894,6 @@ For issues and feature requests:
 
 ---
 
-*Document Version: 1.0.0*
-*Last Updated: 2026-03-10*
+*Document Version: 1.1.0*
+*Last Updated: 2026-03-11*
 *Compatible CLI Version: >=0.1.0*

@@ -13,7 +13,6 @@ Detailed documentation for all xion-treasury scripts.
 - [fee-config.sh](#fee-configsh)
 - [admin.sh](#adminsh)
 - [update-params.sh](#update-paramssh)
-- [chain-query.sh](#chain-querysh)
 
 ---
 
@@ -262,15 +261,14 @@ Updates Treasury contract parameters.
 
 ---
 
-## chain-query.sh
+## Chain Queries
 
-Queries on-chain data for Treasury contracts.
+> **Note**: For chain-level queries, use xiond from [xion-skills](https://github.com/burnt-labs/xion-skills).
 
-**Usage:**
-```bash
-# Query authz grants
-./scripts/chain-query.sh <ADDRESS> grants
+| Query Type | Command |
+|------------|---------|
+| Transaction status | `xiond query tx <hash>` |
+| Block info | `xiond query block` |
+| Balance (any address) | `xiond query bank balances <address>` |
 
-# Query fee allowances
-./scripts/chain-query.sh <ADDRESS> allowances
-```
+See `xiond-usage` skill in xion-skills for more details.

@@ -57,6 +57,7 @@ npx skills add burnt-labs/xion-skills
 
 | Skill | Purpose |
 |-------|---------|
+| `xion-dev` | Unified entry point - routes to correct skill based on user needs |
 | `xion-toolkit-init` | Install xion-toolkit CLI automatically |
 | `xion-oauth2` | OAuth2 authentication (login, logout, status, refresh) |
 | `xion-treasury` | Treasury management (create, query, fund, withdraw, grants, fees) |
@@ -66,22 +67,33 @@ npx skills add burnt-labs/xion-skills
 | Skill | Purpose |
 |-------|---------|
 | `xiond-init` | Install and configure xiond CLI |
-| `xiond-usage` | Account management, transactions, queries |
+| `xiond-usage` | Chain queries, account management, transactions |
 | `xiond-wasm` | CosmWasm contract deployment |
 
 #### Dependency Graph
 
 ```
 burnt-labs/xion-agent-toolkit
+├── xion-dev (entry point - routes to correct skill)
 ├── xion-toolkit-init (installs xion-toolkit CLI)
 ├── xion-oauth2 (requires xion-toolkit)
 └── xion-treasury (requires xion-oauth2)
 
-burnt-labs/xion-skills (optional)
+burnt-labs/xion-skills (optional, for advanced operations)
 ├── xiond-init (installs xiond CLI)
-├── xiond-usage (requires xiond)
-└── xiond-wasm (requires xiond)
+├── xiond-usage (chain queries, requires xiond)
+└── xiond-wasm (contract deployment, requires xiond)
 ```
+
+#### When to Use Which Toolkit
+
+| Use xion-agent-toolkit when... | Use xion-skills when... |
+|-------------------------------|-------------------------|
+| Building Xion applications | Deploying CosmWasm contracts |
+| Managing Treasury contracts | Querying chain data (blocks, txs) |
+| Gasless transactions | Checking transaction status |
+| OAuth2 authentication | Mnemonic wallet management |
+| Authz/Fee grant configuration | Validator operations |
 
 ### Manual Installation (Alternative)
 
@@ -111,6 +123,27 @@ curl -fsSL https://raw.githubusercontent.com/burnt-labs/xion-agent-toolkit/main/
 ---
 
 ## Available Skills
+
+### xion-dev
+
+**Purpose**: Unified entry point for ALL Xion blockchain development. This skill helps route users to the correct tool based on their needs.
+
+**When to Use**: This skill should be triggered whenever the user mentions anything related to Xion, MetaAccount, gasless transactions, Treasury, or Xion development in general.
+
+**Core Philosophy**: Xion developers should primarily use MetaAccount for a gasless experience. The `xiond` CLI (from xion-skills) is reserved for advanced scenarios like contract deployment and chain queries.
+
+**Decision Matrix**:
+
+| User Needs | Recommended Skill | Why |
+|------------|-------------------|-----|
+| Login / Authentication | `xion-oauth2` | MetaAccount, gasless |
+| Create / Manage Treasury | `xion-treasury` | Core functionality |
+| Fund / Withdraw | `xion-treasury` | Gasless transactions |
+| Authz / Fee Grant | `xion-treasury` | Specialized feature |
+| Query chain data | `xiond-usage` (xion-skills) | More powerful queries |
+| Deploy CosmWasm | `xiond-wasm` (xion-skills) | Contract developer tool |
+
+---
 
 ### xion-toolkit-init
 
@@ -274,7 +307,8 @@ Treasury management skill for Xion blockchain development. Enables AI agents to 
 | `fee-config.sh` | Configure Fee Grants (set, remove, query) |
 | `admin.sh` | Admin management (propose, accept, cancel) |
 | `update-params.sh` | Update Treasury parameters |
-| `chain-query.sh` | On-chain queries (grants, allowances) |
+
+> **Note**: For chain-level queries (transaction status, block info), use `xiond-usage` from [xion-skills](https://github.com/burnt-labs/xion-skills).
 
 #### Usage Examples
 
@@ -481,42 +515,24 @@ Treasury management skill for Xion blockchain development. Enables AI agents to 
 }
 ```
 
-**Chain Query:**
+---
+
+## Chain Queries
+
+For chain-level queries (transaction status, block info, balance for any address), use `xiond-usage` from [xion-skills](https://github.com/burnt-labs/xion-skills):
 
 ```bash
-# Query authz grants
-./skills/xion-treasury/scripts/chain-query.sh xion1abc123... grants
+# Query transaction status
+xiond query tx <txhash>
 
-# Query fee allowances
-./skills/xion-treasury/scripts/chain-query.sh xion1abc123... allowances
+# Query block info
+xiond query block
+
+# Query balance for any address
+xiond query bank balances <address>
 ```
 
-**Output (Grants):**
-
-```json
-{
-  "success": true,
-  "treasury_address": "xion1abc123...",
-  "grants": [
-    {
-      "grantee": "xion1grantee...",
-      "authorization": {
-        "type": "cosmos.bank.v1beta1.SendAuthorization",
-        "value": {
-          "spend_limit": [
-            {
-              "denom": "uxion",
-              "amount": "1000000"
-            }
-          ]
-        }
-      },
-      "expiration": "2025-01-01T00:00:00Z"
-    }
-  ],
-  "count": 1
-}
-```
+See the [xion-skills documentation](https://github.com/burnt-labs/xion-skills) for more details.
 
 ---
 
@@ -1091,6 +1107,6 @@ chmod +x ~/.xion-toolkit/skills/*/scripts/*.sh
 
 ---
 
-*Document Version: 1.0.0*
-*Last Updated: 2026-03-10*
+*Document Version: 1.1.0*
+*Last Updated: 2026-03-11*
 *Compatible CLI Version: >=0.1.0*

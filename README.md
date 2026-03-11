@@ -16,7 +16,6 @@ Xion Agent Toolkit provides a command-line interface for interacting with Xion's
 - ⚙️ Grant & fee configuration
 - 👤 Admin management (propose, accept, cancel)
 - 🔧 Treasury parameter updates
-- 🔍 On-chain queries (grants, allowances)
 - 🚀 Generic contract instantiation
 - 🤖 Agent-friendly JSON output
 - 🔒 Encrypted credential storage
@@ -88,9 +87,33 @@ Xion Agent Toolkit includes pre-built skills that wrap CLI commands for easy AI 
 
 | Skill | Description |
 |-------|-------------|
+| `xion-dev` | Unified entry point - routes to correct skill based on user needs |
 | `xion-toolkit-init` | Install xion-toolkit CLI automatically |
 | `xion-oauth2` | OAuth2 authentication (login, logout, status, refresh) |
 | `xion-treasury` | Treasury management (list, query, create, fund, withdraw, grants, fees) |
+
+### When to Use xion-toolkit vs xion-skills
+
+**xion-toolkit** (this repo) is for **MetaAccount development** - the primary way to build on Xion:
+
+| Use xion-toolkit when... | Use xion-skills when... |
+|--------------------------|-------------------------|
+| Building Xion applications | Deploying CosmWasm contracts |
+| Managing Treasury contracts | Querying chain data |
+| Gasless transactions | Checking transaction status |
+| OAuth2 authentication | Mnemonic wallet management |
+| Authz/Fee grant configuration | Validator operations |
+
+**For most Xion developers, xion-toolkit is the recommended tool.**
+
+Install both for complete coverage:
+```bash
+# Primary: MetaAccount development
+npx skills add burnt-labs/xion-agent-toolkit
+
+# Secondary: Advanced chain operations
+npx skills add burnt-labs/xion-skills
+```
 
 ### Installing via skills.sh (Recommended)
 
@@ -309,10 +332,6 @@ xion-toolkit treasury admin cancel <address>                   # Cancel proposed
 
 # Parameters
 xion-toolkit treasury params update <address> [options]        # Update treasury params
-
-# On-chain queries
-xion-toolkit treasury chain-query grants <address>             # Query authz grants
-xion-toolkit treasury chain-query allowances <address>         # Query fee allowances
 ```
 
 ### Contract
@@ -392,6 +411,7 @@ Errors include actionable hints:
 - [Agent Skills Format](https://agentskills.io/)
 - [CLI Reference](./docs/cli-reference.md)
 - [Contributing Guide](CONTRIBUTING.md)
+- [xion-skills](https://github.com/burnt-labs/xion-skills) - Advanced chain operations (xiond)
 
 ## License
 

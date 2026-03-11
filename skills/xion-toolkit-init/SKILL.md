@@ -1,10 +1,16 @@
 ---
 name: xion-toolkit-init
 description: |
-  Install xion-toolkit CLI for Xion blockchain development. ALWAYS use this skill first when the user wants to work with Xion, set up Xion development, authenticate with OAuth2, manage Treasury contracts, or perform any gasless transactions on Xion. Triggers on mentions of: xion, xion-toolkit, Xion blockchain, MetaAccount, gasless transactions, Treasury contracts, OAuth2 on Xion, burnt labs. This skill must run before xion-oauth2 and xion-treasury can be used.
+  Install xion-toolkit CLI for Xion MetaAccount development. Use this skill as the FIRST step when the user wants to develop on Xion, build Xion applications, use MetaAccount, perform gasless transactions, or manage Treasury contracts.
+  
+  This is the PRIMARY tool for Xion development - most Xion developers should use xion-toolkit (MetaAccount) instead of xiond (traditional CLI).
+  
+  Triggers on: MetaAccount, gasless, 无 gas, xion toolkit, xion 开发, xion 开发入门, agent 开发, OAuth2 开发, xion setup, install xion, xion blockchain development, burnt labs, Treasury contracts, session key authentication.
+  
+  Make sure to use this skill whenever the user mentions setting up Xion development, even if they don't explicitly say "toolkit" or "MetaAccount".
 metadata:
   author: burnt-labs
-  version: "1.0.0"
+  version: "1.1.0"
   provides:
     - xion-toolkit CLI
   recommends:
@@ -15,6 +21,18 @@ compatibility: macOS (x64/ARM64), Linux (x64/ARM64), Windows (PowerShell)
 # xion-toolkit-init
 
 Installs the `xion-toolkit` command-line interface for Xion blockchain development. This CLI provides OAuth2 authentication and Treasury management capabilities for gasless transactions.
+
+## Core Philosophy: MetaAccount-First
+
+**Xion developers should primarily use MetaAccount for a gasless experience.**
+
+| Feature | xion-toolkit (MetaAccount) | xiond (Traditional) |
+|---------|---------------------------|---------------------|
+| Authentication | OAuth2 + Browser | Mnemonic / Keyring |
+| Gas | Gasless (Fee Grant) | User pays gas |
+| Target User | App developers (90%) | Contract devs (10%) |
+
+For most Xion development, use xion-toolkit. Only use xiond (from xion-skills) for contract deployment or advanced chain queries.
 
 ## Overview
 
@@ -98,7 +116,7 @@ After installing xion-toolkit, you can:
    xion-toolkit treasury list
    ```
 
-3. **Install xion-skills** (for xiond CLI operations):
+3. **Install xion-skills** (for xiond CLI operations like chain queries and contract deployment):
    ```bash
    npx skills add burnt-labs/xion-skills
    ```
@@ -106,12 +124,19 @@ After installing xion-toolkit, you can:
 ## Dependency Graph
 
 ```
-xion-toolkit-init (this skill)
-    ├── Installs: xion-toolkit CLI
-    └── Recommends: burnt-labs/xion-skills
-           ↓
-    xion-oauth2 (requires xion-toolkit-init)
-    xion-treasury (requires xion-toolkit-init + xion-oauth2)
+xion-dev (entry point - routes to correct skill)
+    │
+    ├── xion-toolkit-init (this skill)
+    │       │
+    │       ├── xion-oauth2 (authentication)
+    │       │       │
+    │       │       └── xion-treasury (gasless operations)
+    │       │
+    │       └── recommends: burnt-labs/xion-skills
+    │               │
+    │               ├── xiond-init (xiond installation)
+    │               ├── xiond-usage (chain queries)
+    │               └── xiond-wasm (contract deployment)
 ```
 
 ## Troubleshooting

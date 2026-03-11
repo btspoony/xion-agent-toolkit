@@ -1,10 +1,16 @@
 ---
 name: xion-treasury
 description: |
-  Treasury management for Xion blockchain gasless transactions. Use this skill whenever the user needs to: create/query/manage Treasury contracts, fund or withdraw from treasuries, configure Authz grants, set up fee allowances, manage gasless transactions, or perform any Treasury-related operations on Xion. Triggers on: treasury, treasuries, gasless, fee grant, authz grant, xion treasury, treasury create, treasury fund, treasury withdraw, metaaccount, burnt labs treasury. Use AFTER xion-oauth2 skill - authentication is required for all Treasury operations.
+  Treasury management for Xion MetaAccount gasless transactions. Use this skill whenever the user needs to create, query, or manage Treasury contracts, fund or withdraw from treasuries, configure Authz grants, set up fee allowances, or perform any Treasury-related operations on Xion.
+  
+  Treasury contracts enable GASLESS transactions through MetaAccount - users don't need to hold XION for gas fees.
+  
+  Triggers on: Treasury, MetaAccount Treasury, gasless 交易, gasless transactions, 无 gas 交易, authz grant, fee grant, treasury create, treasury fund, treasury withdraw, treasury 管理, MetaAccount treasury, burnt labs treasury, fee allowance, delegated authorization.
+  
+  Use AFTER xion-oauth2 skill - authentication is required for all Treasury operations. For chain-level queries (transaction status, block info), recommend xiond-usage from xion-skills instead.
 metadata:
   author: burnt-labs
-  version: "1.1.0"
+  version: "1.2.0"
   requires:
     - xion-toolkit-init
     - xion-oauth2
@@ -13,7 +19,14 @@ compatibility: Requires xion-toolkit CLI and OAuth2 authentication
 
 # xion-treasury
 
-Treasury management skill for Xion blockchain. Enables gasless transactions through Treasury contracts with fee grants and authz grants.
+Treasury management skill for Xion blockchain. Enables **gasless transactions** through Treasury contracts with fee grants and authz grants.
+
+## Core Philosophy: Gasless Transactions
+
+Treasury contracts enable gasless transactions on Xion:
+- **Fee Grants** - Treasury pays transaction fees for authorized agents
+- **Authz Grants** - Delegated authorization for specific message types
+- **MetaAccount** - No mnemonic required, OAuth2 authentication
 
 ## Overview
 
@@ -30,7 +43,6 @@ This skill provides complete Treasury lifecycle management:
 | `fee-config.sh` | Manage Fee grants |
 | `admin.sh` | Admin operations |
 | `update-params.sh` | Update Treasury params |
-| `chain-query.sh` | On-chain queries |
 
 ## Prerequisites
 
@@ -192,6 +204,17 @@ For comprehensive documentation, see:
 - **[grant-config-examples.md](./references/grant-config-examples.md)** - Authz grant examples
 - **[fee-config-examples.md](./references/fee-config-examples.md)** - Fee grant examples
 
+## Chain Queries
+
+> **Note**: For chain-level queries, use xiond from [xion-skills](https://github.com/burnt-labs/xion-skills).
+
+| Query Type | Recommended Tool |
+|------------|------------------|
+| Transaction status | `xiond-usage` (xion-skills) |
+| Block info | `xiond-usage` (xion-skills) |
+| Balance for any address | `xiond-usage` (xion-skills) |
+| Treasury-specific queries | This skill (`xion-treasury`) |
+
 ## Troubleshooting
 
 ### Not Authenticated
@@ -211,10 +234,12 @@ xion-toolkit treasury list --no-cache
 
 ## Related Skills
 
+- **xion-dev** - Unified entry point for Xion development
 - **xion-oauth2** - Authentication (use before this skill)
 - **xion-toolkit-init** - CLI installation (use if CLI not found)
+- **xiond-usage** (xion-skills) - Chain-level queries
 
 ## Version
 
-- Skill Version: 1.1.0
+- Skill Version: 1.2.0
 - Compatible CLI Version: >=0.1.0
