@@ -5,6 +5,21 @@ All notable changes to the Xion Agent Toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0](https://github.com/burnt-labs/xion-agent-toolkit/compare/0.5.0...0.6.0) (2026-03-11)
+
+
+### Features
+
+* **cli:** add contract query and treasury export/import commands ([35ee428](https://github.com/burnt-labs/xion-agent-toolkit/commit/35ee4289b41c2ab1f4b9deb31181d13bdc6be6a5))
+* **cli:** add contract query and treasury export/import commands ([ddfde4e](https://github.com/burnt-labs/xion-agent-toolkit/commit/ddfde4e1e8eee046d669492f338a8f0811431670))
+* Skills documentation improvements and CLI enhancements ([c5d9557](https://github.com/burnt-labs/xion-agent-toolkit/commit/c5d9557290095c8ec2cb2399e523a276ac3222fd))
+
+
+### Documentation
+
+* remove manual skills installation, keep only npx skills add method ([e790450](https://github.com/burnt-labs/xion-agent-toolkit/commit/e790450cb5a236e995a74cc9a56a4d748d6c73da))
+* remove manual skills installation, keep only npx skills add method ([b2e4d0a](https://github.com/burnt-labs/xion-agent-toolkit/commit/b2e4d0a5a3bf6a5ade77b1fedfe432eee0109125))
+
 ## [0.5.0](https://github.com/btspoony/xion-agent-toolkit/compare/0.4.3...0.5.0) (2026-03-11)
 
 
