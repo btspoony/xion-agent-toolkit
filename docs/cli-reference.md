@@ -1,5 +1,7 @@
 # CLI Reference
 
+> **For AI Agents**: This document is comprehensive. For a condensed quick reference, see [QUICK-REFERENCE.md](./QUICK-REFERENCE.md).
+
 Complete reference for the Xion Agent Toolkit CLI commands.
 
 ## Table of Contents
