@@ -35,7 +35,8 @@ xion-toolkit treasury list
 xion-toolkit treasury create \
   --redirect-url "https://..." \
   --icon-url "https://.../icon.png" \
-  --name "My Treasury"
+  --name "My Treasury" \
+  --is-oauth2-app
 
 # Query treasury details
 xion-toolkit treasury query <ADDRESS>
@@ -45,6 +46,13 @@ xion-toolkit treasury fund <ADDRESS> --amount 1000000uxion
 
 # Withdraw
 xion-toolkit treasury withdraw <ADDRESS> --amount 500000uxion
+
+# Update parameters (redirect_url, icon_url, name, is_oauth2_app)
+xion-toolkit treasury params update <ADDRESS> \
+  --redirect-url "https://new.example.com/callback" \
+  --icon-url "https://new.example.com/icon.png" \
+  --name "Updated Name" \
+  --is-oauth2-app
 ```
 
 ### Treasury Output Examples

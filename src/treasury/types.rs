@@ -645,7 +645,13 @@ pub struct UpdateParamsInput {
     /// Icon URL for display
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_url: Option<String>,
-    /// Additional metadata as JSON object
+    /// Treasury name (stored in metadata.name)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Whether this is an OAuth2 app (stored in metadata.is_oauth2_app)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_oauth2_app: Option<bool>,
+    /// Additional metadata as JSON object (merged with name and is_oauth2_app)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<serde_json::Value>,
 }

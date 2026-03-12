@@ -76,18 +76,37 @@ xion-toolkit treasury export xion1abc123... --output treasury-backup.json
 
 ### `treasury-params-update.json`
 
-Example metadata for `xion-toolkit treasury params update`:
+Update treasury parameters including `redirect_url`, `icon_url`, `name`, and `is_oauth2_app`:
 
 ```bash
+# Update individual parameters
 xion-toolkit treasury params update xion1treasury... \
   --redirect-url "https://newapp.com/callback" \
-  --icon-url "https://newapp.com/icon.png" \
+  --icon-url "https://newapp.com/icon.png"
+
+# Update name
+xion-toolkit treasury params update xion1treasury... \
+  --name "My Updated Treasury"
+
+# Mark as OAuth2 application
+xion-toolkit treasury params update xion1treasury... \
+  --is-oauth2-app
+
+# Update with additional metadata
+xion-toolkit treasury params update xion1treasury... \
   --metadata @examples/treasury-params-update.json
 ```
 
-**Note**: `is_oauth2_app` can only be set during treasury creation and cannot be modified. This is a contract design decision.
+**Available flags:**
+- `--redirect-url <URL>` - OAuth callback URL
+- `--icon-url <URL>` - Treasury icon URL
+- `--name <NAME>` - Display name (stored in metadata)
+- `--is-oauth2-app` - Mark as OAuth2 application (stored in metadata.is_oauth2_app)
+- `--metadata <JSON>` - Additional metadata as JSON string
 
-**Metadata schema:**
+**Important**: `is_oauth2_app` and `name` are stored in the `metadata` JSON field on-chain, but exposed as first-class CLI parameters for convenience.
+
+**Metadata schema** (for `--metadata` flag):
 - `name` - Display name for the treasury
 - `description` - Human-readable description
 - `archived` - Whether the treasury is archived
